@@ -141,3 +141,39 @@ test('portrait: picking a draw tool folds the inspector sheet', async ({ page })
   await page.locator('#brushbtn').click();
   await expect(page.locator('#rstrip [aria-label="Properties"]')).toHaveAttribute('aria-pressed', 'false');
 });
+
+// ---- Notion checklist fixes: frame-by-frame workspace and pen smoothing ----
+test('frame-by-frame workspace: header toggle opens a brush panel and restores the layout', async ({ page }) => {
+  const tgl = page.locator('#top [data-act="fbf"]');
+  const before = await page.evaluate(() => ({ left: localStorage.getItem('rfp-left'), right: localStorage.getItem('rfp-right') }));
+  await tgl.click();
+  await expect(tgl).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#rpanel .phead h2')).toHaveText('Frame by frame');
+  await expect(page.locator('#rpanel [data-act="pickdraw"][data-v="brush"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#rpanel .fld[aria-label="Smoothing"]')).toBeVisible();
+  await expect(page.locator('#bbar')).not.toHaveClass(/show/);
+  await tgl.click();
+  await expect(tgl).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#rpanel .phead h2')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('rfp-right'))).toBe(before.right);
+});
+
+test('pen smoothing steadies a shaky stroke', async ({ page }) => {
+  const draw = async (sm: number) => {
+    await page.evaluate((v) => { const b = JSON.parse(localStorage.getItem('rfp-brush') || '{}'); b.sm = v; localStorage.setItem('rfp-brush', JSON.stringify(b)); }, sm);
+    await page.reload();
+    await page.locator('#stage g[data-id]').first().waitFor();
+    await page.locator('#top [data-act="fbf"]').click();
+    const vp = (await page.locator('#vp').boundingBox())!;
+    const x0 = vp.x + 120, y0 = vp.y + 150;
+    await ptr(page, 'pointerdown', x0, y0, { id: 41, type: 'pen', pressure: .6 });
+    for (let i = 1; i <= 24; i++) await ptr(page, 'pointermove', x0 + i * 10, y0 + (i % 2 ? 14 : -14), { id: 41, type: 'pen', pressure: .6 });
+    await ptr(page, 'pointerup', x0 + 240, y0, { id: 41, type: 'pen' });
+    const p = await page.evaluate(() => { const l = JSON.parse(localStorage.getItem('rfp-project')!).layers.find((q: any) => q.type === 'draw'); const s = l.cels.flatMap((c: any) => c.strokes); return s[s.length - 1].pts as number[][]; });
+    // Zig-zag size: the largest jump in y between neighbouring points.
+    let worst = 0; for (let i = 1; i < p.length; i++) worst = Math.max(worst, Math.abs(p[i][1] - p[i - 1][1]));
+    return { worst, last: p[p.length - 1] };
+  };
+  const raw = await draw(0), smooth = await draw(80);
+  expect(smooth.worst).toBeLessThan(raw.worst * 0.6);
+});

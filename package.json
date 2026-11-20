@@ -13,7 +13,8 @@
     "test:parity:app": "node scripts/with-env.mjs RF_TARGET=app playwright test",
     "test:parity:update": "playwright test --update-snapshots",
     "lint": "eslint src",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "build:artifact": "node scripts/make-artifact.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -5,12 +5,17 @@ import { S } from '../state/state';
 import { hi, hist, lastLabel } from '../state/history';
 
 /* ---------- render: top bar ---------- */
+/** The overlay button cycles off, safe areas, grid (stored as 'thirds'). */
+const GUIDE_NEXT = { off: 'safe', safe: 'thirds', thirds: 'off' }, GUIDE_NAME = { off: 'Off', safe: 'Safe areas', thirds: 'Grid' };
 export function renderTop() {
   $('#top').innerHTML = `
     <button class="ib back" style="width:auto" aria-label="Back to library">${ic('left', 's')}<span style="font-size:var(--fs-s)">Library</span></button>
     <input class="name" id="pname" value="${esc(projName)}" aria-label="Project name"><span class="meta tc">30 fps · 1920×1080</span>
     <span class="save" role="status"><i></i>Autosaved</span>
     <span class="spacer"></span>
+    <button class="fbf-toggle ${S.fbf ? 'on' : ''}" data-act="fbf" aria-pressed="${!!S.fbf}" aria-label="Frame-by-frame drawing workspace" title="Frame-by-frame drawing workspace">${ic('fbf', 's')}<span>Frame by frame</span></button>
+    <span class="spacer"></span>
+    <button class="ib ${S.guide !== 'off' ? 'on' : ''}" data-act="guide" data-v="${GUIDE_NEXT[S.guide] || 'safe'}" aria-label="Overlay: ${GUIDE_NAME[S.guide] || 'Off'}. Tap to change" title="Overlay: ${GUIDE_NAME[S.guide] || 'Off'} (off, safe areas, grid)">${ic(S.guide === 'thirds' ? 'grid' : 'safe', 's')}</button>
     <button class="ib" data-act="menu" aria-label="More" aria-haspopup="menu" aria-expanded="${S.pop === 'menu'}">${ic('more')}</button>
     <button class="primary" data-act="export" style="margin-left:6px">${ic('share', 's')}Export</button>`;
   fitName();

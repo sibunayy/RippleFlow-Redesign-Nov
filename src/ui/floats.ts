@@ -9,9 +9,7 @@ import { setFitSelOn, setSuppressClick } from '../events/delegate';
 
 export function renderFloats() {
   $('#zoom').innerHTML = `<button class="ib" data-act="zoom" data-v="0.8" aria-label="Zoom out" title="Zoom out">${ic('zout', 's')}</button><button class="pct tc" data-act="fit" aria-label="Zoom level. Drag left or right to zoom. Tap to fit the selection, tap again to fit the workspace" title="Drag to zoom · tap to fit selection / workspace">100%</button><button class="ib" data-act="zoom" data-v="1.25" aria-label="Zoom in" title="Zoom in">${ic('zin', 's')}</button><span class="vsep"></span>
-    <button class="ib ${S.snap ? 'on' : ''}" data-act="snap" aria-pressed="${S.snap}" aria-label="Snap" title="Snap">${ic('magnet', 's')}</button>
-    <button class="ib ${S.guide === 'safe' ? 'on' : ''}" data-act="guide" data-v="${S.guide === 'safe' ? 'off' : 'safe'}" aria-pressed="${S.guide === 'safe'}" aria-label="Safe areas" title="Title and action safe areas">${ic('safe', 's')}</button>
-    <button class="ib ${S.guide === 'thirds' ? 'on' : ''}" data-act="guide" data-v="${S.guide === 'thirds' ? 'off' : 'thirds'}" aria-pressed="${S.guide === 'thirds'}" aria-label="Thirds grid" title="Rule-of-thirds grid">${ic('grid', 's')}</button>`;
+    <button class="ib ${S.snap ? 'on' : ''}" data-act="snap" aria-pressed="${S.snap}" aria-label="Snap" title="Snap">${ic('magnet', 's')}</button>`;
   const ql = S.sel && lay(S.sel), hasKeys = !!(ql && TF.some((p) => animated(ql.p[p])));
   $('#qbar').innerHTML = `<button class="qb" data-act="keyall">${ic('key', 's')}Keyframe</button>
     <button class="qb" data-act="qease" ${hasKeys ? '' : 'disabled'}>${ic('easing', 's')}Easing</button>

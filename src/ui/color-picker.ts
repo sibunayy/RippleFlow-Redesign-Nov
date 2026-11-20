@@ -18,7 +18,7 @@ export let cp = null;
 export function cpApply(hexIn?) {
   const l = S.sel && lay(S.sel); if (!cp || (!l && cp.key !== 'brush')) return;
   const hex = hexIn || hsvToHex(cp.h, cp.s, cp.v);
-  if (cp.key === 'brush') { S.brush.c = hex; saveBrush(); const bc = $('#bbar .bcol'); if (bc) bc.style.background = hex; }
+  if (cp.key === 'brush') { S.brush.c = hex; saveBrush(); const bc = $('#bbar .bcol') || $('#rpanel .bcol'); if (bc) bc.style.background = hex; }
   else { l[cp.key || 'hue'] = hex; cp.dirty = true; buildCanvas(); }
   const pop = $('.pop.cp');
   if (pop) {

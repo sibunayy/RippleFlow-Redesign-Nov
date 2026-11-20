@@ -114,14 +114,14 @@ export function keyDown(e, dk) {
 // Moving the finger further above the field speeds it up (×2/×5/×10), further below slows it (×0.5/×0.2/×0.1).
 export function fieldDrag(e, fl) {
   e.preventDefault();
-  const o = fl.dataset.o, isObj = o != null, isOpt = o === 'po' || o === 'br' || o === 'on';
+  const o = fl.dataset.o, isObj = o != null, isOpt = o === 'po' || o === 'br' || o === 'bs' || o === 'on';
   const l: any = isOpt ? {} : lay(isObj ? S.sel : fl.dataset.l); if (!l) return;
   const p = fl.dataset.p, key = fl.dataset.k, ii = +fl.dataset.i, isInt = fl.dataset.int === '1';
-  const tgt = () => (o === 'br' ? brushCur() : o === 'on' ? S.onion : isOpt ? S : o === 'fx' ? l.fx[ii] : o === 'rep' ? l.rep : o === 'mod' ? (l.mods || [])[ii] : o === 'an' ? (l.anims || [])[ii] : l);
+  const tgt = () => (o === 'br' ? brushCur() : o === 'bs' ? S.brush : o === 'on' ? S.onion : isOpt ? S : o === 'fx' ? l.fx[ii] : o === 'rep' ? l.rep : o === 'mod' ? (l.mods || [])[ii] : o === 'an' ? (l.anims || [])[ii] : l);
   if (isObj && !tgt()) return;
   const m = isObj ? { step: +fl.dataset.step || .5, min: +fl.dataset.min, max: +fl.dataset.max, u: fl.dataset.u || '', label: fl.getAttribute('aria-label') } : PROPS[p];
   const getV = () => (isObj ? tgt()[key] : val(l.p[p], S.f));
-  const setV = (nv) => { if (isObj) { tgt()[key] = isInt ? Math.round(nv) : nv; if (key === 'inP' || key === 'outP') { l.inP = Math.min(l.inP ?? 0, (l.outP ?? DUR) - 1); } if (isOpt) { if (o === 'br') saveBrush(); else if (o === 'on') { saveOnion(); updateCanvas(); } return; } if (o === 'mod') updateCanvas(); else buildCanvas(); } else { applyProp(l, p, nv); updateCanvas(); } };
+  const setV = (nv) => { if (isObj) { tgt()[key] = isInt ? Math.round(nv) : nv; if (key === 'inP' || key === 'outP') { l.inP = Math.min(l.inP ?? 0, (l.outP ?? DUR) - 1); } if (isOpt) { if (o === 'br' || o === 'bs') saveBrush(); else if (o === 'on') { saveOnion(); updateCanvas(); } return; } if (o === 'mod') updateCanvas(); else buildCanvas(); } else { applyProp(l, p, nv); updateCanvas(); } };
   let v = getV();
   const r0 = fl.getBoundingClientRect(), cy0 = r0.top + r0.height / 2, x0 = e.clientX; let lastX = e.clientX, moved = false;
   const badge = $('#spd');

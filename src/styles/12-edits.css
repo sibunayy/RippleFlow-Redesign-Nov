@@ -1,0 +1,30 @@
+/* Edits after the port (Notion test checklist, "Bugs/Fixes that need to be made"). Loads after the v8 inspector pass, so
+   it only adds rules; it never changes the order of the earlier files. */
+
+/* Info pop-outs: explainer text lives behind a small (i) button instead of in the panel. */
+.ib.info { width: 22px; height: 22px; margin-left: 2px; vertical-align: middle; color: var(--faint); border-radius: 50%; }
+.ib.info .i { width: 14px; height: 14px; }
+.ib.info:hover, .ib.info[aria-expanded="true"] { color: var(--acc-text); }
+.kv > span:has(> .ib.info), .kv > span { display: inline-flex; align-items: center; gap: 2px; }
+.pop.infopop { max-width: 240px; padding: 10px 12px; font-size: var(--fs-s); line-height: 1.4; color: var(--text); user-select: none; }
+
+/* Inspector header: "Layer type – name", the name underlined and editable. */
+#rpanel .phead .nline { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+#rpanel .phead .nline .ity { flex: none; font-size: var(--fs-s); color: var(--muted); }
+#rpanel .phead .nline .idash { flex: none; color: var(--faint); }
+#rpanel .phead .nline .lname { flex: 1; min-width: 0; width: auto; margin-left: 0; padding: 0 0 1px; min-height: 28px; border: 0; border-bottom: 1px solid var(--faint); border-radius: 0; background: transparent; font-weight: 650; }
+#rpanel .phead .nline .lname:hover { background: transparent; border-bottom-color: var(--muted); }
+#rpanel .phead .nline .lname:focus { background: transparent; box-shadow: none; border-bottom-color: rgb(var(--acc)); }
+
+/* Layer switches (hide, lock, solo) as small icons at the top of Transform. */
+.lsw { display: flex; align-items: center; gap: 2px; padding: 0 0 4px; }
+.lsw > span { margin-right: auto; font-size: var(--fs-s); color: var(--muted); }
+.ib.sm { width: 30px; height: 28px; }
+
+/* Frame-by-frame toggle in the middle of the header. */
+.fbf-toggle { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--surface-2); box-shadow: var(--rest); color: var(--muted); font-size: var(--fs-s); font-weight: 600; cursor: pointer; flex: none; }
+.fbf-toggle:hover { color: var(--text); }
+.fbf-toggle.on { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
+.line-btn.lit { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
+.app.portrait .fbf-toggle span { display: none; }
+.app.portrait .fbf-toggle { padding: 0 9px; }

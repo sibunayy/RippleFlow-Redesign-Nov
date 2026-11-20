@@ -9,6 +9,9 @@ import { fmt, grpState, kdLabel, sec, tc } from './controls';
 import { easingBlock } from './easing';
 import { fxView } from './effects';
 import { propsView } from './props-view';
+import { repHtml } from './extras';
+import { repN } from '../../anim/pose';
+import { fbfView } from '../../drawing/workspace';
 
 export function renderRight() {
   const el = $('#rpanel');
@@ -22,6 +25,11 @@ export function renderRight() {
     const n = S.keys.length;
     head = `<span class="chip-dot" style="background:rgb(var(--acc))"></span><div><h2>Easing</h2><div class="sub">${n ? `${n} keyframe${n > 1 ? 's' : ''} selected` : 'No keyframes selected'}</div></div>`;
     body = `<div class="sec-b" style="padding-top:4px">${easingBlock(false)}</div>`;
+  } else if (S.right === 'dup') {
+    if (!l) { head = `<div><h2>Duplicator</h2><div class="sub">No layer selected</div></div>`; body = `<p class="hint">Select a layer to make copies of it.</p>`; }
+    else { head = `<span class="chip-dot" style="background:${l.hue}"></span><div style="min-width:0"><h2 style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.name)}</h2><div class="sub">${l.rep && l.rep.on ? repN(l) + ' copies' : 'Duplicator off'}</div></div>`; body = `<div class="sec-b" style="padding-top:4px">${repHtml(l)}</div>`; }
+  } else if (S.right === 'fbf') {
+    ({ head, body } = fbfView());
   } else if (!l) {
     head = `<div><h2>${S.right === 'effects' ? 'Effects' : 'Composition'}</h2><div class="sub">${esc(projName)} · 1920×1080 · 30 fps · ${DUR / FPS} s</div></div>`;
     body = `<p class="hint">Select a layer on the canvas or in Layers to edit it. Use ＋ to add text, shapes or media.</p>

@@ -67,6 +67,8 @@ export function drawDown(e) {
   const B = S.brush, cur = brushCur(), [p, alt] = penData(e);
   const s = { k: tool === 'erase' ? 'erase' : 'brush', pre: B.pre, c: B.c, sz: cur.sz, op: cur.op, pts: [[Math.round(x * 10) / 10, Math.round(y * 10) / 10, p, alt]] };
   const stt = {}; let cancelled = false, folded = false;
+  // Pen smoothing: each new point moves part of the way to the pen (1 = follow exactly), so shaky lines come out steadier.
+  const follow = 1 - Math.min(0.9, (B.sm || 0) / 100 * 0.9); let sx = x, sy = y, lastRaw = null;
   inkSetup(l);
   if (s.k === 'erase') { const er = celRaster(c); liveHide = l.id; updateCanvas(); ictx.save(); ictx.globalAlpha = 1; if (er.img && er.w) ictx.drawImage(er.img, er.x, er.y, er.w, er.h); ictx.restore(); ictx.globalCompositeOperation = 'destination-out'; stampStroke(ictx, s, stt, s.op / 100); }
   else { ink.style.opacity = s.op / 100; stampStroke(ictx, s, stt); }
@@ -76,13 +78,14 @@ export function drawDown(e) {
     if (ptrs.size > 1) { cancelled = true; inkClear(); return; }
     if (!folded && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 4) { folded = true; foldStart('drag'); }
     const evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
-    for (const q of (evs.length ? evs : [ev])) { const [qx, qy] = localPt(l, q), [qp, qa] = penData(q); const last = s.pts[s.pts.length - 1]; if (Math.hypot(qx - last[0], qy - last[1]) < 0.4) continue; s.pts.push([Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]); }
+    for (const q of (evs.length ? evs : [ev])) { let [qx, qy] = localPt(l, q); const [qp, qa] = penData(q); lastRaw = [Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]; if (follow < 1) { sx += (qx - sx) * follow; sy += (qy - sy) * follow; qx = sx; qy = sy; } const last = s.pts[s.pts.length - 1]; if (Math.hypot(qx - last[0], qy - last[1]) < 0.4) continue; s.pts.push([Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]); }
     stampStroke(ictx, s, stt, s.k === 'erase' ? s.op / 100 : 1);
   };
   const up = () => {
     vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up);
     setDragging(false); liveHide = null; foldEnd('drag');
     if (cancelled) { inkClear(); if (newCel && !c.strokes.length) l.cels = l.cels.filter((x) => x !== c); updateCanvas(); return; }
+    if (follow < 1 && lastRaw) s.pts.push(lastRaw); // finish exactly where the pen lifted
     c.strokes.push(s); c.v = (c.v || 0) + 1; rasterCel(c);
     inkClear(); commit(s.k === 'erase' ? 'Erase' : 'Brush stroke'); updateCanvas(); renderTL(); renderRight();
   };

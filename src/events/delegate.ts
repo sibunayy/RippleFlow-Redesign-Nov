@@ -48,7 +48,7 @@ export function listen() {
   document.addEventListener('click', (e) => {
     if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
     const el = (e.target as any).closest('[data-act]');
-    if (S.pop && !(e.target as any).closest('.pop') && !(el && ['menu', 'insert', 'addfx', 'colour', 'anchorpick', 'bcolour', 'onionpop', 'align'].includes(el.dataset.act))) { S.pop = null; renderPop(); renderTop(); renderStrips(); if (!el) return; }
+    if (S.pop && !(e.target as any).closest('.pop') && !(el && ['menu', 'insert', 'addfx', 'addbeh', 'info', 'colour', 'anchorpick', 'bcolour', 'onionpop', 'align'].includes(el.dataset.act))) { S.pop = null; renderPop(); renderTop(); renderStrips(); if (!el) return; }
     if (!el || el.tagName === 'LABEL') return;
     const f = A[el.dataset.act]; if (f) f(el, e);
   });

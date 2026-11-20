@@ -99,7 +99,7 @@ test('pinch zooms the canvas', async ({ page }) => {
 
 test('two-finger tap undoes and three-finger tap redoes', async ({ page }) => {
   // A hidden layer's stage group gets opacity 0.
-  await page.locator('#rpanel .phead [data-act="vis"]').click();
+  await page.locator('#rpanel .lsw [data-act="vis"]').click();
   await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '0');
   await fingerTap(page, 2);
   await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '1');
@@ -107,17 +107,30 @@ test('two-finger tap undoes and three-finger tap redoes', async ({ page }) => {
   await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '0');
 });
 
+test('two-finger undo keeps the layer selected', async ({ page }) => {
+  await page.locator('#rpanel .lsw [data-act="vis"]').click();
+  await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '0');
+  // The first finger lands on empty canvas (which deselects), then the second finger joins and the tap undoes.
+  const vp = (await page.locator('#vp').boundingBox())!;
+  await ptr(page, 'pointerdown', vp.x + 20, vp.y + vp.height - 20, { id: 31 });
+  await expect(page.locator('#rpanel #lname')).toHaveCount(0);
+  await ptr(page, 'pointerup', vp.x + 20, vp.y + vp.height - 20, { id: 31 });
+  await fingerTap(page, 2);
+  await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '1');
+  await expect(page.locator('#rpanel #lname')).toHaveValue('YOUR LOGO');
+});
+
 test('keyboard undo and redo, and the strip buttons', async ({ page }) => {
   const undo = page.locator('#lstrip [data-act="undo"]'), redo = page.locator('#lstrip [data-act="redo"]');
   await expect(undo).toBeDisabled();
   // Known quirk (ported as is): Lock only re-renders the panels, so the strip buttons may lag; the keys still work.
-  await page.locator('#rpanel .phead [data-act="lock"]').click();
+  await page.locator('#rpanel .lsw [data-act="lock"]').click();
   await page.keyboard.press('Control+z');
-  await expect(page.locator('#rpanel .phead [data-act="lock"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#rpanel .lsw [data-act="lock"]')).toHaveAttribute('aria-pressed', 'false');
   await page.keyboard.press('Control+Shift+z');
-  await expect(page.locator('#rpanel .phead [data-act="lock"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#rpanel .lsw [data-act="lock"]')).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('Control+z');
-  await expect(page.locator('#rpanel .phead [data-act="lock"]')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#rpanel .lsw [data-act="lock"]')).toHaveAttribute('aria-pressed', 'false');
   // Duplicate re-renders everything, so the strip's undo button is current.
   await page.locator('#qbar [data-act="dup"]').dispatchEvent('click');
   await expect(undo).toBeEnabled();
@@ -171,14 +184,20 @@ test('hand tool pans and zoom buttons zoom', async ({ page }) => {
   await expect.poll(async () => parseInt((await pct.textContent())!)).toBeGreaterThan(z0);
 });
 
-test('safe-area and thirds overlays, snap toggle', async ({ page }) => {
-  await page.locator('#zoom [aria-label="Safe areas"]').click();
+test('overlay button cycles off, safe areas, grid; snap toggle', async ({ page }) => {
+  const ov = page.locator('#top [data-act="guide"]');
+  await expect(ov).toHaveAttribute('aria-label', /Overlay: Off/);
+  await ov.click();
   await expect(page.locator('#stage .gd')).toHaveCount(1);
-  await expect(page.locator('#zoom [aria-label="Safe areas"]')).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('#zoom [aria-label="Thirds grid"]').click();
-  await expect(page.locator('#zoom [aria-label="Thirds grid"]')).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('#zoom [aria-label="Thirds grid"]').click();
+  await expect(ov).toHaveAttribute('aria-label', /Overlay: Safe areas/);
+  await ov.click();
+  await expect(ov).toHaveAttribute('aria-label', /Overlay: Grid/);
+  await expect(page.locator('#stage .gd')).toHaveCount(1);
+  await ov.click();
+  await expect(ov).toHaveAttribute('aria-label', /Overlay: Off/);
   await expect(page.locator('#stage .gd')).toHaveCount(0);
+  // The zoom pill no longer carries the overlay buttons.
+  await expect(page.locator('#zoom [data-act="guide"]')).toHaveCount(0);
   await page.locator('#zoom [data-act="snap"]').click();
   await expect(page.locator('#zoom [data-act="snap"]')).toHaveAttribute('aria-pressed', 'false');
 });

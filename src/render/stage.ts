@@ -110,7 +110,7 @@ export function toLocal(l, dx, dy, f = S.f) {
 export function placeSel() {
   const box = $('#selbox'), qb = $('#qbar'), anc = $('#anc'), v = vp.getBoundingClientRect(), dt = isDrawTool(S.tool), r = dt ? null : selRect();
   drawOverlay();
-  $('#bbar').classList.toggle('show', dt && !S.playing);
+  $('#bbar').classList.toggle('show', dt && !S.playing && !S.fbf);
   if (!r) { box.hidden = true; anc.hidden = true; qb.classList.remove('show'); return; }
   const multi = selIds().length > 1, l = lay(S.sel);
   box.hidden = false; box.classList.toggle('multi', multi);

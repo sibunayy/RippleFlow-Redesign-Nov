@@ -3,12 +3,13 @@ import { store } from '../../core/store';
 import { buildCanvas, gEls, layoutStage, stage, vp } from '../../render/stage';
 import { renderRight } from '../../ui/inspector/index';
 import { renderFloats } from '../../ui/floats';
+import { renderTop } from '../../ui/topbar';
 import { fitSelOn, setFitSelOn } from '../../events/delegate';
 import { A } from '../index';
 
 /** Canvas view: zoom, fit, snap and guides. Keys are data-act names. */
 export const viewActions = {
-  guide: (el) => { S.guide = el.dataset.v; store.set('guide', S.guide); buildCanvas(); renderRight(); renderFloats(); },
+  guide: (el) => { S.guide = el.dataset.v; store.set('guide', S.guide); buildCanvas(); renderRight(); renderFloats(); renderTop(); },
   zoom: (el) => { S.zoom = Math.max(.25, Math.min(6, S.zoom * +el.dataset.v)); layoutStage(); },
   fit: () => {
     /* One control for both: tap fits the selection (when there is one); tap again returns to the whole workspace. */

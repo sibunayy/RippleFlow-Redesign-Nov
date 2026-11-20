@@ -5,11 +5,12 @@ import { TF } from '../../model/schema';
 import { animated, lay } from '../../anim/interpolate';
 import { S } from '../../state/state';
 import { selectedKeyObjs } from '../../anim/clipboard';
+import { info } from './controls';
 
 const EZ_SHORT = { out: 'Out', in: 'In', inout: 'In-out', back: 'Back', anticip: 'Antic.', bounce: 'Over' };
 export function easingBlock(compact) {
   const ks = selectedKeyObjs(), l = S.sel && lay(S.sel), lk = l ? TF.filter((p) => animated(l.p[p])).reduce((n, p) => n + l.p[p].keys.length, 0) : 0;
-  if (!ks.length) return `<p class="hint" style="padding:0">Tap keyframes in the timeline to ease them. Hold a keyframe for quick presets.</p>`
+  if (!ks.length) return `<div class="kv"><span>No keyframes selected ${info('Tap keyframes in the timeline to ease them. Hold a keyframe for quick presets.')}</span></div>`
     + `<button class="line-btn" data-act="keysall" ${lk ? '' : 'disabled'}>${ic('selall', 's')}Select all keyframes on ${l ? esc(l.name) : 'layer'}</button>`;
   const a = earr(ks[0]), cur = Array.isArray(ks[0].e) ? null : ks[0].e, hold = cur === 'hold';
   const pts = (x, y) => [12 + x * 256, 112 - y * 92];
@@ -29,6 +30,6 @@ export function easingBlock(compact) {
     <div class="three"><button class="line-btn" data-act="ezcopy" title="Copy this curve">${ic('copy', 's')}Copy</button><button class="line-btn" data-act="ezpaste" ${S.easeClip ? '' : 'disabled'} title="Paste the copied curve">Paste</button><button class="line-btn" data-act="ezrev" ${hold ? 'disabled' : ''} title="Mirror the curve (ease in ↔ ease out)">${ic('arrowH', 's')}Mirror</button></div>
     <button class="line-btn" data-act="keysall" ${lk > ks.length ? '' : 'disabled'}>${ic('selall', 's')}Select all keyframes (${lk})</button>
     ${compact ? '' : `<div class="kv"><span>${ks.length} keyframe${ks.length > 1 ? 's' : ''} · ${mixed ? 'Mixed' : ename(ks[0])}</span><span class="tc">${hold ? 'hold' : a.map((n) => n.toFixed(2)).join(', ')}</span></div>
-    <p class="hint" style="padding:0">Hold keeps the value until the next keyframe, then jumps.</p>`}
+    <div class="kv"><span>Hold ease ${info('Hold keeps the value until the next keyframe, then jumps.')}</span></div>`}
   </div>`;
 }

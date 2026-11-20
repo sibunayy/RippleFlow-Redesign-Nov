@@ -13,18 +13,24 @@ import { renderRight } from '../../ui/inspector/index';
 import { renderTL } from '../../ui/timeline';
 import { seek } from '../../ui/layout';
 import { $$ } from '../../core/dom';
+import { stepCel, toggleFbf } from '../../drawing/workspace';
 
 /** Tools, brush and drawing cels. Keys are data-act names. */
 export const drawingActions = {
   tool: (el) => { S.tool = el.dataset.v; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); },
-  pickdraw: (el) => { S.drawMode = S.tool = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); },
-  bpre: (el) => { S.brush.pre = el.dataset.v; if (S.tool !== 'brush') { S.tool = S.drawMode = 'brush'; renderStrips(); } saveBrush(); renderFloats(); },
-  btog: (el) => { const k = el.dataset.k; S.brush[k] = !S.brush[k]; saveBrush(); renderBrushBar(); toast(k === 'pr' ? (S.brush.pr ? 'Pressure changes width' : 'Pressure off') : (S.brush.tl ? 'Tilt the Pencil to shade' : 'Tilt off')); },
+  pickdraw: (el) => { S.drawMode = S.tool = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); if (S.fbf) renderRight(); },
+  bpre: (el) => { S.brush.pre = el.dataset.v; if (S.tool !== 'brush') { S.tool = S.drawMode = 'brush'; renderStrips(); } saveBrush(); renderFloats(); if (S.fbf) renderRight(); },
+  btog: (el) => { const k = el.dataset.k; S.brush[k] = !S.brush[k]; saveBrush(); renderBrushBar(); if (S.fbf) renderRight(); toast(k === 'pr' ? (S.brush.pr ? 'Pressure changes width' : 'Pressure off') : (S.brush.tl ? 'Tilt the Pencil to shade' : 'Tilt off')); },
   bcolour: () => { S.pop = { type: 'color', key: 'brush' }; renderPop(); },
+  fbf: () => toggleFbf(),
+  celprev: () => stepCel(-1),
+  celnext: () => stepCel(1),
+  onsetnb: (el) => { S.onion.nb = +el.dataset.v; S.onion.on = true; saveOnion(); updateCanvas(); renderTL(); renderRight(); },
+  onsetna: (el) => { S.onion.na = +el.dataset.v; S.onion.on = true; saveOnion(); updateCanvas(); renderTL(); renderRight(); },
   celadd: () => addCel(false),
   celdup: () => addCel(true),
   celclear: () => { const l = lay(S.sel), i = l && celIdx(l, S.f); if (!l || i < 0) return; l.cels[i].strokes = []; l.cels[i].v = (l.cels[i].v || 0) + 1; commit('Clear cel'); updateCanvas(); renderRight(); renderTL(); toast('Cel cleared', true); },
-  onion: () => { S.onion.on = !S.onion.on; saveOnion(); updateCanvas(); renderTL(); if (S.pop && S.pop.type === 'onion') renderPop(); },
+  onion: () => { S.onion.on = !S.onion.on; saveOnion(); updateCanvas(); renderTL(); if (S.fbf) renderRight(); if (S.pop && S.pop.type === 'onion') renderPop(); },
   onionpop: (el) => { const r = el.getBoundingClientRect(); S.pop = { type: 'onion', x: r.left + r.width / 2, y: r.top + 360 }; renderPop(); },
   onset: (el) => { const k = el.dataset.k; if (k === 'tint' || k === 'lb') S.onion[k] = !S.onion[k]; else S.onion[k] = +el.dataset.v; if (k !== 'lb' && k !== 'tint') S.onion.on = true; saveOnion(); updateCanvas(); renderTL(); renderPop(); },
   celop: (el) => {

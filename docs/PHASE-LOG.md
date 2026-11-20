@@ -137,3 +137,35 @@ Nathan approved this phase (HANDOFF section 13, decision 3).
 - New `tests/parity/12-pwa.spec.ts` (build only): the manifest and icons load, and the app reloads with the
   network off.
 - Parity: 242/242 on the build, 238/238 on the dev server. Unit: 25/25.
+
+## Post-V1 edits: Notion test checklist, "Bugs/Fixes that need to be made"
+
+These change the UI on purpose, so the screenshots and the legacy DOM comparison no longer apply (see below).
+Work is local and on the Claude artifact copy only. Nothing has been pushed to GitHub since V1.
+
+1. **Two-finger undo keeps the selection.** The first finger of the tap used to deselect (empty canvas) before the
+   second landed. The selection from the moment the first finger touched is restored after undo/redo.
+2. **Properties panel.**
+   - Explainer text moved into small (i) buttons that open a pop-out (`info()` in `controls.ts`, pop-out in `popovers.ts`).
+   - Header is one line, "Layer type – name", the name underlined and editable. The two-line header and the boxed rename field are gone.
+   - Align is a pop-out button in the right strip, above Help. Easing moved down beside it.
+   - Behaviours moved to the Effects tab as their own section. Duplicator has its own tab (right strip, under Effects).
+   - Properties now has Transform, Layer, Appearance (and Fill), Text animators, Timing & links.
+3. **Zoom pill.** Safe area and Grid buttons are gone. One header button, next to the ⋯ menu, cycles Off, Safe areas, Grid.
+4. **Behaviours.** "Add behaviour" opens a menu like Add effect.
+5. **Duplicator.** Own tab (item 2).
+6. **Layer Hide / Lock / Solo** are small icons at the top of Transform.
+7. **Frame by frame.** A header toggle (centre) opens a drawing workspace: left panel folded, a brush panel on the
+   right (tool, brush, size, opacity, smoothing, colour, pressure, tilt, onion skin, cel stepping and adding),
+   timeline at 30% height. Switching it off restores the panels, timeline and tool. New **pen smoothing**
+   (Brush option, default 20%) steadies strokes and ends exactly where the pen lifts.
+
+Interpretations to confirm with Nathan: "Easing tabs above the help button" is the Easing tab button moved down
+beside Align; "Behaviours in the Effects tab" is one Behaviours section.
+
+Tests: the controls that moved were updated, new tests cover selection after undo, info pop-outs, header, overlay
+cycle, behaviours menu, Duplicator tab, workspace toggle and smoothing. Reference screenshots were re-taken
+(`tests/reference/`). `10-dom-parity` is skipped unless `RF_LEGACY_PARITY=1`, because the DOM now differs from the
+prototype on purpose. New styles are in `src/styles/12-edits.css`, loaded after the v8 inspector block.
+
+Artifact copy: `npm run build:artifact` writes `dist-artifact/`; the page fragment is `dist-artifact/rippleflow.html`.

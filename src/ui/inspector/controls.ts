@@ -45,6 +45,8 @@ export function sec(id, title, inner, extra = '') {
   return `<div class="sec"><button class="sec-h" data-act="sec" data-v="${id}" aria-expanded="${open}">${title}${extra}${ic('down', 'xs chev')}</button>${open ? `<div class="sec-b">${inner}</div>` : ''}</div>`;
 }
 /* ---------- inspector building blocks ---------- */
+/** Small info button. Tapping it opens a pop-out with the explainer text, so panels stay short. */
+export const info = (text: string) => `<button class="ib info" data-act="info" data-t="${text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" aria-haspopup="true" aria-label="More info" title="More info">${ic('info', 'xs')}</button>`;
 const fmtv = (v, u) => { const r = Math.round((+v || 0) * 10) / 10; return (Number.isInteger(r) ? String(r) : r.toFixed(1)) + (u || ''); };
 // Plain (non-keyframed) parameter: o = 'lp' layer · 'fx' effect · 'rep' duplicator · 'mod' behaviour
 export function pf(obj, o, idx, key, label, min, max, step, u = '', int = false) {
