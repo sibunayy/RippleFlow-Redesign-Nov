@@ -31,17 +31,22 @@ export function pose(l, f, i) {
 export function repXf(l, q, i) {
   const R = l.rep, n = Math.max(1, R.count | 0);
   if (R.mode === 'radial') { const a = i / n * Math.PI * 2 - Math.PI / 2; q.x += Math.cos(a) * R.rad; q.y += Math.sin(a) * R.rad; if (R.align) q.r += i / n * 360; }
-  else if (R.mode === 'grid') { const c = Math.max(1, R.cols | 0), rows = Math.ceil(n / c); q.x += ((i % c) - (c - 1) / 2) * R.dx; q.y += (Math.floor(i / c) - (rows - 1) / 2) * R.dy; }
+  // Grid: rows use the vertical spacing, or the horizontal one when that is 0 (the default), so a grid never collapses into a line.
+  else if (R.mode === 'grid') { const c = Math.max(1, R.cols | 0), rows = Math.ceil(n / c), gy = R.dy || R.dx; q.x += ((i % c) - (c - 1) / 2) * R.dx; q.y += (Math.floor(i / c) - (rows - 1) / 2) * gy; }
   else { q.x += R.dx * i; q.y += R.dy * i; }
   q.r += R.rot * i; q.s *= Math.pow(Math.max(0, 1 + R.sc / 100), i); q.o *= Math.pow(Math.max(0, 1 - R.fade / 100), i);
 }
 export function mat(q) { const m = new DOMMatrix(); m.translateSelf(q.x, q.y); m.rotateSelf(q.r); m.scaleSelf(Math.max(0, q.s) / 100 * (q.fx || 1), Math.max(0, q.s) / 100 * (q.fy || 1)); m.translateSelf(-q.ax, -q.ay); return m; }
 export const mstr = (m) => `matrix(${m.a.toFixed(5)} ${m.b.toFixed(5)} ${m.c.toFixed(5)} ${m.d.toFixed(5)} ${m.e.toFixed(3)} ${m.f.toFixed(3)})`;
 export function world(l, f, d = 0) { const own = mat(pose(l, f, 0)); return l.parent && lay(l.parent) && d < 8 ? relM(l, f, d).multiply(own) : own; }
-/* A parented layer follows its parent's movement since the frame it was parented, so it keeps its look at that frame. */
+/* A parented layer follows its parent's movement since it was parented, so it keeps its look at that moment.
+   The parent's placement at that moment is stored on the child (pw). Before, it was recalculated from the parent's
+   current values, so moving a parent that has no keyframes moved that reference too and the child stayed put. */
+export const parentRef = (p, f, d = 0) => { const m = world(p, f, d); return [m.a, m.b, m.c, m.d, m.e, m.f]; };
 export function relM(l, f, d) {
   const p = lay(l.parent); let inv;
-  try { inv = world(p, l.pt || 0, d + 1).inverse(); if (!isFinite(inv.a) || !isFinite(inv.e)) inv = new DOMMatrix(); } catch { inv = new DOMMatrix(); }
+  if (!Array.isArray(l.pw) || l.pw.length !== 6) l.pw = parentRef(p, l.pt || 0, d + 1); // older projects: fix the reference now
+  try { inv = new DOMMatrix(l.pw).inverse(); if (!isFinite(inv.a) || !isFinite(inv.e)) inv = new DOMMatrix(); } catch { inv = new DOMMatrix(); }
   return world(p, f, d + 1).multiply(inv);
 }
 export const repN = (l) => (l.rep && l.rep.on ? Math.max(1, Math.min(60, Math.round(l.rep.count) || 1)) : 1);

@@ -3,7 +3,7 @@ import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
 import { stage, updateCanvas } from '../render/stage';
 import { postT } from '../fx/defs';
-import { renderShader } from '../shader/runtime';
+import { fxShaderSize, renderShader, shaderOf } from '../shader/runtime';
 import { setExporting } from '../drawing/cels';
 
 /* Draw the composition at frame f into ctx (w x h). */
@@ -13,8 +13,9 @@ export async function rasterFrame(f, w, h, ctx, transparent) {
   setExporting(false);
   const bg = svg.querySelector(':scope > rect');
   if (bg) { if (transparent) bg.remove(); else { bg.removeAttribute('style'); bg.setAttribute('fill', compBg || getComputedStyle(document.documentElement).getPropertyValue('--comp-bg').trim() || '#15120f'); } }
-  svg.querySelectorAll('foreignObject.shfo').forEach((fo) => {
-    const l = lay(fo.dataset.sh), rt = l && l.vis ? renderShader(l, postT(l, f), Math.min(1920, w), Math.min(1080, h)) : null;
+  svg.querySelectorAll('foreignObject.shfo, foreignObject.shfx').forEach((fo) => {
+    const sl = shaderOf(fo), owner = fo.dataset.sh ? sl : lay(String(fo.dataset.fx || '').split('~fx')[0]);
+    const rt = sl && owner && owner.vis ? (fo.dataset.sh ? renderShader(sl, postT(owner, f), Math.min(1920, w), Math.min(1080, h), false) : renderShader(sl, postT(owner, f), fxShaderSize, Math.round(fxShaderSize * 9 / 16), false)) : null;
     if (rt && rt.ok) { const im = document.createElementNS('http://www.w3.org/2000/svg', 'image'); ['x', 'y', 'width', 'height'].forEach((k) => im.setAttribute(k, fo.getAttribute(k))); im.setAttribute('preserveAspectRatio', 'none'); im.setAttribute('href', rt.canvas.toDataURL('image/png')); fo.replaceWith(im); } else fo.remove();
   });
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); svg.setAttribute('width', w); svg.setAttribute('height', h);

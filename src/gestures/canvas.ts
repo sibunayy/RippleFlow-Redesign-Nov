@@ -1,3 +1,4 @@
+import { cTarget } from '../ui/color-picker';
 import { $ } from '../core/dom';
 import { layers } from '../model/project';
 import { lay, val } from '../anim/interpolate';
@@ -42,7 +43,7 @@ export function canvasDown(e) {
     const g = e.target.closest('g[data-id]'), src = g && lay(g.dataset.id), dst = S.sel && lay(S.sel);
     const key: string = typeof S.eyedrop === 'string' ? S.eyedrop : 'hue'; S.eyedrop = false; renderFloats();
     if (key === 'brush' && src) { S.brush.c = src.hue; saveBrush(); renderBrushBar(); toast(`Brush colour ${String(src.hue).toUpperCase()} from ${src.name}`); return; }
-    if (src && dst) { dst[key] = src.hue; commit('Pick colour'); buildCanvas(); renderAll(); toast(`Picked ${String(src.hue).toUpperCase()} from ${src.name}`, true); }
+    if (src && dst) { const [o, k] = cTarget(dst, key); o[k] = src.hue; commit('Pick colour'); buildCanvas(); renderAll(); toast(`Picked ${String(src.hue).toUpperCase()} from ${src.name}`, true); }
     else toast('No layer there. Tap the eyedropper and try again.');
     return;
   }

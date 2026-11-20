@@ -61,7 +61,7 @@ test('every effect in the Add effect menu can be added', async ({ page }) => {
   await openRight(page, 'Effects');
   await page.locator('#rpanel [data-act="addfx"]').first().click();
   const items = page.locator('#layer-pop [data-act="fxadd"]');
-  await expect(items).toHaveCount(23); // the menu lists 23 effects (the brief says 25; the source menu has 23)
+  await expect(items).toHaveCount(24); // 23 effects from the source menu plus Shader fill
   const ids = await items.evaluateAll((b) => b.map((e) => (e as HTMLElement).dataset.v!));
   await page.keyboard.press('Escape');
   // Bypass first: 20+ live SVG filters make the page too slow to drive.

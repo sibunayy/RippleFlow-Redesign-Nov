@@ -67,3 +67,15 @@ describe('pose, mat and world', () => {
     expect(world(kid, 10).e).toBeCloseTo(105, 6);
   });
 });
+
+describe('parenting (checklist fix)', () => {
+  it('a child follows a parent that has no keyframes', () => {
+    const p = layer({ id: 'p' }), c = layer({ id: 'c', parent: 'p', pt: 0 });
+    p.p.x = st(100); c.p.x = st(300);
+    setLayers([c, p]);
+    const before = world(c, 0).e;
+    expect(before).toBeCloseTo(300, 3); // linking keeps the child where it was
+    p.p.x = st(160);
+    expect(world(c, 0).e).toBeCloseTo(360, 3);
+  });
+});

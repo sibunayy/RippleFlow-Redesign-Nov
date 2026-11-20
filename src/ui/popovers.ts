@@ -13,7 +13,7 @@ import { pf } from './inspector/controls';
 import { selectedKeyObjs } from '../anim/clipboard';
 import { renderRight } from './inspector/index';
 import { renderTL } from './timeline';
-import { cp, hexToHsv, setCp } from './color-picker';
+import { cTarget, cp, hexToHsv, setCp } from './color-picker';
 
 export function renderPop() {
   // closing the colour picker commits its live edits as one undo step
@@ -69,7 +69,7 @@ export function renderPop() {
     pos = { left: Math.max(8, Math.min(S.pop.x - a.left - 135, a.width - 280)), top: Math.max(8, S.pop.y - a.top - 300) };
   } else if (S.pop.type === 'fx') {
     const b = $('#rpanel [data-act=addfx]').getBoundingClientRect();
-    const groups: [string, string[]][] = [['Stylise', ['glow', 'bloom', 'shadow', 'longshadow', 'outline', 'halftone', 'pixelate', 'grain', 'vignette']], ['Blur', ['blur', 'dirblur']], ['Distort', ['ripple', 'roughen', 'rgbsplit', 'glitch']], ['Colour', ['hue', 'sat', 'bright', 'tint', 'duotone', 'posterize', 'invert']], ['Time', ['postime']]];
+    const groups: [string, string[]][] = [['Stylise', ['glow', 'bloom', 'shadow', 'longshadow', 'outline', 'halftone', 'pixelate', 'grain', 'vignette']], ['Blur', ['blur', 'dirblur']], ['Distort', ['ripple', 'roughen', 'rgbsplit', 'glitch']], ['Colour', ['hue', 'sat', 'bright', 'tint', 'duotone', 'posterize', 'invert']], ['Generate', ['shader']], ['Time', ['postime']]];
     html = `<div class="pop menu" role="menu" aria-label="Add effect" style="max-height:${a.height - 24}px;overflow:auto">${groups.map(([g, ids]) => `<div class="mlbl">${g}</div>${ids.map((id) => `<button class="mi" role="menuitem" data-act="fxadd" data-v="${id}">${FXDEF[id].name}</button>`).join('')}`).join('')}</div>`;
     pos = { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 470)) };
   } else if (S.pop.type === 'info') {
@@ -92,16 +92,16 @@ export function renderPop() {
       <div class="mhr"></div><button class="mi danger" role="menuitem" data-act="fxdel" data-v="${i}">${ic('trash', 's')}Remove</button></div>`;
     pos = { left: Math.max(8, Math.min(S.pop.x - a.left - 220, a.width - 260)), top: Math.max(8, Math.min(S.pop.y - a.top + 8, a.height - 300)) };
   } else if (S.pop.type === 'color') {
-    const key = S.pop.key || 'hue', l = key === 'brush' ? S.brush : lay(S.sel), b = (key === 'brush' ? ($('#bbar .bcol') || $('#rpanel .bcol')) : $(`#rpanel .cchip[data-key="${key}"]`)).getBoundingClientRect(), inPanel = key === 'brush' && !!S.fbf;
+    const key = S.pop.key || 'hue', l0 = key === 'brush' ? S.brush : lay(S.sel), [l, ck] = key === 'brush' ? [l0, key] : cTarget(l0, key), b = (key === 'brush' ? ($('#bbar .bcol') || $('#rpanel .bcol')) : $(`#rpanel .cchip[data-key="${key}"]`)).getBoundingClientRect(), inPanel = key === 'brush' && !!S.fbf;
     if (key === 'brush') l.brush = l.c;
-    if (!cp) setCp({ ...hexToHsv(l[key] || '#ffffff'), key, dirty: false });
+    if (!cp) setCp({ ...hexToHsv(l[ck] || '#ffffff'), key, dirty: false });
     const sw = [...new Set([...layers.map((x) => String(x.hue).toLowerCase()).filter((h) => /^#[0-9a-f]{6}$/.test(h)), ...HUES.map((h) => h.toLowerCase())])].slice(0, 14);
     html = `<div class="pop cp" role="dialog" aria-label="Colour">
       <div class="mlbl" style="padding:2px 4px 0">Document colours</div>
-      <div class="swatches">${sw.map((h) => `<button class="sw ${h === String(l[key] || '').toLowerCase() ? 'on' : ''}" style="background:${h}" data-act="cpsw" data-v="${h}" aria-label="Colour ${h}"></button>`).join('')}</div>
+      <div class="swatches">${sw.map((h) => `<button class="sw ${h === String(l[ck] || '').toLowerCase() ? 'on' : ''}" style="background:${h}" data-act="cpsw" data-v="${h}" aria-label="Colour ${h}"></button>`).join('')}</div>
       <div class="sv" data-cp="sv" style="--hue:${cp.h}" role="slider" aria-label="Saturation and brightness" aria-valuenow="${Math.round(cp.s * 100)}"><i style="left:${cp.s * 100}%;top:${(1 - cp.v) * 100}%"></i></div>
       <div class="hue" data-cp="hue" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" aria-valuenow="${Math.round(cp.h)}"><i style="left:${cp.h / 360 * 100}%"></i></div>
-      <div class="cprow"><span class="cpchip" style="background:${l[key]}"></span><input id="cphex" class="txt tc" value="${String(l[key]).toUpperCase()}" aria-label="Hex colour" maxlength="7" spellcheck="false" autocomplete="off"><button class="ib" data-act="eyedrop" aria-label="Pick colour from canvas" title="Eyedropper">${ic('eyedrop', 's')}</button></div>
+      <div class="cprow"><span class="cpchip" style="background:${l[ck]}"></span><input id="cphex" class="txt tc" value="${String(l[ck]).toUpperCase()}" aria-label="Hex colour" maxlength="7" spellcheck="false" autocomplete="off"><button class="ib" data-act="eyedrop" aria-label="Pick colour from canvas" title="Eyedropper">${ic('eyedrop', 's')}</button></div>
       <p class="hint" style="padding:0 4px">The eyedropper picks a layer's colour in this prototype.</p></div>`;
     pos = inPanel ? { right: Math.max(8, a.right - b.left + 8), top: Math.max(8, Math.min(b.top - a.top - 120, a.height - 400)) } : key === 'brush' ? { left: Math.max(8, Math.min(b.left - a.left - 110, a.width - 272)), top: Math.max(8, b.top - a.top - 410) } : { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 400)) };
   } else if (S.pop.type === 'anchor') {

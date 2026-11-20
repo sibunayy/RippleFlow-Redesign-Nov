@@ -53,7 +53,7 @@ function shapeSvg0(l) {
     case 'solid': return `<rect x="-960" y="-540" width="1920" height="1080" fill="${l.hue}"/>`;
     case 'shader': return `<rect x="-960" y="-540" width="1920" height="1080" fill="url(#shd-${l.id})" class="shph"/><foreignObject class="shfo" data-sh="${l.id}" x="-960" y="-540" width="1920" height="1080"></foreignObject>`;
     case 'audio': return '';
-    case 'image': return `<image href="${l.src}" x="${-l.w / 2}" y="${-l.h / 2}" width="${l.w}" height="${l.h}"/>`;
+    case 'image': return `<image href="${l.src}" x="${-l.w / 2 + (l.ox || 0)}" y="${-l.h / 2 + (l.oy || 0)}" width="${l.w}" height="${l.h}"/>`;
     case 'draw': return `<g class="onion"></g><image class="cel" x="0" y="0" width="0" height="0" preserveAspectRatio="none" href="${BLANK}"/>`;
     case 'comp': return `<rect x="-300" y="-170" width="600" height="340" rx="10" fill="none" stroke="${l.hue}" stroke-width="4" stroke-dasharray="14 10"/><text text-anchor="middle" dominant-baseline="central" font-family="-apple-system, sans-serif" font-size="40" fill="${l.hue}">${esc(l.name)}</text>`;
     default: return `<rect x="-24" y="-24" width="48" height="48" fill="transparent"/>`;

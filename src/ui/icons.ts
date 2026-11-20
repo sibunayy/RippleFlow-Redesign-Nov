@@ -75,6 +75,7 @@ Object.assign(P, {
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16v-5M12 8h.01',
   fbf: 'M3 5h18v14H3zM8 5v14M16 5v14M3 9.5h5M3 14.5h5M16 9.5h5M16 14.5h5',
   smooth: 'M3 16c3.5-10 6.5-10 9 0s5.5 10 9 0',
+  bake: 'M12 3l9 4.5-9 4.5-9-4.5zM3 12l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5',
   celadd: 'M4 5h16v14H4zM12 9v6M9 12h6', press: 'M3 12h3l3-8 4 16 3-8h5', tilt: 'M4 20h16M6 20L17 5M11 20a7 7 0 0 0-1.5-4.3',
 });
 export const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] && P[n].startsWith('<') ? P[n] : `<path d="${P[n] || ''}"/>`}</svg>`;

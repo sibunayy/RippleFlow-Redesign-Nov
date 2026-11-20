@@ -3,7 +3,7 @@ import { FPS, layers } from '../model/project';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
 import { buildCanvas, stage, updateCanvas } from '../render/stage';
-import { SH, SH_GLSL_POST, SH_GLSL_PRE, SH_WGSL_POST, SH_WGSL_PRE, shLang, shPresetCode } from './presets';
+import { SH, SHP, SH_GLSL_POST, SH_GLSL_PRE, SH_WGSL_POST, SH_WGSL_PRE, shLang, shPresetCode } from './presets';
 import { renderRight } from '../ui/inspector/index';
 import { renderDialog } from '../ui/dialog';
 
@@ -11,7 +11,7 @@ export let gpuState = (navigator as any).gpu ? 'pending' : 'none', gpuDev = null
 if ((navigator as any).gpu) {
   (navigator as any).gpu.requestAdapter().then((a) => (a ? a.requestDevice() : null)).then((d) => {
     gpuDev = d; gpuState = d ? 'ok' : 'none'; if (d) { gpuFmt = (navigator as any).gpu.getPreferredCanvasFormat(); d.lost.then(() => { gpuState = 'none'; gpuDev = null; }); }
-    if (layers.some((l) => l.type === 'shader')) { for (const k in SH) delete SH[k]; buildCanvas(); renderRight(); }
+    if (layers.some((l) => l.type === 'shader' || l.fx.some((e) => e.id === 'shader'))) { for (const k in SH) delete SH[k]; buildCanvas(); renderRight(); }
   }).catch(() => { gpuState = 'none'; });
 }
 export function shSource(l) {
@@ -75,23 +75,62 @@ async function shBuildGpu(rt, code) {
   };
   rt.ok = true;
 }
+/* The shader draws on a GPU canvas that is never put on the page. Each frame is copied onto plain 2D canvases inside
+   the layer (one per duplicator copy). Safari draws a GPU canvas inside the SVG at screen size and outside the
+   composition; a plain canvas follows the layer's position, size and the composition edge like any other layer. */
 function shRuntime(l) {
   const src = shSource(l), key = src.lang + '|' + gpuState + '|' + src.code;
   let rt = SH[l.id];
   if (rt && rt.key === key) return rt;
-  const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 720; cv.className = 'shcv';
-  rt = SH[l.id] = { key, lang: src.lang, canvas: cv, ok: false, err: '', draw: null };
+  const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 720;
+  rt = SH[l.id] = { key, lang: src.lang, canvas: cv, views: rt ? rt.views : [], ok: false, err: '', draw: null };
   if (src.lang === 'wgsl') shBuildGpu(rt, src.code).then(() => { if (SH[l.id] === rt) { updateCanvas(); if (S.sel === l.id) renderRight(); if (S.dialog === 'shader') renderDialog(); } });
   else shBuildGl(rt, src.code);
   return rt;
 }
-export function renderShader(l, f, w?, h?) {
+function newView() {
+  const v = document.createElement('canvas'); v.className = 'shcv';
+  // willReadFrequently keeps this canvas off the GPU, so Safari composites it with the SVG like an image.
+  v.getContext('2d', { willReadFrequently: true } as any);
+  return v;
+}
+function blit(rt) {
+  for (const v of rt.views) {
+    if (!v.isConnected) continue;
+    if (v.width !== rt.canvas.width || v.height !== rt.canvas.height) { v.width = rt.canvas.width; v.height = rt.canvas.height; }
+    const g = v.getContext('2d', { willReadFrequently: true } as any); if (!g) continue;
+    g.clearRect(0, 0, v.width, v.height); g.drawImage(rt.canvas, 0, 0);
+  }
+}
+export function renderShader(l, f, w?, h?, show = true) {
   const rt = shRuntime(l); if (!rt.ok || !rt.draw) return rt;
   w = w || 1280; h = h || 720;
   if (rt.canvas.width !== w || rt.canvas.height !== h) { rt.canvas.width = w; rt.canvas.height = h; }
-  try { rt.draw(shUniforms(l, f, w, h)); } catch (e) { rt.ok = false; rt.err = (e && e.message) || String(e); }
+  try { rt.draw(shUniforms(l, f, w, h)); if (show) blit(rt); } catch (e) { rt.ok = false; rt.err = (e && e.message) || String(e); }
   return rt;
 }
+
+/* ---- Shader fill effect: a shader preset painted inside any layer's shape (Effects tab › Add effect › Shader fill) ---- */
+export const fxShaderId = (l, j) => `${l.id}~fx${j}`;
+/** The shader settings for a layer's Shader fill effect, in the same form as a shader layer. */
+export function fxShaderLayer(l, j) {
+  const e = l.fx[j], P = SHP[e.preset] || SHP.liquid, o: any = { id: fxShaderId(l, j), preset: e.preset || 'liquid', hue: e.c1 || P.c[0], hue2: e.c2 || P.c[1], spd: e.speed ?? 100, inP: l.inP ?? 0, opaque: true };
+  P.def.forEach((v, k) => { o['sp' + k] = v; });
+  return o;
+}
+/** The layer a shader canvas element belongs to: a shader layer, or the shader fill effect of a layer. */
+export function shaderOf(fo) {
+  if (fo.dataset.sh) return lay(fo.dataset.sh);
+  const [id, j] = String(fo.dataset.fx || '').split('~fx'), l = lay(id);
+  return l && l.fx[+j] && l.fx[+j].id === 'shader' ? fxShaderLayer(l, +j) : null;
+}
+export const fxShaderSize = 960;
 export function mountShaders() {
-  $$('foreignObject.shfo', stage).forEach((fo) => { const l = lay(fo.dataset.sh); if (!l) return; const rt = shRuntime(l); if (rt.canvas.parentNode !== fo) fo.appendChild(rt.canvas); });
+  const seen: Record<string, number> = {};
+  $$('foreignObject.shfo, foreignObject.shfx', stage).forEach((fo) => {
+    const l = shaderOf(fo); if (!l) return; const rt = shRuntime(l), k = seen[l.id] = (seen[l.id] ?? -1) + 1;
+    const v = rt.views[k] || (rt.views[k] = newView());
+    if (v.parentNode !== fo) fo.appendChild(v);
+  });
+  for (const id in SH) if (SH[id].views) SH[id].views.length = Math.min(SH[id].views.length, (seen[id] ?? -1) + 1);
 }

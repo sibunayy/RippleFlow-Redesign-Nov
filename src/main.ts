@@ -73,6 +73,7 @@ import './gestures/drags';
 import { listen as listenGesturesCanvas } from './gestures/canvas';
 import { listen as listenEventsKeyboard } from './events/keyboard';
 import { registerServiceWorker } from './host/pwa';
+import { guardTouch } from './host/touch-guard';
 
 listenUiTopbar();
 listenUiFloats();
@@ -80,6 +81,7 @@ listenEventsDelegate();
 listenGesturesReorder();
 listenGesturesCanvas();
 listenEventsKeyboard();
+guardTouch();
 
 new ResizeObserver(() => { applyLayout(); layoutStage(); }).observe(app);
 new ResizeObserver(() => layoutStage()).observe(vp);

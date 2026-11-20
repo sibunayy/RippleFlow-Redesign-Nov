@@ -169,3 +169,30 @@ cycle, behaviours menu, Duplicator tab, workspace toggle and smoothing. Referenc
 prototype on purpose. New styles are in `src/styles/12-edits.css`, loaded after the v8 inspector block.
 
 Artifact copy: `npm run build:artifact` writes `dist-artifact/`; the page fragment is `dist-artifact/rippleflow.html`.
+
+## Notion checklist, round 2: every unchecked item (2026-11-20)
+
+- **Parenting.** A child now remembers where its parent was when they were linked (`l.pw`, `parentRef()` in
+  `anim/pose.ts`), so moving a parent with no keyframes moves the child too.
+- **Text keyboard.** `host/touch-guard.ts` shrinks the page to the visible area while the on-screen keyboard is open,
+  so the field being edited stays in view.
+- **Dash.** Dragging a field that has no value yet starts from its minimum instead of doing nothing; Gap and Offset
+  get starting values as soon as Dash is on.
+- **Duplicator grid.** Rows use Spacing Y (it was 0, so grid looked like a line); switching to grid fills it in.
+- **Effects.** Glow and Outline colours, Drop shadow distance and angle, Roughen styles (smooth, jagged, torn),
+  RGB split is now Chromatic aberration (lens or linear), Glitch has four styles plus an Offset that reaches outside
+  the layer. Vignette, Pixelate and Halftone were rebuilt without large images or oversized filter areas (the cause of
+  the Safari breakage). New **Shader fill** effect puts a shader inside any shape or photo. New **Bake effects into
+  layer** (`fx/bake.ts`) turns a layer and its filter effects into one picture, keeping its movement.
+- **Shaders.** The GPU canvas is now copied into a plain 2D canvas on the stage, so shader layers clip to the
+  composition and scale with zoom in Safari.
+- **Gestures.** Safari pinch-zoom, edge back-swipe, text selection and the long-press callout are blocked on the
+  canvas; double-tap zoom is off.
+- **Performance.** Undo history is capped at 60 steps (it grew without limit, which can crash Safari after long
+  sessions). Dragging an effect slider redraws only that layer's filter.
+- **iPhone layout.** No outer frame, tool strips scroll, the canvas fits above the settings sheet, and the timeline
+  keeps room for the time readout.
+
+Tests: `tests/parity/13-checklist-fixes.spec.ts` and a parenting unit test. The Add effect menu now lists 24.
+Effects-tab reference screenshots were re-taken. Not testable without a device: the real keyboard, Home Screen safe
+areas, Safari's back-swipe, and frame rate on an iPad.

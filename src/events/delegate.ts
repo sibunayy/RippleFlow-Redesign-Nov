@@ -28,6 +28,7 @@ import { jumpKey, tcDrag, trackDown, trimDrag, waDrag } from '../gestures/timeli
 import { fxReorder, layerHold } from '../gestures/reorder';
 import { curveDrag, fieldDrag, keyDown, layerDrag, scrubDrag, sheetDrag, tlDrag } from '../gestures/drags';
 import { canvasDown } from '../gestures/canvas';
+import { parentRef } from '../anim/pose';
 
 export let dragging = false, suppressClick = false, fitSelOn = false;
 // Long press helper: fires cb after 450 ms unless the pointer moves or lifts.
@@ -63,9 +64,10 @@ export function listen() {
       else if (k === 'shp') { if (t.value !== '__custom') { const P = SHP[t.value]; l.preset = t.value; delete l.code; l.hue = P.c[0]; l.hue2 = P.c[1]; P.def.forEach((v, j) => { l['sp' + j] = v; }); if (/^(Shader|Liquid gradient|Plasma|Aurora|Ring tunnel|Cells|Synth grid)( \d+)?$/.test(l.name)) l.name = P.name; commit('Shader preset'); buildCanvas(); renderAll(); } return; }
       else if (k === 'matte') { if (layers.indexOf(l) < 1) { toast('There is no layer above to use as a matte.'); renderRight(); return; } l.matte = t.value || null; commit(l.matte ? 'Track matte' : 'Remove matte'); buildCanvas(); renderAll(); return; }
       else if (k === 'blend') { l.blend = t.value; commit('Blend mode'); buildCanvas(); }
-      else if (k === 'parent') { l.parent = t.value || null; l.pt = Math.round(S.f); commit('Parent'); updateCanvas(); renderLeft(); }
-      else if (k === 'repmode' && l.rep) { l.rep.mode = t.value; commit('Duplicator layout'); buildCanvas(); renderRight(); }
-      else if (k === 'modtgt' && l.mods && l.mods[i]) { l.mods[i].tgt = t.value; commit('Behaviour target'); updateCanvas(); }
+      else if (k === 'parent') { l.parent = t.value || null; l.pt = Math.round(S.f); const p = l.parent && lay(l.parent); if (p) l.pw = parentRef(p, l.pt); else delete l.pw; commit('Parent'); updateCanvas(); renderLeft(); }
+      else if (k === 'repmode' && l.rep) { l.rep.mode = t.value; if (t.value === 'grid' && !l.rep.dy) l.rep.dy = l.rep.dx || 60; commit('Duplicator layout'); buildCanvas(); renderRight(); }
+      else if (k === 'fxopt' && l.fx[i]) { const e = l.fx[i], o = t.dataset.k; e[o] = t.value; if (e.id === 'shader' && o === 'preset' && SHP[t.value]) { e.c1 = SHP[t.value].c[0]; e.c2 = SHP[t.value].c[1]; } commit(`${e.name} ${o}`); buildCanvas(); renderRight(); return; }
+      else if (k === 'modtgt' &&l.mods && l.mods[i]) { l.mods[i].tgt = t.value; commit('Behaviour target'); updateCanvas(); }
       return;
     }
     if (t.dataset && t.dataset.ezv != null) {

@@ -28,3 +28,33 @@
 .line-btn.lit { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
 .app.portrait .fbf-toggle span { display: none; }
 .app.portrait .fbf-toggle { padding: 0 9px; }
+
+/* Safari gestures: no double-tap page zoom, no copy / look-up callout on long press (text fields keep theirs). */
+html { touch-action: manipulation; }
+body { -webkit-touch-callout: none; }
+input, textarea, select { -webkit-touch-callout: default; }
+
+/* Dope sheet keys: a 36 px finger target around the 10 px diamond. */
+.dk { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+
+/* On-screen keyboard open: the app is fitted above it (touch-guard.ts), so drop the outer padding to keep room. */
+html.kb-open body { padding-block: 0; }
+html.kb-open .app { border-radius: 0; }
+
+/* Phones (iPhone Safari, portrait or landscape): no outer frame, tool strips scroll when they run out of height,
+   and the timeline keeps room for the time readout. */
+@media (max-width: 600px), (max-height: 500px) {
+  body { padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
+  .app { border-radius: 0; box-shadow: none; }
+  .strip { overflow-y: auto; scrollbar-width: none; }
+  .strip::-webkit-scrollbar { display: none; }
+  #qbar { max-width: calc(100% - 16px); overflow-x: auto; scrollbar-width: none; }
+}
+@media (max-width: 520px) { :root { --name: 158px; } .peek .stp { display: none; } }
+
+/* Effect card options (Colour, Style, Preset) and colour chips, above the number fields. */
+.fxopts { display: grid; gap: 6px; padding: 0 0 6px; }
+.fxopts:empty { display: none; }
+.fxopts .kv { min-height: 38px; }
+.fxopts .sel { font-family: var(--ui); font-size: var(--fs-s); }
+.fxopts .fxcol .cchip { width: 100%; }
