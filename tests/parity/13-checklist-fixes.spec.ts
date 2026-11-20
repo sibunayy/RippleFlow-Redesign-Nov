@@ -90,6 +90,18 @@ test('effects: bake turns the layer and its effects into a picture', async ({ pa
   await expect(layerG(page, 'box').locator('image')).toHaveCount(1);
 });
 
+test('timeline: a selected keyframe draws no box around itself', async ({ page }) => {
+  const p = { ...P(400, 540), x: { keys: [{ t: 0, v: 400 }, { t: 70, v: 900 }] } };
+  await openApp(page, { storage: project([rect('box', 400, 540, { p })]) });
+  const expand = page.getByRole('button', { name: 'Expand timeline' });
+  if (await expand.count()) await expand.click();
+  await page.locator('#tlrows .dk[data-dk="agg"]').nth(1).click();
+  const dk = page.locator('#tlrows .dk.sel').first();
+  await expect(dk).toHaveCount(1);
+  const s = await dk.evaluate((d) => { const c = getComputedStyle(d); return [c.backgroundColor, c.boxShadow]; });
+  expect(s).toEqual(['rgba(0, 0, 0, 0)', 'none']);
+});
+
 test('phone portrait: the canvas sits above the settings sheet and the time readout is clear of the scrubber', async ({ page }) => {
   test.skip(test.info().project.name !== 'webkit-portrait', 'one project is enough');
   await openApp(page);

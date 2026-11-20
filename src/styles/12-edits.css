@@ -36,6 +36,8 @@ input, textarea, select { -webkit-touch-callout: default; }
 
 /* Dope sheet keys: a 36 px finger target around the 10 px diamond. */
 .dk { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+/* A selected key also has the class "sel", which the dropdown style (09-overlays) uses too. Keep its tap area invisible. */
+.dk.sel { background: none; box-shadow: none; border-radius: 0; padding: 0; }
 
 /* On-screen keyboard open: the app is fitted above it (touch-guard.ts), so drop the outer padding to keep room. */
 html.kb-open body { padding-block: 0; }
