@@ -180,7 +180,10 @@ test('hand tool pans and zoom buttons zoom', async ({ page }) => {
   const b1 = (await stage.boundingBox())!;
   expect(b1.x - b0.x).toBeGreaterThan(80);
   const pct = page.locator('#zoom [data-act="fit"]'), z0 = parseInt((await pct.textContent())!);
-  await page.locator('#zoom [data-act="zoom"][data-v="1.25"]').click();
+  // The zoom pill is the only zoom control: dragging it to the right zooms in.
+  await expect(page.locator('#zoom [data-act="zoom"]')).toHaveCount(0);
+  const [px, py] = await center(pct);
+  await drag(page, [px, py], [px + 80, py], { type: 'mouse', steps: 10 });
   await expect.poll(async () => parseInt((await pct.textContent())!)).toBeGreaterThan(z0);
 });
 

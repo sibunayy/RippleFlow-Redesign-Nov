@@ -8,7 +8,8 @@ import { renderBrushBar } from '../drawing/brush-bar';
 import { setFitSelOn, setSuppressClick } from '../events/delegate';
 
 export function renderFloats() {
-  $('#zoom').innerHTML = `<button class="ib" data-act="zoom" data-v="0.8" aria-label="Zoom out" title="Zoom out">${ic('zout', 's')}</button><button class="pct tc" data-act="fit" aria-label="Zoom level. Drag left or right to zoom. Tap to fit the selection, tap again to fit the workspace" title="Drag to zoom · tap to fit selection / workspace">100%</button><button class="ib" data-act="zoom" data-v="1.25" aria-label="Zoom in" title="Zoom in">${ic('zin', 's')}</button><span class="vsep"></span>
+  // Zoom is the percentage pill alone: drag it to zoom, tap it to fit (Nathan, Nov 2026: no + / − buttons).
+  $('#zoom').innerHTML = `<button class="pct tc" data-act="fit" aria-label="Zoom level. Drag left or right to zoom. Tap to fit the selection, tap again to fit the workspace" title="Drag to zoom · tap to fit selection / workspace">100%</button><span class="vsep"></span>
     <button class="ib ${S.snap ? 'on' : ''}" data-act="snap" aria-pressed="${S.snap}" aria-label="Snap" title="Snap">${ic('magnet', 's')}</button>`;
   const ql = S.sel && lay(S.sel), hasKeys = !!(ql && TF.some((p) => animated(ql.p[p])));
   $('#qbar').innerHTML = `<button class="qb" data-act="keyall">${ic('key', 's')}Keyframe</button>
