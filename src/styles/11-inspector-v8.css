@@ -1,51 +1,51 @@
 /* ---- v8: inspector hierarchy pass (iPad touch + Pencil) ----
    Order: identity header → Transform → Layer (opacity, blend) → content (Text / Shape / Path …) → Fill & stroke → extras → Timing & links.
-   Hierarchy: section title (14px, text colour) > group label (11px caps, faint) > property label (12.5px, muted). */
-.app.right-open:not(.portrait) { --rw: 296px; }
-.panel.r > .inner { width: 296px; }
-#rpanel .phead { padding: 10px 8px 10px 14px; gap: 8px; border-bottom: 1px solid var(--line-soft); min-height: 56px; }
-#rpanel .phead .chip-dot { width: 14px; height: 14px; }
+   Hierarchy: section title (calc(14px * var(--k)), text colour) > group label (calc(11px * var(--k)) caps, faint) > property label (calc(12.5px * var(--k)), muted). */
+.app.right-open:not(.portrait) { --rw: calc(296px * var(--k)); }
+.panel.r > .inner { width: calc(296px * var(--k)); }
+#rpanel .phead { padding: calc(10px * var(--k)) calc(8px * var(--k)) calc(10px * var(--k)) calc(14px * var(--k)); gap: calc(8px * var(--k)); border-bottom: 1px solid var(--line-soft); min-height: calc(56px * var(--k)); }
+#rpanel .phead .chip-dot { width: calc(14px * var(--k)); height: calc(14px * var(--k)); }
 #rpanel .phead .idn { flex: 1; min-width: 0; display: grid; gap: 0; }
 #rpanel .phead .ity { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 0; }
-#rpanel .phead .lname { min-height: 32px; padding: 0 6px; margin-left: -6px; width: calc(100% + 6px); border-color: transparent; background: transparent; font-size: var(--fs-m); font-weight: 650; border-radius: var(--r-field); text-overflow: ellipsis; }
+#rpanel .phead .lname { min-height: calc(32px * var(--k)); padding: 0 calc(6px * var(--k)); margin-left: calc(-6px * var(--k)); width: calc(100% + calc(6px * var(--k))); border-color: transparent; background: transparent; font-size: var(--fs-m); font-weight: 650; border-radius: var(--r-field); text-overflow: ellipsis; }
 #rpanel .phead .lname:hover { background: var(--surface-2); }
 #rpanel .phead .lname:focus { outline: none; background: var(--surface-2); box-shadow: var(--lit); }
-#rpanel .phead .ib { width: 36px; height: 36px; }
+#rpanel .phead .ib { width: calc(36px * var(--k)); height: calc(36px * var(--k)); }
 #rpanel .sec:first-child { border-top: 0; }
-#rpanel .sec-h { height: 44px; padding: 0 12px 0 14px; color: var(--text); font-size: var(--fs-m); font-weight: 650; letter-spacing: -.005em; text-transform: none; }
+#rpanel .sec-h { height: calc(44px * var(--k)); padding: 0 calc(12px * var(--k)) 0 calc(14px * var(--k)); color: var(--text); font-size: var(--fs-m); font-weight: 650; letter-spacing: -.005em; text-transform: none; }
 #rpanel .sec-h .chev { color: var(--faint); }
-#rpanel .sec-h .count { font-size: var(--fs-xs); padding: 1px 7px; border-radius: 99px; background: var(--lit-bg); }
-#rpanel .sec-b { padding: 0 14px 14px; gap: 6px; }
-#rpanel .sublbl { padding: 10px 0 0; }
+#rpanel .sec-h .count { font-size: var(--fs-xs); padding: 1px calc(7px * var(--k)); border-radius: calc(99px * var(--k)); background: var(--lit-bg); }
+#rpanel .sec-b { padding: 0 calc(14px * var(--k)) calc(14px * var(--k)); gap: calc(6px * var(--k)); }
+#rpanel .sublbl { padding: calc(10px * var(--k)) 0 0; }
 #rpanel .sec-b > .sublbl:first-child { padding-top: 0; }
-#rpanel .fld, #rpanel .sel { height: 38px; }
-#rpanel .cchip { min-height: 38px; }
-#rpanel .seg button { min-height: 32px; }
+#rpanel .fld, #rpanel .sel { height: calc(38px * var(--k)); }
+#rpanel .cchip { min-height: calc(38px * var(--k)); }
+#rpanel .seg button { min-height: calc(32px * var(--k)); }
 #rpanel .pair.fw { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
-#rpanel .fillrow { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 6px; }
-#rpanel .fillrow .cchip { min-width: 0; gap: 8px; }
+#rpanel .fillrow { display: grid; grid-template-columns: minmax(0, 1fr) calc(112px * var(--k)); gap: calc(6px * var(--k)); }
+#rpanel .fillrow .cchip { min-width: 0; gap: calc(8px * var(--k)); }
 #rpanel .fillrow .cchip > span:not(.cc) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#rpanel .kv.sh { min-height: 34px; padding-top: 6px; }
+#rpanel .kv.sh { min-height: calc(34px * var(--k)); padding-top: calc(6px * var(--k)); }
 #rpanel .kv.sh .sublbl { padding: 0; }
 /* property rows: label on top; values and the keyframe controls share one line, so every ◆ lines up */
-#rpanel .prop { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lbl lbl' 'pv kc'; gap: 3px 2px; min-height: 0; padding: 2px 0 6px; }
-#rpanel .prop .plbl { grid-area: lbl; display: flex; align-items: center; gap: 6px; min-height: 20px; font-size: var(--fs-s); color: var(--muted); }
+#rpanel .prop { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lbl lbl' 'pv kc'; gap: calc(3px * var(--k)) calc(2px * var(--k)); min-height: 0; padding: calc(2px * var(--k)) 0 calc(6px * var(--k)); }
+#rpanel .prop .plbl { grid-area: lbl; display: flex; align-items: center; gap: calc(6px * var(--k)); min-height: calc(20px * var(--k)); font-size: var(--fs-s); color: var(--muted); }
 #rpanel .prop.is-anim .plbl > span { color: var(--acc-text); }
-#rpanel .prop .pv { grid-area: pv; gap: 6px; }
-#rpanel .prop .pv .fld { padding: 0 10px; }
+#rpanel .prop .pv { grid-area: pv; gap: calc(6px * var(--k)); }
+#rpanel .prop .pv .fld { padding: 0 calc(10px * var(--k)); }
 #rpanel .prop .kc { grid-area: kc; }
-#rpanel .prop .kc button { height: 38px; width: 26px; }
-#rpanel .prop .kc .kd { width: 34px; }
+#rpanel .prop .kc button { height: calc(38px * var(--k)); width: calc(26px * var(--k)); }
+#rpanel .prop .kc .kd { width: calc(34px * var(--k)); }
 #rpanel .fld .axg { font: 600 var(--fs-xs)/1 var(--ui); color: var(--faint); letter-spacing: .02em; }
-#rpanel .plbl .lk { position: relative; margin-left: auto; border: 0; background: none; color: var(--acc-text); font-size: var(--fs-xs); font-weight: 600; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
-#rpanel .plbl .lk::before { content: ""; position: absolute; inset: -12px -8px; }
-#rpanel .al6 { gap: 4px; }
-#rpanel .al6 button { height: 40px; border-radius: 9px; }
-#rpanel .three { gap: 6px; }
+#rpanel .plbl .lk { position: relative; margin-left: auto; border: 0; background: none; color: var(--acc-text); font-size: var(--fs-xs); font-weight: 600; padding: calc(2px * var(--k)) calc(6px * var(--k)); border-radius: calc(6px * var(--k)); cursor: pointer; }
+#rpanel .plbl .lk::before { content: ""; position: absolute; inset: calc(-12px * var(--k)) calc(-8px * var(--k)); }
+#rpanel .al6 { gap: calc(4px * var(--k)); }
+#rpanel .al6 button { height: calc(40px * var(--k)); border-radius: calc(9px * var(--k)); }
+#rpanel .three { gap: calc(6px * var(--k)); }
 @media (pointer: coarse) {
-  #rpanel .fld, #rpanel .sel, #rpanel .cchip { height: 42px; min-height: 42px; }
-  #rpanel .prop .kc button { height: 42px; }
-  #rpanel .sec-h { height: 48px; }
-  #rpanel .seg button { min-height: 36px; }
-  #rpanel .al6 button { height: 44px; }
+  #rpanel .fld, #rpanel .sel, #rpanel .cchip { height: calc(42px * var(--k)); min-height: calc(42px * var(--k)); }
+  #rpanel .prop .kc button { height: calc(42px * var(--k)); }
+  #rpanel .sec-h { height: calc(48px * var(--k)); }
+  #rpanel .seg button { min-height: calc(36px * var(--k)); }
+  #rpanel .al6 button { height: calc(44px * var(--k)); }
 }

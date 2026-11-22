@@ -140,7 +140,7 @@ export async function openRight(page: Page, name: 'Properties' | 'Effects' | 'Du
   await expect(b).toHaveAttribute('aria-pressed', 'true');
 }
 export async function openLeft(page: Page, name: 'Layers' | 'Assets') {
-  const b = page.locator(`#lstrip [aria-label="${name}"]`);
+  const b = page.locator(`#rstrip [aria-label="${name}"]`);
   if ((await b.getAttribute('aria-pressed')) !== 'true') await b.click();
   await expect(b).toHaveAttribute('aria-pressed', 'true');
 }

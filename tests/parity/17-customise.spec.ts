@@ -51,8 +51,8 @@ test('interface and workflow options take effect, and reset needs two taps', asy
   await openApp(page);
   await openCustomise(page);
   await page.locator('[data-act=cztab][data-v=interface]').click();
-  await page.locator('[data-act=pfset][data-k=textSize][data-v="120"]').click();
-  expect(await rootVar(page, '--fs-m')).toBe('16.8px');
+  await page.locator('[data-act=pfset][data-k=textSize][data-v="110"]').click();
+  expect(await rootVar(page, '--fs-m')).toBe("18.48px");
   await page.locator('[data-act=pfset][data-k=grid][data-v=none]').click();
   expect(await page.locator('#vp').evaluate((el) => getComputedStyle(el).backgroundImage)).toBe('none');
   await setInput(page, '[data-pfn=nameW]', '300');

@@ -21,8 +21,6 @@ export function renderStrips() {
     <button class="sb" data-act="undo" aria-label="Undo" title="Undo" ${hi <= 0 ? 'disabled' : ''}>${ic('undo')}</button>
     <button class="sb" data-act="redo" aria-label="Redo" title="Redo" ${hi >= hist.length - 1 ? 'disabled' : ''}>${ic('redo')}</button>
     <span class="sep"></span>
-    ${[['assets', 'Assets'], ['layers', 'Layers']].map(([id, n]) => `<button class="sb ${S.left === id ? 'on' : ''}" data-act="left" data-v="${id}" aria-label="${n}" aria-pressed="${S.left === id}" title="${n}">${ic(id)}</button>`).join('')}
-    <span class="sep"></span>
     <button class="sb insert" data-act="insert" aria-label="Insert" aria-haspopup="dialog" aria-expanded="${S.pop === 'insert'}" title="Insert layer, shape or media">${ic('plus')}</button>`;
   const hasKeys = S.keys.length > 0;
   $('#rstrip').innerHTML = `
@@ -30,5 +28,6 @@ export function renderStrips() {
     <span class="grow"></span>
     <button class="sb ${S.pop && S.pop.type === 'align' && S.pop.from === 'rstrip' ? 'on' : ''}" data-act="align" aria-haspopup="dialog" aria-label="Align" title="Align to composition or selection">${ic('alC')}</button>
     <button class="sb ${S.right === 'easing' ? 'on' : ''}" data-act="right" data-v="easing" aria-label="Easing" aria-pressed="${S.right === 'easing'}" title="Easing">${ic('easing')}${hasKeys ? '<span class="dot"></span>' : ''}</button>
+    ${[['assets', 'Assets'], ['layers', 'Layers']].map(([id, n]) => `<button class="sb ${S.left === id ? 'on' : ''}" data-act="left" data-v="${id}" aria-label="${n}" aria-pressed="${S.left === id}" title="${n}">${ic(id)}</button>`).join('')}
     <button class="sb" data-act="help" aria-label="Help and shortcuts" title="Help">${ic('help')}</button>`;
 }
