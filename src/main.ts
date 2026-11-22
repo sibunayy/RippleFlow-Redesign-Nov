@@ -63,6 +63,7 @@ import './drawing/brush-bar';
 import './ui/inspector/drawing';
 import './gestures/cel-timeline';
 import './drawing/overlay';
+import { listenFbfTimeline } from './drawing/fbf-timeline';
 import './gestures/handles';
 import './actions/align';
 import './ui/text-animators';
@@ -83,6 +84,7 @@ listenEventsDelegate();
 listenGesturesReorder();
 listenGesturesCanvas();
 listenEventsKeyboard();
+listenFbfTimeline();
 guardTouch();
 
 new ResizeObserver(() => { applyLayout(); layoutStage(); }).observe(app);

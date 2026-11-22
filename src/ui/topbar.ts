@@ -13,7 +13,7 @@ export function renderTop() {
     <input class="name" id="pname" value="${esc(projName)}" aria-label="Project name"><span class="meta tc">30 fps · 1920×1080</span>
     <span class="save" role="status"><i></i>Autosaved</span>
     <span class="spacer"></span>
-    <button class="fbf-toggle ${S.fbf ? 'on' : ''}" data-act="fbf" aria-pressed="${!!S.fbf}" aria-label="Frame-by-frame drawing workspace" title="Frame-by-frame drawing workspace">${ic('fbf', 's')}<span>Frame by frame</span></button>
+    <button class="fbf-toggle ${S.fbf ? 'on' : ''}" data-act="fbf" aria-pressed="${!!S.fbf}" aria-label="${S.fbf ? 'Exit the frame-by-frame workspace' : 'Frame-by-frame drawing workspace'}" title="${S.fbf ? 'Back to the full editor' : 'Frame-by-frame drawing workspace'}">${ic('fbf', 's')}<span>${S.fbf ? 'Exit frame by frame' : 'Frame by frame'}</span></button>
     <span class="spacer"></span>
     <button class="ib ${S.guide !== 'off' ? 'on' : ''}" data-act="guide" data-v="${GUIDE_NEXT[S.guide] || 'safe'}" aria-label="Overlay: ${GUIDE_NAME[S.guide] || 'Off'}. Tap to change" title="Overlay: ${GUIDE_NAME[S.guide] || 'Off'} (off, safe areas, grid)">${ic(S.guide === 'thirds' ? 'grid' : 'safe', 's')}</button>
     <button class="ib" data-act="menu" aria-label="More" aria-haspopup="menu" aria-expanded="${S.pop === 'menu'}">${ic('more')}</button>

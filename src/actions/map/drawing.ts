@@ -14,6 +14,7 @@ import { renderTL } from '../../ui/timeline';
 import { seek } from '../../ui/layout';
 import { $$ } from '../../core/dom';
 import { stepCel, toggleFbf } from '../../drawing/workspace';
+import { fbfDelete, fbfHold, fbfInsert, fbfMove, fbfNewLayer, fbfZoom } from '../../drawing/fbf-timeline';
 
 /** Tools, brush and drawing cels. Keys are data-act names. */
 export const drawingActions = {
@@ -25,6 +26,15 @@ export const drawingActions = {
   fbf: () => toggleFbf(),
   celprev: () => stepCel(-1),
   celnext: () => stepCel(1),
+  fadd: () => fbfInsert(false),
+  fdup: () => fbfInsert(true),
+  fdel: () => fbfDelete(),
+  fmovel: () => fbfMove(-1),
+  fmover: () => fbfMove(1),
+  fholdm: () => fbfHold(-1),
+  fholdp: () => fbfHold(1),
+  fzoom: (el) => fbfZoom(+el.dataset.v),
+  fnewlayer: () => fbfNewLayer(),
   onsetnb: (el) => { S.onion.nb = +el.dataset.v; S.onion.on = true; saveOnion(); updateCanvas(); renderTL(); renderRight(); },
   onsetna: (el) => { S.onion.na = +el.dataset.v; S.onion.on = true; saveOnion(); updateCanvas(); renderTL(); renderRight(); },
   celadd: () => addCel(false),

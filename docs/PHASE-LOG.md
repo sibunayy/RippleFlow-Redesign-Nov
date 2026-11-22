@@ -220,3 +220,16 @@ areas, Safari's back-swipe, and frame rate on an iPad.
   file first.
 - **Tests.** `tests/parity/14-library.spec.ts`. Older specs open with `?editor`, which skips the landing page.
   Not testable without a device: Safari's storage limits, the share sheet, and the Home Screen app's safe areas.
+
+## Full frame-by-frame workspace
+- **Where it came from.** The newer workspace was only in the published Claude artifact, as compiled code. Its original
+  source was not on this computer, so it was rebuilt as normal source from that build (`drawing/fbf-timeline.ts`).
+- **Timeline.** While the workspace is on, the timeline becomes a frame grid: one row per drawing layer, one column per
+  frame, with playback, onion skin, loop, zoom and a New layer button.
+- **Frame actions.** Add, copy, clear, delete, shift earlier or later, and hold shorter or longer. Cels can also be
+  dragged, and their right edge changes the hold. With a finger, a short hold lifts a cel so a swipe can still scroll.
+- **Left strip and panels.** Brush, eraser, fill, colour, brush settings, undo and redo. In portrait the brush panel starts
+  closed so the canvas has room; the settings button opens it.
+- **Two fixes over the published version.** Dragging no longer rebuilds the block under the finger, which could make
+  Safari cancel the drag. Undo now lights up right after each change in the workspace.
+- **Tests.** `tests/parity/15-frame-by-frame.spec.ts`. Not tested on a real iPad with touch and Apple Pencil.

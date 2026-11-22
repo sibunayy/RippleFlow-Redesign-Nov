@@ -10,6 +10,7 @@ import { keyClip, selectedKeyObjs } from '../anim/clipboard';
 import { drawGraph, graphHtml } from './graph';
 import { waveSvg } from '../playback/audio';
 import { celBlocks } from '../gestures/cel-timeline';
+import { renderFbfTimeline } from '../drawing/fbf-timeline';
 
 /* ---------- render: timeline ---------- */
 export function tlHeight() {
@@ -24,6 +25,7 @@ function rulerHtml() {
   return `<div class="ruler">${h}</div>`;
 }
 export function renderTL() {
+  if (S.fbf) return renderFbfTimeline();
   const el = $('#tl'), l = S.sel && lay(S.sel);
   const ticks = l ? [...new Set(TF.flatMap((p) => animated(l.p[p]) ? l.p[p].keys.map((k) => k.t) : []))] : [];
   const expanded = tlHeight() > 90;

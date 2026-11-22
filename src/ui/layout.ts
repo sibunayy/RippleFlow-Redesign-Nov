@@ -11,10 +11,12 @@ import { renderRight, updateFields } from './inspector/index';
 import { renderFloats } from './floats';
 import { renderTL, tlHeight } from './timeline';
 import { renderPop } from './popovers';
+import { fbfTick } from '../drawing/fbf-timeline';
 
 /* ---------- layout ---------- */
 export function applyLayout() {
   const w = app.clientWidth, h = app.clientHeight;
+  app.classList.toggle('fbf', !!S.fbf);
   if (S.right === 'fbf' && !S.fbf) S.right = null;
   const portrait = S.portraitPreview || w < 900 || w / h < 1;
   app.classList.toggle('portrait', portrait);
@@ -27,7 +29,7 @@ export function applyLayout() {
 }
 export function renderAll() { applyLayout(); renderTop(); renderStrips(); renderLeft(); renderRight(); renderTL(); renderFloats(); renderPop(); setPF(); persist(); }
 export function persist() { store.set('left', S.left); store.set('right', S.right); store.set('tl', S.tl); store.set('collapsed', [...S.collapsed]); }
-export function setPF() { app.style.setProperty('--pf', (S.f / DUR).toFixed(5)); const t = $('#tcode'); if (t) t.textContent = tc(S.f); const sc = $('#scrub'); if (sc) sc.setAttribute('aria-valuenow', Math.round(S.f)); }
+export function setPF() { app.style.setProperty('--pf', (S.f / DUR).toFixed(5)); const t = $('#tcode'); if (t) t.textContent = tc(S.f); const sc = $('#scrub'); if (sc) sc.setAttribute('aria-valuenow', Math.round(S.f)); if (S.fbf) fbfTick(); }
 export function seek(f) { S.f = Math.max(0, Math.min(DUR - 1, f)); setPF(); updateCanvas(); updateFields(); }
 export function applyTheme() {
   if (S.themePref === 'auto') { if (S.hostTheme) root.setAttribute('data-theme', S.hostTheme); else root.removeAttribute('data-theme'); }

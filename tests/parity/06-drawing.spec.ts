@@ -148,6 +148,8 @@ test('frame-by-frame workspace: header toggle opens a brush panel and restores t
   const before = await page.evaluate(() => ({ left: localStorage.getItem('rfp-left'), right: localStorage.getItem('rfp-right') }));
   await tgl.click();
   await expect(tgl).toHaveAttribute('aria-pressed', 'true');
+  // In portrait the canvas stays clear; the settings button opens the brush panel.
+  if (await page.locator('.app.portrait').count()) await page.locator('#lstrip [data-act="right"][data-v="fbf"]').click();
   await expect(page.locator('#rpanel .phead h2')).toHaveText('Frame by frame');
   await expect(page.locator('#rpanel [data-act="pickdraw"][data-v="brush"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#rpanel .fld[aria-label="Smoothing"]')).toBeVisible();

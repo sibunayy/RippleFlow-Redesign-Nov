@@ -2,11 +2,13 @@ import { $ } from '../core/dom';
 import { ic } from './icons';
 import { DRAWMODES, S, SELMODES, isDrawTool, isSelTool } from '../state/state';
 import { hi, hist } from '../state/history';
+import { renderFbfStrips } from '../drawing/fbf-timeline';
 
 /* ---------- render: strips ---------- */
 const TOOLS = [['select', 'Select', 'V'], ['hand', 'Hand', 'H'], ['pen', 'Pen', 'P']];
 export const SHAPES = [['rect', 'Rectangle', 'R'], ['ellipse', 'Ellipse', 'E'], ['polygon', 'Polygon', 'Y'], ['star', 'Star', 'S'], ['line', 'Line', 'L']];
 export function renderStrips() {
+  if (S.fbf) return renderFbfStrips();
   const t = S.tool;
   $('#lstrip').innerHTML = `
     <button class="sb ${isSelTool(t) ? 'on' : ''}" id="selbtn" data-act="tool" data-v="${S.selMode}" aria-label="${SELMODES.find((m) => m[0] === S.selMode)[1]} (hold for marquee and lasso)" aria-pressed="${isSelTool(t)}" title="Selection · hold for Marquee and Lasso">${ic(S.selMode)}<span class="more"></span></button>

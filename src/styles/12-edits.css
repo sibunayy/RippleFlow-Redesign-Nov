@@ -121,3 +121,63 @@ body { position: relative; }
 .fxopts .kv { min-height: 38px; }
 .fxopts .sel { font-family: var(--ui); font-size: var(--fs-s); }
 .fxopts .fxcol .cchip { width: 100%; }
+
+/* ===== Frame-by-frame workspace ===== */
+.app.fbf { grid-template-columns: 48px 0 minmax(0, 1fr) var(--rw) 0; }
+.app.fbf #rstrip, .app.fbf #lpanel { display: none; }
+.app.fbf .tl-handle { display: none; }
+.app.fbf .vp { background: var(--board); }
+.sb .swatch { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line); }
+.ftl { --name: 132px; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.fbar { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 10px; overflow-x: auto; scrollbar-width: none; }
+.fbar::-webkit-scrollbar { display: none; }
+.fbar.acts { border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); padding-block: 5px; }
+.fbar .spacer { flex: 1; }
+.fgrp { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 12px; background: var(--surface-2); box-shadow: var(--rest); flex: none; }
+.fgrp .ib { width: 38px; height: 34px; }
+.fgrp .ib.on { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
+.fgrp .play { width: 44px; height: 34px; }
+.fb { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 11px; border: 0; border-radius: 10px; background: none; color: var(--text); font-size: var(--fs-s); font-weight: 550; cursor: pointer; white-space: nowrap; flex: none; }
+.fb:hover { background: var(--surface-3); }
+.fb:active { box-shadow: var(--lit-press); }
+.fb:disabled { opacity: .38; pointer-events: none; }
+.fb.warn { color: var(--danger); }
+.fcount { display: flex; flex-direction: column; line-height: 1.15; min-width: 96px; flex: none; }
+.fcount b { font-size: var(--fs-m); }
+.fcount span { font-size: var(--fs-xs); color: var(--muted); }
+.fhint { margin-left: auto; padding-left: 8px; font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; flex: none; }
+.ftl-scroll { flex: 1; min-height: 0; overflow: auto; position: relative; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.ftl-grid { position: relative; width: calc(var(--name) + var(--np) * var(--cw)); min-height: 100%; }
+.fruler { position: sticky; top: 0; z-index: 5; display: flex; height: 30px; background: var(--surface); border-bottom: 1px solid var(--line-soft); touch-action: none; cursor: ew-resize; }
+.fruler .corner { position: sticky; left: 0; z-index: 6; flex: none; width: var(--name); display: flex; align-items: center; padding-left: 4px; background: var(--surface); border-right: 1px solid var(--line-soft); cursor: default; touch-action: auto; }
+.fruler .corner .fb { min-height: 28px; padding: 0 8px; }
+.fruler i { flex: none; width: var(--cw); box-sizing: border-box; border-left: 1px solid var(--line-soft); font: normal 10.5px/30px var(--mono); text-align: center; color: var(--muted); }
+.fruler i.s { border-left-color: var(--muted); }
+.fruler i.cur { color: var(--acc-text); font-weight: 700; background: rgb(var(--acc) / .14); }
+.frow { display: flex; height: 58px; border-bottom: 1px solid var(--line-soft); }
+.flab { position: sticky; left: 0; z-index: 4; flex: none; width: var(--name); box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 2px 0 10px; background: var(--surface); border-right: 1px solid var(--line-soft); cursor: pointer; min-width: 0; }
+.flab .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flab .ib { width: 30px; height: 30px; }
+.frow.act .flab .nm { color: var(--acc-text); font-weight: 600; }
+.ftrack { position: relative; flex: none; width: calc(var(--np) * var(--cw)); background-image: linear-gradient(to right, var(--line-soft) 1px, transparent 1px); background-size: var(--cw) 100%; cursor: pointer; }
+.frow.act .ftrack { background-color: rgb(var(--acc) / .04); }
+.fcel { position: absolute; top: 7px; bottom: 7px; box-sizing: border-box; border-radius: 8px; background: color-mix(in srgb, var(--hue) 16%, transparent); box-shadow: inset 3px 0 0 var(--hue); cursor: grab; transition: transform .12s var(--ease), box-shadow .12s; }
+.fcel .fn { position: absolute; left: 9px; top: 5px; font: 600 11px var(--mono); color: var(--text); pointer-events: none; }
+.fcel::before { content: ""; position: absolute; left: 11px; bottom: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--hue); pointer-events: none; }
+.fcel.empty::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--hue); }
+.fcel::after { content: ""; position: absolute; left: 26px; right: 16px; bottom: 11px; border-top: 2px dotted color-mix(in srgb, var(--hue) 65%, transparent); pointer-events: none; }
+.fcel.on { background: color-mix(in srgb, var(--hue) 38%, transparent); box-shadow: inset 0 0 0 1.5px var(--hue); }
+.fcel.lift { transform: translateY(-3px); box-shadow: var(--lit); cursor: grabbing; }
+.fh { position: absolute; right: 0; top: 0; bottom: 0; width: 14px; cursor: ew-resize; touch-action: none; }
+.fh::after { content: ""; position: absolute; right: 3px; top: 14px; bottom: 14px; width: 3px; border-radius: 2px; background: color-mix(in srgb, var(--hue) 80%, white); opacity: .75; }
+.fcel.last .fh { display: none; }
+.fcol { position: absolute; top: 30px; bottom: 0; left: calc(var(--name) + var(--fi, 0) * var(--cw)); width: var(--cw); background: rgb(var(--acc) / .09); pointer-events: none; z-index: 2; }
+.fph { position: absolute; top: 0; bottom: 0; left: calc(var(--name) + (var(--fi, 0) + .5) * var(--cw)); width: 2px; margin-left: -1px; background: rgb(var(--acc)); box-shadow: 0 0 calc(10px * var(--halo)) rgb(var(--acc) / .7); pointer-events: none; z-index: 3; }
+.fempty { position: sticky; left: 0; width: min(100%, 420px); padding: 26px 16px; color: var(--muted); font-size: var(--fs-s); display: grid; gap: 10px; justify-items: start; }
+.fempty p { margin: 0; }
+.app.portrait .fb span { display: none; }
+.app.portrait .fb { padding: 0 10px; }
+.app.portrait .fbar.acts .fb span { display: none; }
+.app.portrait .ftl { --name: 88px; }
+.app.portrait .fhint, .app.portrait .fcount span { display: none; }
+.app.portrait .fcount { min-width: 0; }

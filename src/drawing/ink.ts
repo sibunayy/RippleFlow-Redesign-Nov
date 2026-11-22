@@ -31,7 +31,7 @@ function inkSetup(l) {
   ictx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
 }
 function inkClear() { ictx.setTransform(1, 0, 0, 1, 0, 0); ictx.clearRect(0, 0, ink.width, ink.height); ictx.restore && 0; ink.width = ink.width; ink.style.opacity = ''; }
-function drawTarget() {
+export function drawTarget() {
   let l = S.sel && lay(S.sel);
   if (l && l.type === 'draw' && !l.lock && l.vis) return l;
   nameCount.draw = (nameCount.draw || 0) + 1;

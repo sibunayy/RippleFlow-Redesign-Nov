@@ -18,7 +18,7 @@ const state = {
   pDur: 100, pAmt: 100, pDir: 'up', pAt: 'head', pStag: 0, easeClip: null,
 };
 /** Fields the app adds to S later (shader dialog draft and import, the two-tap reset arm). */
-interface LateState { shDraft?: any; shImport?: any; resetArm?: any; fbf?: boolean; fbfPrev?: any }
+interface LateState { shDraft?: any; shImport?: any; resetArm?: any; fbf?: boolean; fbfPrev?: any; fcw?: number }
 export const S: typeof state & LateState = state;
 // Multi-selection: S.multi only counts while it contains the primary S.sel, so single-select code stays valid.
 export const selIds = () => (S.sel && S.multi.size > 1 && S.multi.has(S.sel)) ? [...S.multi].filter((id) => lay(id)) : (S.sel && lay(S.sel) ? [S.sel] : []);

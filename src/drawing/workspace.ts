@@ -20,7 +20,7 @@ export function toggleFbf() {
   }
   if (S.playing) play(false);
   S.fbfPrev = { left: S.left, right: S.right, tl: S.tl, tool: S.tool };
-  S.fbf = true; S.left = null; S.right = 'fbf'; S.tl = 'mid'; S.tlPx = Math.round(app.clientHeight * 0.3); S.pop = null; S.keys = [];
+  S.fbf = true; S.left = null; S.right = app.classList.contains('portrait') ? null : 'fbf'; S.tl = 'mid'; S.tlPx = Math.max(250, Math.min(360, Math.round(app.clientHeight * 0.38))); S.pop = null; S.keys = [];
   if (!isDrawTool(S.tool)) S.tool = S.drawMode = 'brush';
   const cur = S.sel && lay(S.sel);
   if (!cur || cur.type !== 'draw') { const d = layers.find((l) => l.type === 'draw' && !l.lock); if (d) { S.sel = d.id; S.multi.clear(); } }
