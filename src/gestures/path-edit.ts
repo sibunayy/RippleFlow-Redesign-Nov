@@ -68,16 +68,32 @@ export function peEnter(l) {
 export function peExit() { S.pe = null; S.peI = -1; renderFloats(); drawOverlay(); }
 const peDone = (label = 'Edit points') => { commit(label); buildCanvas(); renderAll(); };
 
-/** Corner to curve and back for the selected point. */
-export function peToggle(i = S.peI) {
+/** How a point is shaped: no handles = straight; handles set by Smooth (flag at index 6) = smooth; any other handles = curved. */
+export type PointType = 'straight' | 'curved' | 'smooth';
+export const pointType = (p): PointType => (!p || p.length <= 2 || !(hIn(p).some(Boolean) || hOut(p).some(Boolean)) ? 'straight' : p[6] ? 'smooth' : 'curved');
+const TYPES: PointType[] = ['straight', 'curved', 'smooth'];
+/** Straight, curved or smooth for the selected point. Smooth rounds the point off: its two handles lie on one line, along the direction
+    from the previous point to the next, and each reaches a third of the way to its neighbour. */
+export function peSetType(type: PointType, i = S.peI) {
   const l = peLayer(); if (!l || i < 0) return;
   const P = toEditable(l), n = P.length, p = P[i]; if (!p) return;
-  if (p.length > 2 && (hIn(p).some(Boolean) || hOut(p).some(Boolean))) P[i] = [p[0], p[1]];
+  const a = P[l.closed ? (i - 1 + n) % n : Math.max(0, i - 1)], b = P[l.closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
+  if (type === 'straight') P[i] = [p[0], p[1]];
+  else if (type === 'curved') { if (pointType(p) === 'curved') return; const o = [rd((b[0] - a[0]) / 6), rd((b[1] - a[1]) / 6)]; P[i] = [p[0], p[1], -o[0], -o[1], o[0], o[1]]; }
   else {
-    const a = P[l.closed ? (i - 1 + n) % n : Math.max(0, i - 1)], b = P[l.closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
-    const o = [rd((b[0] - a[0]) / 6), rd((b[1] - a[1]) / 6)]; setH(p, [-o[0], -o[1]], o);
+    let tx = b[0] - a[0], ty = b[1] - a[1]; const tl = Math.hypot(tx, ty);
+    if (tl < 1e-6) { toast('This point has no neighbours to smooth against'); return; }
+    tx /= tl; ty /= tl;
+    const dIn = a === p ? Math.hypot(b[0] - p[0], b[1] - p[1]) / 3 : Math.hypot(p[0] - a[0], p[1] - a[1]) / 3, dOut = b === p ? dIn : Math.hypot(b[0] - p[0], b[1] - p[1]) / 3;
+    P[i] = [p[0], p[1], rd(-tx * (a === p ? dOut : dIn)), rd(-ty * (a === p ? dOut : dIn)), rd(tx * dOut), rd(ty * dOut), 1];
   }
   peDone('Change point type');
+}
+/** Switches the point to the next type (straight, curved, smooth). Used by double-tap. */
+export function peToggle(i = S.peI) {
+  const l = peLayer(); if (!l || i < 0) return;
+  const p = shapePts(l)[i]; if (!p) return;
+  peSetType(TYPES[(TYPES.indexOf(pointType(p)) + 1) % 3], i);
 }
 export function peDelete() {
   const l = peLayer(); if (!l || S.peI < 0) return;
@@ -121,7 +137,7 @@ export function peDown(e) {
     if (!(h[0] || h[1]) || !near(sp[0] + h[0], sp[1] + h[1], HIT)) continue;
     const lh = Math.hypot(...h), lo = Math.hypot(...other), linked = lh > 0 && lo > 0 && Math.abs(h[0] * other[1] - h[1] * other[0]) < lh * lo * .02 && h[0] * other[0] + h[1] * other[1] < 0;
     const i = S.peI;
-    track(e, { move: (ev) => { const P = toEditable(l), p = P[i], q = local(ev), d = [rd(q[0] - p[0]), rd(q[1] - p[1])], ld = Math.hypot(d[0], d[1]) || 1, o = linked && !ev.altKey ? [rd(-d[0] / ld * lo), rd(-d[1] / ld * lo)] : other; if (side === 'o') setH(p, o, d); else setH(p, d, o); live(); }, done: finish, cancel: restore });
+    track(e, { move: (ev) => { const P = toEditable(l), p = P[i], q = local(ev), d = [rd(q[0] - p[0]), rd(q[1] - p[1])], ld = Math.hypot(d[0], d[1]) || 1, o = S.peParallel ? [rd(other[0] + d[0] - h[0]), rd(other[1] + d[1] - h[1])] : linked && !ev.altKey ? [rd(-d[0] / ld * lo), rd(-d[1] / ld * lo)] : other; if (side === 'o') setH(p, o, d); else setH(p, d, o); if (p.length > 6 && (S.peParallel || ev.altKey)) p[6] = 0; live(); }, done: finish, cancel: restore });
     return;
   }
   // 2. a point: tap selects, double-tap switches corner/curve, drag moves

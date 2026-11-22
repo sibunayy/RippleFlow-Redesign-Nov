@@ -11,7 +11,7 @@ const state = {
   open: new Set(['logo']), tlMode: 'dope', pop: null, dialog: null, cat: 'All', q: '', collapsed: new Set(store.get('collapsed', ['blend', 'masks', 'trim', 'repeat'])),
   portraitPreview: false, toast: null, hostTheme: root.getAttribute('data-theme'), themePref: store.get('theme', 'auto'), glow: store.get('glow', 'full'), tint: store.get('tint', 'classic'),
   autoFold: store.get('autofold', true), eyedrop: false, penPts: [],
-  selMode: 'select', areaMode: 'marquee', pe: null as string | null, peI: -1, multi: new Set<string>(), wa: [0, DUR], ctxPrev: null,
+  selMode: 'select', areaMode: 'marquee', pe: null as string | null, peI: -1, peParallel: false, multi: new Set<string>(), wa: [0, DUR], ctxPrev: null,
   drawMode: 'brush', flip: null,
   brush: Object.assign({ pre: 'ink', c: '#f4efe9', pr: true, tl: true, sm: 20, P: { pencil: { sz: 6, op: 90 }, ink: { sz: 10, op: 100 }, marker: { sz: 22, op: 75 }, air: { sz: 70, op: 45 } }, er: { sz: 34, op: 100 } }, store.get('brush', {})),
   onion: Object.assign({ on: true, nb: 2, na: 1, op: 45, tint: true, lb: false }, store.get('onion', {})),
