@@ -196,3 +196,12 @@ Artifact copy: `npm run build:artifact` writes `dist-artifact/`; the page fragme
 Tests: `tests/parity/13-checklist-fixes.spec.ts` and a parenting unit test. The Add effect menu now lists 24.
 Effects-tab reference screenshots were re-taken. Not testable without a device: the real keyboard, Home Screen safe
 areas, Safari's back-swipe, and frame rate on an iPad.
+
+## Full-screen fix (Safari and Home Screen app)
+
+- **Black bars.** The app was drawn as a rounded card with a margin, plus the status bar and home bar space, so the dark
+  page showed above and below it. The app now fills the screen. The system's space takes the header colour.
+- **Scaling.** The app shell and the inspector's Animation section share the class name `anim`, so that section's
+  padding, gaps and border were applied to the whole app. They are now cleared on the shell (`12-edits.css`).
+- Reference screenshots were re-taken for this intended change. Not testable without a device: real status bar and home
+  bar spacing on an iPad.

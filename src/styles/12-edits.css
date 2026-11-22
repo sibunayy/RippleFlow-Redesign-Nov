@@ -39,15 +39,26 @@ input, textarea, select { -webkit-touch-callout: default; }
 /* A selected key also has the class "sel", which the dropdown style (09-overlays) uses too. Keep its tap area invisible. */
 .dk.sel { background: none; box-shadow: none; border-radius: 0; padding: 0; }
 
-/* On-screen keyboard open: the app is fitted above it (touch-guard.ts), so drop the outer padding to keep room. */
-html.kb-open body { padding-block: 0; }
-html.kb-open .app { border-radius: 0; }
+/* Full screen in Safari and as a Home Screen app: no outer frame. The only space left around the app is the system's
+   own (status bar, home bar, notch), and it takes the header colour so it reads as part of the app. dvh follows
+   Safari's toolbars as they show and hide. */
+:root { padding-top: 0; padding-bottom: 0; height: 100dvh; }
+body {
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--surface);
+}
+body:has(.app.preview-portrait) { background: var(--board); } /* the portrait preview is still a framed page */
+.app { max-width: none; border-radius: 0; box-shadow: none; }
+/* The app shell and the inspector's Animation section share the class name "anim". That section's padding, gap and top
+   border were leaking onto the whole app, shrinking and shifting every panel. */
+.app.anim { padding: 0; gap: 0; border-top: 0; }
+
+/* On-screen keyboard open: the app is fitted above it (touch-guard.ts), so drop the bottom padding to keep room. */
+html.kb-open body { padding-bottom: 0; }
 
 /* Phones (iPhone Safari, portrait or landscape): no outer frame, tool strips scroll when they run out of height,
    and the timeline keeps room for the time readout. */
 @media (max-width: 600px), (max-height: 500px) {
-  body { padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
-  .app { border-radius: 0; box-shadow: none; }
   .strip { overflow-y: auto; scrollbar-width: none; }
   .strip::-webkit-scrollbar { display: none; }
   #qbar { max-width: calc(100% - 16px); overflow-x: auto; scrollbar-width: none; }
