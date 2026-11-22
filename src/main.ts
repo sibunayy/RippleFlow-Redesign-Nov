@@ -77,6 +77,7 @@ import { registerServiceWorker } from './host/pwa';
 import { guardTouch } from './host/touch-guard';
 import { bootLibrary, listenLibrary } from './library/page';
 import { listenCustomise } from './ui/customise';
+import { listen as listenModifier } from './state/modifier';
 
 listenLibrary(); // first, so its key guard runs before the editor's shortcuts
 listenUiTopbar();
@@ -88,6 +89,7 @@ listenEventsKeyboard();
 listenFbfTimeline();
 guardTouch();
 listenCustomise();
+listenModifier();
 
 new ResizeObserver(() => { applyLayout(); layoutStage(); }).observe(app);
 new ResizeObserver(() => layoutStage()).observe(vp);

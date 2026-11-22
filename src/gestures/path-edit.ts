@@ -10,6 +10,7 @@ import { renderFloats } from '../ui/floats';
 import { renderAll } from '../ui/layout';
 import { toast } from '../ui/toast';
 import { setDragging } from '../events/delegate';
+import { shifted } from '../state/modifier';
 import { panStart, penFinish, penSeen, ptrs } from './canvas';
 
 /* ---------- pen tool and point editing ----------
@@ -203,7 +204,9 @@ export function penDown(e) {
     track(e, { move: sh, done: () => penFinish(true), tap: () => penFinish(true), cancel: () => { first.length = 0; first.push(...saved); drawOverlay(); } });
     return;
   }
-  const pt: number[] = [Math.round(px), Math.round(py)]; P.push(pt); penClearRedo(); drawOverlay(); renderFloats();
+  let qx = px, qy = py;
+  if (shifted(e) && P.length) { const [ox, oy] = P[P.length - 1], a = Math.round(Math.atan2(py - oy, px - ox) / (Math.PI / 4)) * (Math.PI / 4), d = Math.hypot(px - ox, py - oy); qx = ox + Math.cos(a) * d; qy = oy + Math.sin(a) * d; } // modifier: 45° steps
+  const pt: number[] = [Math.round(qx), Math.round(qy)]; P.push(pt); penClearRedo(); drawOverlay(); renderFloats();
   track(e, {
     move: (ev) => { const [x, y] = compPt(ev), o = [Math.round(x - pt[0]), Math.round(y - pt[1])]; setH(pt, [-o[0], -o[1]], o); drawOverlay(); },
     done: () => { drawOverlay(); renderFloats(); },

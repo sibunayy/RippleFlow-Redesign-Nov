@@ -10,6 +10,7 @@ import { clamp } from '../ui/graph';
 import { renderAll, seek } from '../ui/layout';
 import { play } from '../playback/loop';
 import { foldEnd, foldStart } from '../ui/autofold';
+import { shifted } from '../state/modifier';
 import { longPress, setDragging } from '../events/delegate';
 
 // Corner handles scale and the knob rotates, around the anchor (one layer) or the selection centre (several).
@@ -28,7 +29,7 @@ export function handleDrag(e, el) {
     if (!moved) { moved = true; setDragging(true); foldStart('drag'); }
     let k = 1, dth = 0;
     if (kind === 's') k = Math.max(.01, Math.hypot(q[0] - c[0], q[1] - c[1]) / d0);
-    else { dth = (Math.atan2(q[1] - c[1], q[0] - c[0]) - a0) * 180 / Math.PI; if (dth > 180) dth -= 360; if (dth < -180) dth += 360; if (S.snap) dth = Math.round((st0[0].r + dth) / 15) * 15 - st0[0].r; }
+    else { dth = (Math.atan2(q[1] - c[1], q[0] - c[0]) - a0) * 180 / Math.PI; if (dth > 180) dth -= 360; if (dth < -180) dth += 360; if (S.snap !== shifted(ev)) dth = Math.round((st0[0].r + dth) / 15) * 15 - st0[0].r; }
     const rad = dth * Math.PI / 180, co = Math.cos(rad), si = Math.sin(rad);
     st0.forEach((o) => {
       if (kind === 's') setVal(o.l, 'scale', clamp(o.s * k, 0, 1000)); else setVal(o.l, 'rot', o.r + dth);

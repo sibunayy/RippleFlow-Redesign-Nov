@@ -29,6 +29,7 @@ import { handleDrag, mpDrag } from '../gestures/handles';
 import { jumpKey, tcDrag, trackDown, trimDrag, waDrag } from '../gestures/timeline';
 import { fxReorder, layerHold } from '../gestures/reorder';
 import { curveDrag, fieldDrag, keyDown, layerDrag, scrubDrag, sheetDrag, tlDrag } from '../gestures/drags';
+import { modDown } from '../state/modifier';
 import { canvasDown } from '../gestures/canvas';
 import { parentRef } from '../anim/pose';
 
@@ -111,6 +112,7 @@ export function listen() {
   document.addEventListener('contextmenu', (e) => { if ((e.target as any).closest('[data-ctx],[data-dk],#shapebtn,#areabtn,#brushbtn,[data-onion],[data-flip],[data-cel],#vp,[data-kj],.fld,.bar')) e.preventDefault(); });
   document.addEventListener('pointerdown', (e) => {
     const t: any = e.target; // delegated: any element in the app
+    if (t.closest('#modbtn')) return modDown(e);
     // shapes flyout on the rail
     if (t.closest('#shapebtn')) { longPress(e, () => { S.pop = { type: 'shapes' }; renderPop(); }); return; }
     if (t.closest('#areabtn')) { longPress(e, () => { S.pop = { type: 'selmodes' }; renderPop(); }); return; }
