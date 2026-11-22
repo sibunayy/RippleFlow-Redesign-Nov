@@ -1,4 +1,5 @@
 import { SHP } from '../shader/presets';
+import { FPS } from '../model/project';
 
 /* ---- effects ---- */
 // ps: [key, label, min, max, step per point, unit, default, show?(effect)]
@@ -51,7 +52,7 @@ export function fxDefaults(e, force = false) {
   return e;
 }
 export const hsl = (h, s = .75, L = .55) => { const k = (n) => (n + h / 30) % 12, a = s * Math.min(L, 1 - L); return [0, 8, 4].map((n) => L - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))); };
-export const postT = (l, f) => { const e = !l.fxOff && l.fx.find((x) => x.on && x.id === 'postime'); if (!e) return f; const st = 30 / Math.max(1, e.amount || 8); return Math.floor(f / st) * st; };
+export const postT = (l, f) => { const e = !l.fxOff && l.fx.find((x) => x.on && x.id === 'postime'); if (!e) return f; const st = FPS / Math.max(1, e.amount || 8); return Math.floor(f / st) * st; };
 export const rippleBF = (e) => 0.05 / (1 + (e.radius ?? 30) * 0.12);
 /** Effects drawn by the SVG filter chain. Time effects and the shader fill (a canvas inside the layer) are not. */
 export const isFilterFx = (e) => e.on && e.id !== 'postime' && e.id !== 'shader';

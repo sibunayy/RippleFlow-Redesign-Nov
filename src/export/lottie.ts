@@ -1,4 +1,4 @@
-import { DUR, FPS, layers, markers, projName } from '../model/project';
+import { DUR, FPS, layers, markers, projName, CW, CH } from '../model/project';
 import { lay } from '../anim/interpolate';
 import { hasStroke, pathHasHandles, pathSegs, polyOf } from '../render/shapes';
 import { FONTS, WNAME, snapW } from '../render/text';
@@ -92,7 +92,7 @@ export async function exportLottie(job) {
         L.ty = 5; L.ks.a = { a: 0, k: [0, lr(-size * .35 + (lines - 1) * lh / 2)] };
         L.t = { d: { k: [{ s: { s: size, f: fname, t: t.replace(/\n/g, '\r'), j: { left: 0, right: 1, center: 2 }[l.align || 'center'], tr: Math.round((+l.track || 0) / size * 1000), lh: lr(lh), ls: 0, fc: lrgb(l.hue) }, t: 0 }] }, p: {}, m: { g: 1, a: { a: 0, k: [0, 0] } }, a: [] };
         if (l.grad) warn.add('gradient text');
-      } else if (l.type === 'solid') { L.ty = 1; L.sc = l.hue; L.sw = 1920; L.sh = 1080; L.ks.a = { a: 0, k: [960, 540] }; }
+      } else if (l.type === 'solid') { L.ty = 1; L.sc = l.hue; L.sw = CW; L.sh = CH; L.ks.a = { a: 0, k: [(CW / 2), (CH / 2)] }; }
       else if (l.type === 'image') {
         let p = ''; try { const b = await (await fetch(l.src)).blob(); p = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(b); }); } catch { warn.add('an image that could not be read'); continue; }
         const id = 'img_' + assets.length; assets.push({ id, w: Math.round(l.w), h: Math.round(l.h), u: '', p, e: 1 });
@@ -112,7 +112,7 @@ export async function exportLottie(job) {
     job.set((li + 1) / layers.length * 95, `Layer ${li + 1} of ${layers.length}`);
     await new Promise((r) => setTimeout(r, 0));
   }
-  const doc: any = { v: '5.7.4', fr: FPS, ip: 0, op: DUR, w: 1920, h: 1080, nm: projName, ddd: 0, assets, layers: out, markers: markers.map((m) => ({ tm: m.f, cm: m.name, dr: 0 })) };
+  const doc: any = { v: '5.7.4', fr: FPS, ip: 0, op: DUR, w: CW, h: CH, nm: projName, ddd: 0, assets, layers: out, markers: markers.map((m) => ({ tm: m.f, cm: m.name, dr: 0 })) };
   if (fonts.length) doc.fonts = { list: fonts };
   job.warn = [...warn];
   return new Blob([JSON.stringify(doc)], { type: 'application/json' });

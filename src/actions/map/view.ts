@@ -4,11 +4,14 @@ import { buildCanvas, gEls, layoutStage, stage, vp } from '../../render/stage';
 import { renderRight } from '../../ui/inspector/index';
 import { renderFloats } from '../../ui/floats';
 import { renderTop } from '../../ui/topbar';
+import { applyClip } from '../../ui/layout';
+import { toast } from '../../ui/toast';
 import { fitSelOn, setFitSelOn } from '../../events/delegate';
 import { A } from '../index';
 
 /** Canvas view: zoom, fit, snap and guides. Keys are data-act names. */
 export const viewActions = {
+  clip: () => { S.clip = !S.clip; store.set('clip', S.clip); applyClip(); renderTop(); toast(S.clip ? 'Clip to bounds on. Content outside the canvas is hidden.' : 'Clip to bounds off. Content outside the canvas is shown.'); },
   guide: (el) => { S.guide = el.dataset.v; store.set('guide', S.guide); buildCanvas(); renderRight(); renderFloats(); renderTop(); },
   zoom: (el) => { S.zoom = Math.max(.25, Math.min(6, S.zoom * +el.dataset.v)); layoutStage(); },
   fit: () => {

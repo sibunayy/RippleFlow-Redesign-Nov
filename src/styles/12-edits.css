@@ -263,3 +263,7 @@ body { position: relative; }
 .sb.on .dot { background: var(--on-acc); box-shadow: none; }
 .cz-preset[aria-pressed="true"] small, .cz-preset[aria-pressed="true"] .cz-l { color: inherit; }
 .tog[aria-pressed="true"]::after { background: var(--on-acc); }
+
+/* Composition background: a custom colour swatch. The colour input sits invisibly on top of a rainbow dot. */
+.sw.cust { position: relative; display: inline-block; background: conic-gradient(#f55, #fd5, #5d5, #5df, #55f, #f5d, #f55); overflow: hidden; }
+.sw.cust input { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); opacity: 0; cursor: pointer; border: 0; padding: 0; }

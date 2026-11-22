@@ -1,5 +1,5 @@
 import { $ } from '../core/dom';
-import { HUES, layers } from '../model/project';
+import { HUES, layers, CW, CH } from '../model/project';
 import { st } from '../model/schema';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
@@ -25,7 +25,7 @@ const ink = $('#ink'), ictx = ink.getContext('2d');
 function inkSetup(l) {
   const dpr = devicePixelRatio || 1, W = innerWidth, H = innerHeight;
   ink.width = Math.round(W * dpr); ink.height = Math.round(H * dpr); ink.style.width = W + 'px'; ink.style.height = H + 'px';
-  const sr = stage.getBoundingClientRect(), k = sr.width / 1920;
+  const sr = stage.getBoundingClientRect(), k = sr.width / CW;
   ictx.setTransform(1, 0, 0, 1, 0, 0); ictx.clearRect(0, 0, ink.width, ink.height);
   ictx.beginPath(); ictx.rect(sr.left * dpr, sr.top * dpr, sr.width * dpr, sr.height * dpr); ictx.clip();
   const m = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]).translate(sr.left, sr.top).scale(k).multiply(world(l, S.f));
@@ -37,7 +37,7 @@ export function drawTarget() {
   if (l && l.type === 'draw' && !l.lock && l.vis) return l;
   nameCount.draw = (nameCount.draw || 0) + 1;
   l = { id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: 'Drawing ' + nameCount.draw, type: 'draw', hue: HUES[(layers.length + 2) % HUES.length], vis: true, lock: false, fx: [], cels: [],
-    p: { x: st(960), y: st(540), scale: st(100), rot: st(0), op: st(100), ax: st(0), ay: st(0), ts: st(0), te: st(100) } };
+    p: { x: st((CW / 2)), y: st((CH / 2)), scale: st(100), rot: st(0), op: st(100), ax: st(0), ay: st(0), ts: st(0), te: st(100) } };
   layers.unshift(l); S.sel = l.id; S.multi = new Set(); S.keys = []; buildCanvas(); renderLeft(); renderTL(); renderRight();
   toast('Started a new drawing layer', false);
   return l;

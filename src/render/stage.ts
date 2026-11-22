@@ -1,5 +1,5 @@
-import { $, $$ } from '../core/dom';
-import { DUR, FPS, compBg, layers } from '../model/project';
+import { $, $$, esc } from '../core/dom';
+import { DUR, FPS, compBg, layers, CW, CH, projName } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, isSelTool, selIds } from '../state/state';
 import { guideHtml } from './guides';
@@ -34,7 +34,7 @@ export function buildCanvas() {
     // Shader fill effect: the shader canvas sits on top of the shape, masked to the shape's own outline.
     const copy = (i) => {
       if (!sf) return sh;
-      const e = l.fx[sf.j], s = (e.scale ?? 100) / 100, w = 1920 * s, h = 1080 * s, mid = `shm-${l.id}-${i}`;
+      const e = l.fx[sf.j], s = (e.scale ?? 100) / 100, w = CW * s, h = CH * s, mid = `shm-${l.id}-${i}`;
       defs += `<mask id="${mid}" maskUnits="userSpaceOnUse" x="-6000" y="-6000" width="14000" height="14000"><use href="#sb-${l.id}-${i}" filter="url(#mtw)"/></mask>`;
       return `<g id="sb-${l.id}-${i}">${sh}</g><g mask="url(#${mid})" opacity="${((e.mix ?? 100) / 100).toFixed(3)}"${e.blend && e.blend !== 'normal' ? ` style="mix-blend-mode:${e.blend}"` : ''} pointer-events="none"><foreignObject class="shfx" data-fx="${fxShaderId(l, sf.j)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}"></foreignObject></g>`;
     };
@@ -46,7 +46,7 @@ export function buildCanvas() {
     return mk ? `<g>${gs}</g>` : gs;
   }).join('');
   defs += hidden.join('');
-  stage.innerHTML = `<svg viewBox="0 0 1920 1080" role="img" aria-label="Composition: Logo sting, 1920 by 1080"><defs>${defs}<filter id="onB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 .28  0 0 0 0 .32  0 0 0 1 0"/></filter><filter id="onA"><feColorMatrix type="matrix" values="0 0 0 0 .22  0 0 0 0 .86  0 0 0 0 .5  0 0 0 1 0"/></filter></defs><rect width="1920" height="1080" style="fill: ${compBg || 'var(--comp-bg)'}"/>${body}</svg>${guideHtml()}`;
+  stage.innerHTML = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Composition: ${esc(projName)}, ${CW} by ${CH}"><defs>${defs}<filter id="onB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 .28  0 0 0 0 .32  0 0 0 1 0"/></filter><filter id="onA"><feColorMatrix type="matrix" values="0 0 0 0 .22  0 0 0 0 .86  0 0 0 0 .5  0 0 0 1 0"/></filter></defs><rect width="${CW}" height="${CH}" style="fill: ${compBg || 'var(--comp-bg)'}"/>${body}</svg>${guideHtml()}`;
   gEls = {}; setXfEls({});
   mountShaders();
   $$('g[data-id]', stage).forEach((g) => { gEls[g.dataset.id] = g; xfEls[g.dataset.id] = []; $$(':scope > .xf', g).forEach((x) => { xfEls[g.dataset.id][+x.dataset.i] = x; }); });
@@ -86,7 +86,7 @@ export function updateCanvas() {
     const sf = vis && shaderFill(l); if (sf) renderShader(fxShaderLayer(l, sf.j), f, fxShaderSize, Math.round(fxShaderSize * 9 / 16));
     if (l.type === 'text' && (l.anims || []).length) applyTextAnims(l, g, f);
     l.fx.forEach((e, j) => {
-      if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = stage.querySelector(`#rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / 30) % 997); }
+      if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = stage.querySelector(`#rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / FPS) % 997); }
       if (e.on && e.id === 'ripple') { const tb = stage.querySelector(`#rt-${l.id}-${j}`); if (tb) { const bf = rippleBF(e), sp = (e.speed ?? 30) * .12; tb.setAttribute('baseFrequency', `${(bf * (1 + .22 * Math.sin(t * sp))).toFixed(5)} ${(bf * (1 + .22 * Math.cos(t * sp * .83))).toFixed(5)}`); } }
     });
   }
@@ -97,7 +97,7 @@ export function layoutStage() {
     const v = vp.getBoundingClientRect(), k = S.zoom / frozen.zoom, W = frozen.w * k, H = frozen.h * k;
     const cx = frozen.cx + S.pan[0] - frozen.pan[0], cy = frozen.cy + S.pan[1] - frozen.pan[1];
     Object.assign(stage.style, { width: W + 'px', height: H + 'px', left: (cx - W / 2 - v.left) + 'px', top: (cy - H / 2 - v.top) + 'px' });
-    const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(W / 1920 * 100) + '%';
+    const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(W / CW * 100) + '%';
     placeSel(); return;
   }
   const w = vp.clientWidth;
@@ -107,14 +107,14 @@ export function layoutStage() {
   if (app && pr && app.classList.contains('portrait') && app.classList.contains('right-open') && pr.offsetWidth > w * .6) {
     const above = pr.offsetTop - vp.offsetTop; if (above > 120) h = Math.min(h, above);
   }
-  const fit = Math.min((w - 56) / 1920, (h - 56) / 1080);
+  const fit = Math.min((w - 56) / CW, (h - 56) / CH);
   const sc = Math.max(.05, fit * S.zoom);
-  const W = 1920 * sc, H = 1080 * sc;
+  const W = CW * sc, H = CH * sc;
   Object.assign(stage.style, { width: W + 'px', height: H + 'px', left: ((w - W) / 2 + S.pan[0]) + 'px', top: ((h - H) / 2 + S.pan[1]) + 'px' });
   const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(sc * 100) + '%';
   placeSel();
 }
-export function compPt(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 1920, (e.clientY - r.top) / r.height * 1080]; }
+export function compPt(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * CW, (e.clientY - r.top) / r.height * CH]; }
 export function selRect() {
   let r = null;
   for (const id of selIds()) {
@@ -143,7 +143,7 @@ export function placeSel() {
   if (!r) { box.hidden = true; anc.hidden = true; qb.classList.remove('show'); return; }
   const multi = selIds().length > 1, l = lay(S.sel);
   box.hidden = false; box.classList.toggle('multi', multi);
-  if (!multi && l) { const sr = stage.getBoundingClientRect(), ap = anchorAt(l, S.f); anc.hidden = false; anc.style.left = (sr.left - v.left + ap.x / 1920 * sr.width) + 'px'; anc.style.top = (sr.top - v.top + ap.y / 1080 * sr.height) + 'px'; } else anc.hidden = true;
+  if (!multi && l) { const sr = stage.getBoundingClientRect(), ap = anchorAt(l, S.f); anc.hidden = false; anc.style.left = (sr.left - v.left + ap.x / CW * sr.width) + 'px'; anc.style.top = (sr.top - v.top + ap.y / CH * sr.height) + 'px'; } else anc.hidden = true;
   Object.assign(box.style, { left: (r.left - v.left - 4) + 'px', top: (r.top - v.top - 4) + 'px', width: (r.width + 8) + 'px', height: (r.height + 8) + 'px' });
   const show = isSelTool(S.tool) && !S.playing && !dragging;
   qb.classList.toggle('show', show);

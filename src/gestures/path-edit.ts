@@ -1,3 +1,4 @@
+import { CW, CH } from '../model/project';
 import { $ } from '../core/dom';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
@@ -196,7 +197,7 @@ export function installPenUndo() {
 export function penDown(e) {
   if (ptrs.size > 1) return;
   if (e.pointerType === 'touch' && penSeen) return panStart(e); // with Apple Pencil in use, a finger pans
-  const [px, py] = compPt(e), P = S.penPts, k = stage.getBoundingClientRect().width / 1920;
+  const [px, py] = compPt(e), P = S.penPts, k = stage.getBoundingClientRect().width / CW;
   if (P.length > 2 && Math.hypot(px - P[0][0], py - P[0][1]) * k < HIT) { // closing: lifting finishes, dragging shapes the last curve
     const first = P[0], saved = [...first], sh = (ev) => { const [x, y] = compPt(ev); first[2] = Math.round(first[0] - x); first[3] = Math.round(first[1] - y); first[4] = first[4] || 0; first[5] = first[5] || 0; drawOverlay(); };
     track(e, { move: sh, done: () => penFinish(true), tap: () => penFinish(true), cancel: () => { first.length = 0; first.push(...saved); drawOverlay(); } });
@@ -231,7 +232,7 @@ export function peOverlay(v) {
 /** The path being drawn with the pen tool. */
 export function penOverlay(v) {
   const P = S.penPts; if (S.tool !== 'pen' || !P.length) return '';
-  const sr = stage.getBoundingClientRect(), to = (x, y) => [sr.left - v.left + x / 1920 * sr.width, sr.top - v.top + y / 1080 * sr.height];
+  const sr = stage.getBoundingClientRect(), to = (x, y) => [sr.left - v.left + x / CW * sr.width, sr.top - v.top + y / CH * sr.height];
   const segs = pathSegs({ pts: P, closed: false, smooth: false });
   let out = segs.length ? `<path class="mp" style="stroke-dasharray:none;stroke-width:2.5" d="${dOf(segs, (q) => to(q[0], q[1]).map((n) => n.toFixed(1)).join(' '))}"/>` : '';
   const last = P[P.length - 1], a = to(last[0], last[1]);

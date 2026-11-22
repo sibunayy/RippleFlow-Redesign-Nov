@@ -1,3 +1,4 @@
+import { CW, CH } from '../model/project';
 import { esc } from '../core/dom';
 import { textSvg } from './text';
 import { BLANK } from '../drawing/cels';
@@ -55,8 +56,8 @@ function shapeSvg0(l) {
     case 'line': return `<line x1="${-(l.w || 420) / 2}" y1="0" x2="${(l.w || 420) / 2}" y2="0" fill="none"${stk || ` stroke="${l.hue}" stroke-width="12" stroke-linecap="round" class="tp" data-len="${shapeLen(l).toFixed(1)}"`}/>`;
     case 'rect': { const w = l.w || 280, h = l.h || 180; return `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${Math.min(l.cr ?? 24, w / 2, h / 2)}" fill="${fillA}"${fop}${stk}/>`; }
     case 'star': case 'polygon': return `<polygon points="${polyOf(l).map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="${fillA}"${fop}${stk}/>`;
-    case 'solid': return `<rect x="-960" y="-540" width="1920" height="1080" fill="${l.hue}"/>`;
-    case 'shader': return `<rect x="-960" y="-540" width="1920" height="1080" fill="url(#shd-${l.id})" class="shph"/><foreignObject class="shfo" data-sh="${l.id}" x="-960" y="-540" width="1920" height="1080"></foreignObject>`;
+    case 'solid': return `<rect x="${-CW / 2}" y="${-CH / 2}" width="${CW}" height="${CH}" fill="${l.hue}"/>`;
+    case 'shader': return `<rect x="${-CW / 2}" y="${-CH / 2}" width="${CW}" height="${CH}" fill="url(#shd-${l.id})" class="shph"/><foreignObject class="shfo" data-sh="${l.id}" x="${-CW / 2}" y="${-CH / 2}" width="${CW}" height="${CH}"></foreignObject>`;
     case 'audio': return '';
     case 'image': return `<image href="${l.src}" x="${-l.w / 2 + (l.ox || 0)}" y="${-l.h / 2 + (l.oy || 0)}" width="${l.w}" height="${l.h}"/>`;
     case 'draw': return `<g class="onion"></g><image class="cel" x="0" y="0" width="0" height="0" preserveAspectRatio="none" href="${BLANK}"/>`;

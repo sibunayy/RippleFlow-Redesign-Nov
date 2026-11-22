@@ -3,6 +3,7 @@
   background: var(--bg); background-image: radial-gradient(var(--grid-c, var(--line-soft)) 1px, transparent 1.2px); background-size: calc(22px * var(--k)) calc(22px * var(--k)); }
 .stage { position: absolute; transform-origin: 0 0; border-radius: calc(2px * var(--k)); box-shadow: 0 0 0 1px var(--line-soft), 0 calc(12px * var(--k)) calc(40px * var(--k)) rgb(0 0 0 / .4); }
 .stage svg { display: block; width: 100%; height: 100%; }
+:root[data-clip="off"] .stage svg { overflow: visible; }
 .selbox { position: absolute; pointer-events: none; border: 1.5px solid rgb(var(--acc)); border-radius: calc(2px * var(--k)); box-shadow: 0 0 calc(calc(12px * var(--k)) * var(--halo)) rgb(var(--acc) / .45); }
 .selbox i { position: absolute; width: calc(10px * var(--k)); height: calc(10px * var(--k)); background: var(--surface); border: 1.5px solid rgb(var(--acc)); border-radius: calc(3px * var(--k)); }
 .selbox i:nth-child(1) { left: calc(-6px * var(--k)); top: calc(-6px * var(--k)) } .selbox i:nth-child(2) { right: calc(-6px * var(--k)); top: calc(-6px * var(--k)) } .selbox i:nth-child(3) { left: calc(-6px * var(--k)); bottom: calc(-6px * var(--k)) } .selbox i:nth-child(4) { right: calc(-6px * var(--k)); bottom: calc(-6px * var(--k)) }

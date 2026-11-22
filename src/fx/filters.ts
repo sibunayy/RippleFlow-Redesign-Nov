@@ -1,4 +1,5 @@
 import { hsl, isFilterFx, rippleBF } from './defs';
+import { CH, CW } from '../model/project';
 
 /* A small PNG whose red channel runs left to right and green top to bottom. Used as a displacement map, it scales
    the image about its centre, which gives the lens-style chromatic aberration. A raster PNG (not SVG) is used because
@@ -24,11 +25,11 @@ const f3 = (v) => (+v).toFixed(3);
 
 // Pixel-grid effects (pixelate, halftone) need absolute positions, so they use the composition area plus a margin
 // as their filter area. It is kept small on purpose: Safari skips a filter whose area is too large to allocate.
-const COMP_REGION = 'filterUnits="userSpaceOnUse" x="-240" y="-240" width="2400" height="1560"';
+const compRegion = () => `filterUnits="userSpaceOnUse" x="-240" y="-240" width="${CW + 480}" height="${CH + 480}"`;
 
 /** The layer's filter. `box` (a local area) is used when baking: the filter then covers exactly that area. */
 export function fxDefs(l, box = null) {
-  const X0 = box ? box.x : -240, Y0 = box ? box.y : -240, CX = box ? box.x + box.w / 2 : 960, CY = box ? box.y + box.h / 2 : 540;
+  const X0 = box ? box.x : -240, Y0 = box ? box.y : -240, CX = box ? box.x + box.w / 2 : CW / 2, CY = box ? box.y + box.h / 2 : CH / 2;
   let out = '';
   if (l.type === 'shader') out += `<radialGradient id="shd-${l.id}" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="${l.hue}"/><stop offset=".55" stop-color="#0f2a4a"/><stop offset="1" stop-color="#0c0a08"/></radialGradient>`;
   const on = l.fxOff ? [] : l.fx.map((e, j) => [e, j]).filter(([e]) => isFilterFx(e));
@@ -112,7 +113,7 @@ export function fxDefs(l, box = null) {
     else if (e.id === 'vignette') {
       // A light above the centre of the composition falls off towards the corners; that falloff darkens the layer.
       // Built with filter lighting, so there is no image to load and no oversized filter area.
-      const z = 150 + Math.max(10, Math.min(100, R)) * 30, ic = z / Math.hypot(1101, z), g = 1 / Math.max(.05, 1 - ic), k = A / 100;
+      const z = 150 + Math.max(10, Math.min(100, R)) * 30, ic = z / Math.hypot(CW / 2, CH / 2, z), g = 1 / Math.max(.05, 1 - ic), k = A / 100;
       body += `<feDiffuseLighting in="SourceAlpha" surfaceScale="0" diffuseConstant="1" lighting-color="#fff" result="vl${i}"><fePointLight x="${CX}" y="${CY}" z="${z}"/></feDiffuseLighting>`
         + `<feColorMatrix in="vl${i}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${f3(-g * k)} 0 0 0 ${f3(g * k)}" result="va${i}"/><feComposite in="va${i}" in2="SourceAlpha" operator="in" result="vi${i}"/><feMerge result="r${i}"><feMergeNode in="${src}"/><feMergeNode in="vi${i}"/></feMerge>`;
     }
@@ -121,6 +122,6 @@ export function fxDefs(l, box = null) {
     if (mx < .995) { body += `<feComposite in="r${i}" in2="${src}" operator="arithmetic" k2="${mx.toFixed(3)}" k3="${(1 - mx).toFixed(3)}" result="mx${i}"/>`; src = 'mx' + i; return; }
     src = 'r' + i;
   });
-  const reg = box ? `filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : on.some(([e]) => ['halftone', 'pixelate'].includes(e.id)) ? COMP_REGION : wide ? 'x="-100%" y="-100%" width="300%" height="300%"' : 'x="-50%" y="-50%" width="200%" height="200%"';
+  const reg = box ? `filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : on.some(([e]) => ['halftone', 'pixelate'].includes(e.id)) ? compRegion() : wide ? 'x="-100%" y="-100%" width="300%" height="300%"' : 'x="-50%" y="-50%" width="200%" height="200%"';
   return out + `<filter id="fx-${l.id}" ${reg} color-interpolation-filters="sRGB">${body}</filter>`;
 }

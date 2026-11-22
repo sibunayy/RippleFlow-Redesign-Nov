@@ -5,6 +5,7 @@ import { commit } from '../state/history';
 import { buildCanvas, shaderFill } from '../render/stage';
 import { renderAll } from '../ui/layout';
 import { toast } from '../ui/toast';
+import { FPS } from '../model/project';
 import { celRaster, warmPicture } from '../drawing/raster';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -89,7 +90,7 @@ async function bakeDrawLayer(l) {
     l.fx.forEach((fx, j) => {
       if (!fx.on || !['roughen', 'grain', 'glitch'].includes(fx.id)) return;
       const tb = svg.querySelector(`#rf-${l.id}-${j}`);
-      if (tb) tb.setAttribute('seed', String(fx.id === 'grain' ? 1 + Math.floor(c.f) % 97 : 1 + Math.floor(c.f * (fx.speed || 0) / 30) % 997));
+      if (tb) tb.setAttribute('seed', String(fx.id === 'grain' ? 1 + Math.floor(c.f) % 97 : 1 + Math.floor(c.f * (fx.speed || 0) / FPS) % 997));
     });
     const g = document.createElementNS(NS, 'g'); g.setAttribute('filter', `url(#fx-${l.id})`);
     if (e.w > 0) {

@@ -1,3 +1,4 @@
+import { CW, CH } from '../model/project';
 import { $, app } from '../core/dom';
 import { animated, keyAt, lay, val } from '../anim/interpolate';
 import { S, selIds } from '../state/state';
@@ -15,7 +16,7 @@ import { longPress, setDragging } from '../events/delegate';
 export function handleDrag(e, el) {
   e.preventDefault(); e.stopPropagation();
   const kind = el.dataset.hd, ls = selIds().map(lay).filter((l) => l && !l.lock); if (!ls.length) return;
-  const sr = stage.getBoundingClientRect(), toComp = (x, y) => [(x - sr.left) / sr.width * 1920, (y - sr.top) / sr.height * 1080];
+  const sr = stage.getBoundingClientRect(), toComp = (x, y) => [(x - sr.left) / sr.width * CW, (y - sr.top) / sr.height * CH];
   const multi = ls.length > 1, r = selRect();
   const a0p = multi ? null : anchorAt(ls[0], S.f);
   const c = multi ? toComp(r.left + r.width / 2, r.top + r.height / 2) : [a0p.x, a0p.y];
@@ -49,7 +50,7 @@ export function mpDrag(e, dot) {
   const mv = (ev) => {
     if (isLong()) return; if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return; moved = true; setDragging(true);
     const f = S.f; S.f = t;
-    const [lx, ly] = toLocal(l, (ev.clientX - sx) / sr.width * 1920, (ev.clientY - sy) / sr.height * 1080, t);
+    const [lx, ly] = toLocal(l, (ev.clientX - sx) / sr.width * CW, (ev.clientY - sy) / sr.height * CH, t);
     const nx = Math.round(x0 + lx), ny = Math.round(y0 + ly);
     if (animated(l.p.x) || nx !== Math.round(x0)) setVal(l, 'x', nx, true); if (animated(l.p.y) || ny !== Math.round(y0)) setVal(l, 'y', ny, true);
     S.f = f; updateCanvas(); updateFields();

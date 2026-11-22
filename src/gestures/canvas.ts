@@ -1,6 +1,6 @@
 import { cTarget } from '../ui/color-picker';
 import { $ } from '../core/dom';
-import { layers } from '../model/project';
+import { layers, CW, CH } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, selIds } from '../state/state';
 import { commit, hi, hist, setLastLabel } from '../state/history';
@@ -72,7 +72,7 @@ export function canvasDown(e) {
     const [nx, ny] = compPt(ev); let dx = nx - cx, dy = ny - cy;
     if (!moved && Math.hypot(dx, dy) < 4) return; if (!moved) foldStart('drag'); moved = true; setDragging(true);
     let sx = false, sy = false;
-    if (S.snap && !L.parent && start.length === 1) { const x = start[0][1] + dx, y = start[0][2] + dy; if (Math.abs(x - 960) < 14) { dx += 960 - x; sx = true; } if (Math.abs(y - 540) < 14) { dy += 540 - y; sy = true; } }
+    if (S.snap && !L.parent && start.length === 1) { const x = start[0][1] + dx, y = start[0][2] + dy; if (Math.abs(x - (CW / 2)) < 14) { dx += (CW / 2) - x; sx = true; } if (Math.abs(y - (CH / 2)) < 14) { dy += (CH / 2) - y; sy = true; } }
     const sr = stage.getBoundingClientRect(), vr = vp.getBoundingClientRect();
     $('#gv').style.display = sx ? 'block' : 'none'; $('#gv').style.left = (sr.left - vr.left + sr.width / 2) + 'px';
     $('#gh').style.display = sy ? 'block' : 'none'; $('#gh').style.top = (sr.top - vr.top + sr.height / 2) + 'px';

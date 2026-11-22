@@ -15,7 +15,7 @@ const state = {
   drawMode: 'brush', flip: null,
   brush: Object.assign({ pre: 'ink', c: '#f4efe9', pr: true, tl: true, sm: 20, P: { pencil: { sz: 6, op: 90 }, ink: { sz: 10, op: 100 }, marker: { sz: 22, op: 75 }, air: { sz: 70, op: 45 } }, er: { sz: 34, op: 100 } }, store.get('brush', {})),
   onion: Object.assign({ on: true, nb: 2, na: 1, op: 45, tint: true, lb: false }, store.get('onion', {})),
-  solo: new Set<string>(), guide: store.get('guide', 'off'), loop: PF.loop, lq: '', acat: 'All', aq: '',
+  solo: new Set<string>(), guide: store.get('guide', 'off'), clip: store.get('clip', true) !== false, loop: PF.loop, lq: '', acat: 'All', aq: '',
   pDur: 100, pAmt: 100, pDir: 'up', pAt: 'head', pStag: 0, easeClip: null,
 };
 /** Fields the app adds to S later (shader dialog draft and import, the two-tap reset arm). */
