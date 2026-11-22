@@ -14,6 +14,7 @@ import { play } from '../playback/loop';
 import { A } from '../actions/index';
 import { drawOverlay } from '../drawing/overlay';
 import { penFinish, pinch0, preTouchSel } from '../gestures/canvas';
+import { peDelete, peExit, peLayer } from '../gestures/path-edit';
 
 // two-finger tap = undo, three-finger tap = redo (touch only)
 let tapStart = null;
@@ -23,6 +24,8 @@ export function listen() {
     const typing = /INPUT|TEXTAREA/.test(document.activeElement?.tagName || '');
     const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
     if (S.tool === 'pen' && S.penPts.length && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.key === 'Enter' ? penFinish(false) : (S.penPts = [], drawOverlay(), renderFloats()); return; }
+    if (peLayer() && !S.dialog && (e.key === 'Enter' || e.key === 'Escape') && !typing) { e.preventDefault(); peExit(); return; }
+    if (peLayer() && !S.dialog && !typing && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); peDelete(); return; }
     if (e.key === 'Escape') { if (S.dialog) A.close(); else if (S.pop) { S.pop = null; renderPop(); renderTop(); renderStrips(); } else { S.keys = []; renderAll(); } return; }
     if (typing) return;
     const ar = document.activeElement && document.activeElement.closest && document.activeElement.closest('.lrow[data-v]');
@@ -43,7 +46,7 @@ export function listen() {
     if (e.key === '?') { A.help(); return; }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); if (S.playing) play(false); seek(Math.round(S.f) + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)); return; }
     const map = { b: 'brush', x: 'erase', g: 'fill', v: 'select', m: 'marquee', q: 'lasso', h: 'hand', p: 'pen', t: 'text', r: 'rect', e: 'ellipse', y: 'polygon', s: 'star', l: 'line' };
-    if (!mod && map[k]) { S.tool = map[k]; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); return; }
+    if (!mod && map[k]) { S.tool = map[k]; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (S.tool === 'marquee' || S.tool === 'lasso') S.areaMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); return; }
     if (!mod && k === 'k') { A.autokey(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && S.keys.length) { A.keysdel(); } else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel) { A.del(); }
   });

@@ -15,6 +15,7 @@ import { foldEnd, foldStart } from '../ui/autofold';
 import { newLayer } from '../actions/layers';
 import { toggleMember } from '../state/selection';
 import { areaSelect } from './area-select';
+import { EDITABLE, installPenUndo, peDown, peEnter, peLayer, penClearRedo, penDown } from './path-edit';
 import { saveBrush } from '../drawing/cels';
 import { drawDown } from '../drawing/ink';
 import { renderBrushBar } from '../drawing/brush-bar';
@@ -31,10 +32,10 @@ export function penFinish(close) {
   const P = S.penPts; S.penPts = [];
   if (P.length < 2) { drawOverlay(); renderFloats(); if (P.length) toast('A path needs at least two points'); return; }
   const xs = P.map((q) => q[0]), ys = P.map((q) => q[1]), cx = Math.round((Math.min(...xs) + Math.max(...xs)) / 2), cy = Math.round((Math.min(...ys) + Math.max(...ys)) / 2);
-  S.tool = 'select'; S.selMode = 'select';
-  newLayer('path', { x: cx, y: cy, pts: P.map((q) => [q[0] - cx, q[1] - cy]), closed: !!close && P.length > 2, smooth: false, fill: false, sw: 8 });
+  S.tool = 'select'; S.selMode = 'select'; penClearRedo();
+  newLayer('path', { x: cx, y: cy, pts: P.map((q) => [q[0] - cx, q[1] - cy, ...q.slice(2)]), closed: !!close && P.length > 2, smooth: false, fill: false, sw: 8 });
 }
-export function penUndo() { S.penPts.pop(); drawOverlay(); renderFloats(); }
+let lastLayerTap = { id: null as string | null, t: 0 };
 export function canvasDown(e) {
   if (ptrs.size === 0 && e.pointerType === 'touch') preTouchSel = { t: performance.now(), sel: S.sel, multi: [...S.multi], keys: [...S.keys] };
   ptrs.set(e.pointerId, [e.clientX, e.clientY]); vp.setPointerCapture(e.pointerId);
@@ -51,13 +52,9 @@ export function canvasDown(e) {
   const [cx, cy] = compPt(e);
   if (S.tool === 'text') { newLayer('text', { x: Math.round(cx), y: Math.round(cy) }); S.tool = 'select'; renderStrips(); renderFloats(); return; }
   if (['rect', 'ellipse', 'star', 'polygon', 'line'].includes(S.tool)) return shapeDrag(e, cx, cy);
-  if (S.tool === 'pen') {
-    if (ptrs.size > 1) return;
-    const [px, py] = compPt(e), P = S.penPts;
-    if (P.length > 2 && Math.hypot(px - P[0][0], py - P[0][1]) < 28 / Math.max(.2, S.zoom)) { penFinish(true); return; }
-    P.push([Math.round(px), Math.round(py)]); drawOverlay(); renderFloats(); return;
-  }
+  if (S.tool === 'pen') return penDown(e);
   if (S.tool === 'hand' || e.button === 1) return panStart(e);
+  if (peLayer()) return peDown(e);
   const inBox = (() => { const b = $('#selbox'); if (b.hidden) return false; const r = b.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; })();
   if ((S.tool === 'marquee' || S.tool === 'lasso') && !inBox) return areaSelect(e);
   const g = e.target.closest('g[data-id]'); let L = g && lay(g.dataset.id);
@@ -82,7 +79,7 @@ export function canvasDown(e) {
     start.forEach(([l, x0, y0]) => { const [lx, ly] = toLocal(l, dx, dy); setVal(l, 'x', Math.round(x0 + lx)); setVal(l, 'y', Math.round(y0 + ly)); });
     updateCanvas(); updateFields();
   };
-  const up = () => { vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up); setDragging(false); foldEnd('drag'); $('#gv').style.display = $('#gh').style.display = 'none'; if (isLong()) return; if (moved) { commit(start.length > 1 ? `Move ${start.length} layers` : 'Move'); renderAll(); } else placeSel(); };
+  const up = () => { vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up); setDragging(false); foldEnd('drag'); $('#gv').style.display = $('#gh').style.display = 'none'; if (isLong()) return; if (moved) { commit(start.length > 1 ? `Move ${start.length} layers` : 'Move'); renderAll(); } else { placeSel(); const now = performance.now(), dbl = S.tool === 'select' && ptrs.size === 0 && lastLayerTap.id === L.id && now - lastLayerTap.t < 350 && EDITABLE.includes(L.type) && selIds().length === 1; lastLayerTap = dbl ? { id: null, t: 0 } : { id: L.id, t: now }; if (dbl) peEnter(L); } };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
 }
 // Click-drag with a shape tool sizes the new shape: rectangles corner to corner, round shapes from the centre out, lines end to end. A plain tap places the default size.
@@ -108,7 +105,7 @@ function shapeDrag(e, cx, cy) {
   };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
 }
-function panStart(e) {
+export function panStart(e) {
   const p0 = [...S.pan], x0 = e.clientX, y0 = e.clientY;
   let moved = false;
   const mv = (ev) => { if (ptrs.size > 1) return; if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 4) return; if (!moved) { moved = true; foldStart('drag', 'stage'); } S.pan = [p0[0] + ev.clientX - x0, p0[1] + ev.clientY - y0]; layoutStage(); };
@@ -118,6 +115,7 @@ function panStart(e) {
 const endPtr = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null; if (!ptrs.size) foldEnd('drag'); };
 /** Registers this module's event listeners. main.ts calls it once, in the original order. */
 export function listen() {
+  installPenUndo();
   addEventListener('pointerdown', (e) => { setSuppressClick(false); if (e.pointerType === 'pen') penSeen = true; }, true);
   vp.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch0 && ptrs.size === 2) { const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); const z = Math.max(.25, Math.min(6, pinch0.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0.d)), k = z / pinch0.z; const cx = (a[0] + b[0]) / 2 - v.left, cy = (a[1] + b[1]) / 2 - v.top, mx = v.width / 2, my = v.height / 2; S.zoom = z; S.pan = [cx - mx - (pinch0.c[0] - mx - pinch0.pan[0]) * k, cy - my - (pinch0.c[1] - my - pinch0.pan[1]) * k]; layoutStage(); } });
   vp.addEventListener('pointerup', endPtr); vp.addEventListener('pointercancel', endPtr);

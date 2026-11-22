@@ -1,6 +1,7 @@
 import { $, app } from '../core/dom';
 import { S } from '../state/state';
 import { layoutStage, stage, vp } from '../render/stage';
+import { PF } from './prefs';
 
 /* ---------- auto-fold ---------- */
 // The left panel folds while the user drags on the canvas, and both fold during playback. During a drag the right panel
@@ -8,7 +9,8 @@ import { layoutStage, stage, vp } from '../render/stage';
 // shifts under the finger; afterwards the frozen rect becomes zoom/pan.
 export let frozen = null, foldBy = null, unfoldTimer = 0;
 type FoldTarget = 'sel' | 'stage' | 'pointer';
-const HIDE_AT = .6, SHOW_BELOW = .5; // the gap stops the panel flickering when a drag rests right on the limit
+// The limit is a Customise setting (60% by default). Showing again 10 points lower stops the panel flickering when a drag rests right on it.
+const hideAt = () => PF.hideAt / 100, showBelow = () => hideAt() - .1;
 let target: FoldTarget = 'sel', pointer: [number, number] | null = null, watchFrame = 0;
 const trackPointer = (e: PointerEvent) => { pointer = [e.clientX, e.clientY]; };
 
@@ -38,8 +40,8 @@ function rightPanelCover() {
 function watchRightPanel() {
   if (foldBy !== 'drag') return;
   const cover = rightPanelCover(), folded = app.classList.contains('fold-right');
-  if (!folded && cover >= HIDE_AT) app.classList.add('fold-right');
-  else if (folded && cover < SHOW_BELOW) app.classList.remove('fold-right');
+  if (!folded && cover >= hideAt()) app.classList.add('fold-right');
+  else if (folded && cover < showBelow()) app.classList.remove('fold-right');
   watchFrame = requestAnimationFrame(watchRightPanel);
 }
 export function foldStart(kind, dragging: FoldTarget = 'sel') {

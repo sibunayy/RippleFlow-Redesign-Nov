@@ -1,6 +1,6 @@
 import { $ } from '../core/dom';
 import { ic } from './icons';
-import { DRAWMODES, S, SELMODES, isDrawTool, isSelTool } from '../state/state';
+import { DRAWMODES, S, SELMODES, isDrawTool } from '../state/state';
 import { hi, hist } from '../state/history';
 import { renderFbfStrips } from '../drawing/fbf-timeline';
 
@@ -11,7 +11,8 @@ export function renderStrips() {
   if (S.fbf) return renderFbfStrips();
   const t = S.tool;
   $('#lstrip').innerHTML = `
-    <button class="sb ${isSelTool(t) ? 'on' : ''}" id="selbtn" data-act="tool" data-v="${S.selMode}" aria-label="${SELMODES.find((m) => m[0] === S.selMode)[1]} (hold for marquee and lasso)" aria-pressed="${isSelTool(t)}" title="Selection · hold for Marquee and Lasso">${ic(S.selMode)}<span class="more"></span></button>
+    <button class="sb ${t === 'select' ? 'on' : ''}" id="selbtn" data-act="tool" data-v="select" aria-label="Select" aria-pressed="${t === 'select'}" title="Select · V">${ic('select')}</button>
+    <button class="sb ${t === 'marquee' || t === 'lasso' ? 'on' : ''}" id="areabtn" data-act="tool" data-v="${S.areaMode}" aria-label="${SELMODES.find((m) => m[0] === S.areaMode)[1]} (hold for marquee and lasso)" aria-pressed="${t === 'marquee' || t === 'lasso'}" title="${S.areaMode === 'lasso' ? 'Lasso · Q' : 'Marquee · M'} · hold for more">${ic(S.areaMode)}<span class="more"></span></button>
     ${TOOLS.slice(1).map(([id, n, k]) => `<button class="sb ${t === id ? 'on' : ''}" data-act="tool" data-v="${id}" aria-label="${n}" aria-pressed="${t === id}" title="${n} · ${k}">${ic(id)}</button>`).join('')}
     <button class="sb ${SHAPES.some((s) => s[0] === t) ? 'on' : ''}" id="shapebtn" data-act="tool" data-v="${S.shape}" aria-label="${SHAPES.find((s) => s[0] === S.shape)[1]} (hold for more shapes)" aria-pressed="${t === S.shape}" title="Shapes · hold for more">${ic(S.shape)}<span class="more"></span></button>
     <button class="sb ${t === 'text' ? 'on' : ''}" data-act="tool" data-v="text" aria-label="Text" aria-pressed="${t === 'text'}" title="Text · T">${ic('text')}</button>

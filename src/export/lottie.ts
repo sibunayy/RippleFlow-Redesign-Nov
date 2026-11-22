@@ -1,6 +1,6 @@
 import { DUR, FPS, layers, markers, projName } from '../model/project';
 import { lay } from '../anim/interpolate';
-import { hasStroke, pathSegs, polyOf } from '../render/shapes';
+import { hasStroke, pathHasHandles, pathSegs, polyOf } from '../render/shapes';
 import { FONTS, WNAME, snapW } from '../render/text';
 import { postT } from '../fx/defs';
 import { mat, pose, relM, repN, repXf } from '../anim/pose';
@@ -34,7 +34,7 @@ export function lgeom(l) {
     case 'star': case 'polygon': { const P = polyOf(l), xs = P.map((p) => p[0]), ys = P.map((p) => p[1]); return { g: sh(P, true), bb: [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)] }; }
     case 'path': {
       const P = l.pts || [], xs = P.map((p) => p[0]), ys = P.map((p) => p[1]), bb = [Math.max(...xs) - Math.min(...xs) || 1, Math.max(...ys) - Math.min(...ys) || 1];
-      if (!l.smooth || P.length < 3) return { g: sh(P, !!l.closed && P.length > 2), bb };
+      if (!pathHasHandles(l) && (!l.smooth || P.length < 3)) return { g: sh(P, !!l.closed && P.length > 2), bb };
       const segs = pathSegs(l), n = P.length, ii = P.map(() => [0, 0]), oo = P.map(() => [0, 0]);
       segs.forEach((q, k) => { const a = k, b = (k + 1) % n; oo[a] = [lr(q[1][0] - q[0][0]), lr(q[1][1] - q[0][1])]; ii[b] = [lr(q[2][0] - q[3][0]), lr(q[2][1] - q[3][1])]; });
       return { g: sh(P, !!l.closed, { i: ii, o: oo }), bb };
@@ -52,7 +52,7 @@ export function lpaint(l, bb, trim, part?) {
     } else items.push({ ty: 'fl', c: { a: 0, k: [...lrgb(l.hue), 1] }, o: { a: 0, k: 100 }, r: 1 });
   }
   if (hasStroke(l) && sw > 0 && part !== 'fill') {
-    const st: any = { ty: 'st', c: { a: 0, k: [...lrgb(l.type === 'ring' || l.type === 'path' || l.type === 'line' && !l.sw ? l.hue : (l.sc || '#ffffff')), 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: sw }, lc: { butt: 1, round: 2, square: 3 }[l.cap || 'round'], lj: { miter: 1, round: 2, bevel: 3 }[l.join || 'round'], ml: 4 };
+    const st: any = { ty: 'st', c: { a: 0, k: [...lrgb(l.type === 'path' && l.sc ? l.sc : l.type === 'ring' || l.type === 'path' || l.type === 'line' && !l.sw ? l.hue : (l.sc || '#ffffff')), 1] }, o: { a: 0, k: 100 }, w: { a: 0, k: sw }, lc: { butt: 1, round: 2, square: 3 }[l.cap || 'round'], lj: { miter: 1, round: 2, bevel: 3 }[l.join || 'round'], ml: 4 };
     if (l.dash > 0 && !trim) st.d = [{ n: 'd', nm: 'dash', v: { a: 0, k: l.dash } }, { n: 'g', nm: 'gap', v: { a: 0, k: Math.round(l.dash * 1.2) } }, { n: 'o', nm: 'offset', v: { a: 0, k: 0 } }];
     items.push(st);
   }

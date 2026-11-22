@@ -249,3 +249,27 @@ areas, Safari's back-swipe, and frame rate on an iPad.
 - **What counts as dragged.** The selected layers, the whole canvas when panning or pinching, and the brush tip when drawing.
 - **Top blur.** The solid backup strip is replaced by an invisible one (`.remove-blur`), so it cannot paint over the header.
 - **Tests.** `tests/parity/16-right-panel-fold.spec.ts`. Not tested on a real iPad.
+
+## Status bar matches the app
+- iOS copies the colour of the invisible blur-fix strip into the status bar. It was white, so it now uses the header
+  colour and follows the light and dark themes. Not yet checked on a real iPad.
+
+## Pen tool, point editing and a separate Marquee tool
+- **Drawing curves.** With the Pen, a tap makes a corner and a drag pulls out curve handles. Dragging on the first point closes the path and shapes the last curve.
+- **Two-finger undo.** A second finger now cancels the point the first finger started. While drawing, undo and redo step through the path's points.
+- **Apple Pencil.** Once the Pencil has been used, a resting finger or palm pans instead of adding points.
+- **Edit points.** Double-tap a shape or path, or use Edit points in the quick bar. Drag points or handles, drag a line to bend it, tap a line to add a point, double-tap a point to switch corner and curve.
+- **Shapes.** A rectangle, ellipse, star, polygon, ring or line stays a normal shape until a point is actually changed, then becomes a path with the same look. Its size controls (such as corner radius) are replaced by the path controls.
+- **Marquee.** Marquee has its own button below Select. Holding it offers Lasso.
+- **Tests.** `tests/parity/17-pen-and-points.spec.ts`. Not tested on a real iPad.
+
+## Deep navy theme and the Customise panel
+- **Navy is the new dark theme.** Panels, canvas, lines and text moved from warm charcoal to a deep blue family. The old look
+  is still available as the "Original charcoal" theme. Projects whose background is set to "Theme" now show and export on navy.
+- **Customise (More menu).** Three tabs, saved on this device in `rfp-prefs`:
+  - *Colours:* six ready-made dark themes, plus custom accent, panels, canvas area, composition, app backdrop, text and lines,
+    kept separately for dark and light mode. Related shades are worked out from the colours you pick.
+  - *Interface:* text size, corners, glow, panel animation, canvas pattern and spacing, layer name column width.
+  - *Workflow:* loop, auto-key, auto-fold, the right panel's hide limit, how the timeline and inspector open, new project length, undo steps.
+- **Left out for now:** snap distance, rotate snap angle, gesture toggles and hold time, because those files were being changed for the pen tool work.
+- **Tests.** `tests/parity/17-customise.spec.ts`; reference screenshots re-taken for the navy colours. Not tested on a real iPad.

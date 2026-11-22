@@ -16,6 +16,8 @@ import { buildCanvas, layoutStage } from '../../render/stage';
 import { store } from '../../core/store';
 import { showLibrary } from '../../library/page';
 import { resetOpenProject } from '../../library/projects';
+import { czTab, openCustomise, pfColorReset, pfMode, pfPreset, pfResetAll, pfSet, pfToggle } from '../../ui/customise';
+import { clearAccent } from '../../ui/prefs';
 
 /** App shell: history, menus, dialogs, panels, theme and settings. Keys are data-act names. */
 export const appActions = {
@@ -37,7 +39,15 @@ export const appActions = {
   toast: (el) => toast(el.dataset.v),
   theme: (el) => { S.themePref = el.dataset.v; applyTheme(); renderPop(); },
   glow: () => { S.glow = S.glow === 'soft' ? 'full' : 'soft'; applyTheme(); renderPop(); },
-  tint: (el) => { S.tint = el.dataset.v; applyTheme(); renderPop(); },
+  tint: (el) => { S.tint = el.dataset.v; clearAccent(); applyTheme(); renderPop(); },
+  customise: openCustomise,
+  cztab: czTab,
+  pfset: pfSet,
+  pftog: pfToggle,
+  pfmode: pfMode,
+  pfpreset: pfPreset,
+  pfcolorreset: pfColorReset,
+  pfresetall: pfResetAll,
   perf: () => { S.perf = !S.perf; $('#hud').hidden = !S.perf; $('#hud').textContent = `60 fps · ${layers.length} layers · frame ${Math.floor(S.f)}`; renderPop(); },
   mb: () => { S.mb = !S.mb; renderPop(); toast(S.mb ? 'Motion blur preview on' : 'Motion blur preview off'); },
   pp: () => { S.portraitPreview = !S.portraitPreview; S.pop = null; renderAll(); setTimeout(() => { applyLayout(); layoutStage(); }, 260); },

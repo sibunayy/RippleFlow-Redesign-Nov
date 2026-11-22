@@ -8,7 +8,8 @@ export function pathContent(l) {
   title = 'Path';
   look = tg('pathsm', !!l.smooth, 'Smooth curves') + tg('pathcl', !!l.closed, 'Closed path') + (l.closed ? tg('pathfill', l.fill === true, 'Fill shape') : '');
   paintTitle = 'Stroke';
-  paint = `<div class="fillrow">${chip(l, 'Stroke', 'hue')}${pf(l, 'lp', 0, 'sop', 'Opacity', 0, 100, .5, '%', true)}</div>`
+  // A shape turned into a path keeps its separate fill and stroke colours.
+  paint = `${l.sc && l.fill === true ? `<div class="fillrow">${chip(l, 'Fill', 'hue')}</div>` : ''}<div class="fillrow">${chip(l, 'Stroke', l.sc ? 'sc' : 'hue')}${pf(l, 'lp', 0, 'sop', 'Opacity', 0, 100, .5, '%', true)}</div>`
     + grid2([pf(l, 'lp', 0, 'sw', 'Width', 0, 80, .2)].concat(dashF(l), capJoin(l))) + trimRow(l);
   return { title, look, paint, paintTitle };
 }

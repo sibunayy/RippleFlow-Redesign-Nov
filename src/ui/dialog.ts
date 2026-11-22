@@ -3,6 +3,7 @@ import { DUR, FPS } from '../model/project';
 import { S } from '../state/state';
 import { shaderDialog } from '../shader/ui';
 import { exportDialog } from '../export/dialog';
+import { customiseDialog } from './customise';
 
 export function renderDialog() {
   let d = $('#dlg'); if (d) d.remove();
@@ -12,6 +13,8 @@ export function renderDialog() {
     inner = exportDialog();
   } else if (S.dialog === 'shader') {
     inner = shaderDialog();
+  } else if (S.dialog === 'customise') {
+    inner = customiseDialog();
   } else if (S.dialog === 'settings') {
     inner = `<h2>Project settings</h2>
       <div class="seg" role="group" aria-label="Duration">${[3, 5, 10, 15].map((d) => `<button data-act="setdur" data-v="${d}" aria-pressed="${DUR === d * FPS}">${d} s</button>`).join('')}</div>
@@ -30,6 +33,6 @@ export function renderDialog() {
       <div class="foot"><button class="primary" data-act="close">Done</button></div>`;
   }
   d = document.createElement('div'); d.id = 'dlg'; d.className = 'dlg-scrim'; d.dataset.act = 'scrimclose';
-  d.innerHTML = `<div class="dlg" role="dialog" aria-modal="true" aria-label="${S.dialog === 'export' ? 'Export' : S.dialog === 'settings' ? 'Project settings' : 'Help'}" tabindex="-1">${inner}</div>`;
+  d.innerHTML = `<div class="dlg${S.dialog === 'customise' ? ' dlg-cz' : ''}" role="dialog" aria-modal="true" aria-label="${S.dialog === 'export' ? 'Export' : S.dialog === 'settings' ? 'Project settings' : S.dialog === 'customise' ? 'Customise' : 'Help'}" tabindex="-1">${inner}</div>`;
   app.appendChild(d); setTimeout(() => d.querySelector('.dlg').focus(), 0);
 }

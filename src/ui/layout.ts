@@ -12,6 +12,7 @@ import { renderFloats } from './floats';
 import { renderTL, tlHeight } from './timeline';
 import { renderPop } from './popovers';
 import { fbfTick } from '../drawing/fbf-timeline';
+import { applyPrefs } from './prefs';
 
 /* ---------- layout ---------- */
 export function applyLayout() {
@@ -36,4 +37,5 @@ export function applyTheme() {
   else root.setAttribute('data-theme', S.themePref);
   root.setAttribute('data-glow', S.glow); root.setAttribute('data-tint', S.tint);
   store.set('theme', S.themePref); store.set('glow', S.glow); store.set('tint', S.tint);
+  applyPrefs();
 }

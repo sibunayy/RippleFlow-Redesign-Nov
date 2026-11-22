@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => { await openApp(page); });
 test('every tool in the strip selects', async ({ page }) => {
   const tools = page.locator('#lstrip [data-act="tool"]');
   const n = await tools.count();
-  expect(n).toBe(6);
+  expect(n).toBe(7); // Select and Marquee are separate tools
   for (let i = 0; i < n; i++) {
     await tools.nth(i).click();
     await expect(tools.nth(i)).toHaveAttribute('aria-pressed', 'true');
@@ -19,7 +19,7 @@ test('every tool in the strip selects', async ({ page }) => {
   await expect(page.locator('#selbtn')).toHaveAttribute('aria-pressed', 'true');
 });
 
-for (const [btn, act, pick] of [['#selbtn', 'picksel', 'lasso'], ['#shapebtn', 'pickshape', 'star'], ['#brushbtn', 'pickdraw', 'erase']] as const) {
+for (const [btn, act, pick] of [['#areabtn', 'picksel', 'lasso'], ['#shapebtn', 'pickshape', 'star'], ['#brushbtn', 'pickdraw', 'erase']] as const) {
   test(`holding ${btn} opens its flyout`, async ({ page }) => {
     await hold(page, page.locator(btn));
     const item = page.locator(`#layer-pop [data-act="${act}"][data-v="${pick}"]`);

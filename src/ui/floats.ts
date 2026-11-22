@@ -2,7 +2,8 @@ import { $ } from '../core/dom';
 import { ic } from './icons';
 import { TF } from '../model/schema';
 import { animated, lay } from '../anim/interpolate';
-import { S, isDrawTool } from '../state/state';
+import { S, isDrawTool, selIds } from '../state/state';
+import { EDITABLE, shapePts } from '../gestures/path-edit';
 import { layoutStage } from '../render/stage';
 import { renderBrushBar } from '../drawing/brush-bar';
 import { setFitSelOn, setSuppressClick } from '../events/delegate';
@@ -15,13 +16,16 @@ export function renderFloats() {
   $('#qbar').innerHTML = `<button class="qb" data-act="keyall">${ic('key', 's')}Keyframe</button>
     <button class="qb" data-act="qease" ${hasKeys ? '' : 'disabled'}>${ic('easing', 's')}Easing</button>
     <button class="qb" data-act="align" aria-haspopup="dialog">${ic('alC', 's')}Align</button>
+    ${ql && EDITABLE.includes(ql.type) && selIds().length === 1 ? `<button class="qb" data-act="peedit">${ic('pen', 's')}Edit points</button>` : ''}
     <button class="qb" data-act="dup">${ic('copy', 's')}Duplicate</button>
     <button class="qb" data-act="group">${ic('group', 's')}Pre-compose</button>
     <button class="qb" data-act="del">${ic('trash', 's')}Delete</button>`;
   if (S.tool === 'pen' && S.penPts.length) $('#qbar').innerHTML = `<button class="qb" data-act="pendone">${ic('key', 's')}Done</button><button class="qb" data-act="penclose" ${S.penPts.length > 2 ? '' : 'disabled'}>Close path</button><button class="qb" data-act="penundo">Undo point</button><button class="qb" data-act="pencancel">${ic('trash', 's')}Cancel</button>`;
+  const pe = S.pe && S.tool === 'select' ? lay(S.pe) : null;
+  if (pe) { const pt: any = shapePts(pe)[S.peI], curved = !!pt && pt.length > 2 && (pt[2] || pt[3] || pt[4] || pt[5]), hasPt = S.peI >= 0, closed = pe.type === 'path' ? !!pe.closed : pe.type !== 'line'; $('#qbar').innerHTML = `<button class="qb" data-act="pedone">${ic('key', 's')}Done</button><button class="qb" data-act="petype" ${hasPt ? '' : 'disabled'}>${curved ? 'Make corner' : 'Make curve'}</button><button class="qb" data-act="peclose">${closed ? 'Open path' : 'Close path'}</button><button class="qb" data-act="pedel" ${hasPt ? '' : 'disabled'}>${ic('trash', 's')}Delete point</button>`; }
   renderBrushBar();
   const hint = $('#toolhint');
-  const msg = S.eyedrop ? 'Tap a layer to pick its colour' : isDrawTool(S.tool) ? null : { marquee: 'Drag a box to select layers · hold a layer to add or remove it', lasso: 'Draw around layers to select them', hand: 'Drag to pan · pinch to zoom', pen: 'Tap to add points · tap the first point to close', text: 'Tap the canvas to place text', rect: 'Tap to place a rectangle, or drag to size it', ellipse: 'Tap to place an ellipse, or drag out from the centre', polygon: 'Tap to place a polygon, or drag out from the centre', star: 'Tap to place a star, or drag out from the centre', line: 'Tap to place a line, or drag to draw it' }[S.tool];
+  const msg = S.eyedrop ? 'Tap a layer to pick its colour' : pe ? 'Drag points or handles · drag a line to bend it · tap a line to add a point · double-tap a point for corner or curve' : isDrawTool(S.tool) ? null : { marquee: 'Drag a box to select layers · hold a layer to add or remove it', lasso: 'Draw around layers to select them', hand: 'Drag to pan · pinch to zoom', pen: 'Tap for a corner · drag for a curve · tap the first point to close', text: 'Tap the canvas to place text', rect: 'Tap to place a rectangle, or drag to size it', ellipse: 'Tap to place an ellipse, or drag out from the centre', polygon: 'Tap to place a polygon, or drag out from the centre', star: 'Tap to place a star, or drag out from the centre', line: 'Tap to place a line, or drag to draw it' }[S.tool];
   hint.hidden = !msg; if (msg) hint.textContent = msg;
   layoutStage();
 }

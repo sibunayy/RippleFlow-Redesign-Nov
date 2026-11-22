@@ -99,12 +99,12 @@ export function listen() {
   document.addEventListener('focusout', (e) => {
     if ((e.target as any).id === 'lname') { const l = lay(S.sel); if (l) { if (!l.name.trim()) l.name = TYPE_NAME[l.type] || 'Layer'; commit('Rename layer'); renderLeft(); renderTL(); renderRight(); } }
     if ((e.target as any).dataset && (e.target as any).dataset.mkn != null) { commit('Rename marker'); renderTL(); } if ((e.target as any).id === 'ltext') { commit('Edit text'); renderLeft(); renderTL(); renderTop(); } });
-  document.addEventListener('contextmenu', (e) => { if ((e.target as any).closest('[data-ctx],[data-dk],#shapebtn,#selbtn,#brushbtn,[data-onion],[data-flip],[data-cel],#vp,[data-kj],.fld,.bar')) e.preventDefault(); });
+  document.addEventListener('contextmenu', (e) => { if ((e.target as any).closest('[data-ctx],[data-dk],#shapebtn,#areabtn,#brushbtn,[data-onion],[data-flip],[data-cel],#vp,[data-kj],.fld,.bar')) e.preventDefault(); });
   document.addEventListener('pointerdown', (e) => {
     const t: any = e.target; // delegated: any element in the app
     // shapes flyout on the rail
     if (t.closest('#shapebtn')) { longPress(e, () => { S.pop = { type: 'shapes' }; renderPop(); }); return; }
-    if (t.closest('#selbtn')) { longPress(e, () => { S.pop = { type: 'selmodes' }; renderPop(); }); return; }
+    if (t.closest('#areabtn')) { longPress(e, () => { S.pop = { type: 'selmodes' }; renderPop(); }); return; }
     if (t.closest('#brushbtn')) { longPress(e, () => { S.pop = { type: 'drawmodes' }; renderPop(); }); return; }
     const onb = t.closest('[data-onion]'); if (onb) { longPress(e, () => { const r = onb.getBoundingClientRect(); S.pop = { type: 'onion', x: r.left + r.width / 2, y: r.top }; renderPop(); }); return; }
     if (t.closest('[data-flip]')) return flipDrag(e);

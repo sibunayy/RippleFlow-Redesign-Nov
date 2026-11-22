@@ -2,6 +2,7 @@
 import { $, app, esc, root } from '../core/dom';
 import { FPS } from '../model/project';
 import { ic } from '../ui/icons';
+import { PF } from '../ui/prefs';
 import { toast as editorToast } from '../ui/toast';
 import { saveFile } from '../host/save-file';
 import type { Meta } from './db';
@@ -129,7 +130,7 @@ async function act(name: string, t: HTMLElement, e: Event) {
     case 'open': return enter(t.dataset.id!);
     case 'blank': { const m = await createBlank(await nextUntitled()); return enter(m.id); }
     case 'sample': { const m = await createSample(); return enter(m.id); }
-    case 'new': ui.menu = null; ui.dialog = { type: 'new', name: '', dur: 150, start: 'blank' }; return render();
+    case 'new': ui.menu = null; ui.dialog = { type: 'new', name: '', dur: PF.newLen * FPS, start: 'blank' }; return render();
     case 'menu': { if (ui.menu?.id === id) { ui.menu = null; return render(); } const r = t.getBoundingClientRect(); ui.menu = { id: id!, x: r.right, y: r.bottom + 4, arm: false }; return render(); }
     case 'dur': keepName(); ui.dialog!.dur = +t.dataset.v! * FPS; return render();
     case 'start': keepName(); ui.dialog!.start = t.dataset.v as 'blank' | 'sample'; return render();

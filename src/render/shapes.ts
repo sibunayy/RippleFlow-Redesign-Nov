@@ -7,19 +7,24 @@ function starPts(n, ro, ri) { return ptsArr(n, ro, ri).map((p) => p[0].toFixed(1
 export const polyOf = (l) => l.type === 'star' ? ptsArr(l.n || 5, 120, 120 * (l.ir ?? 43) / 100) : ptsArr(l.n || 3, 120, 120 * Math.cos(Math.PI / (l.n || 3)));
 export const STROKABLE = ['rect', 'ellipse', 'star', 'polygon'];
 export const hasStroke = (l) => l.type === 'ring' || l.type === 'line' || l.type === 'path' || (STROKABLE.includes(l.type) && (l.sw || 0) > 0);
+/** True when any point carries its own curve handles: [x, y, inX, inY, outX, outY], measured from the point. */
+export const pathHasHandles = (l) => (l.pts || []).some((p) => p.length > 2 && (p[2] || p[3] || p[4] || p[5]));
 export function pathSegs(l) {
   const P = l.pts || [], n = P.length, segs = [], cl = !!l.closed && n > 2, g = (i) => cl ? P[(i + n) % n] : P[Math.max(0, Math.min(n - 1, i))];
-  const m = cl ? n : n - 1;
+  const m = cl ? n : n - 1, own = pathHasHandles(l);
   for (let i = 0; i < m; i++) {
     const a = P[i], b = P[(i + 1) % n];
-    if (l.smooth && n > 2) { const p0 = g(i - 1), p3 = g(i + 2); segs.push([a, [a[0] + (b[0] - p0[0]) / 6, a[1] + (b[1] - p0[1]) / 6], [b[0] - (p3[0] - a[0]) / 6, b[1] - (p3[1] - a[1]) / 6], b]); }
+    if (own) {
+      const out = a[4] || a[5], inn = b[2] || b[3];
+      segs.push([a, out ? [a[0] + (a[4] || 0), a[1] + (a[5] || 0)] : a, inn ? [b[0] + (b[2] || 0), b[1] + (b[3] || 0)] : b, b]);
+    } else if (l.smooth && n > 2) { const p0 = g(i - 1), p3 = g(i + 2); segs.push([a, [a[0] + (b[0] - p0[0]) / 6, a[1] + (b[1] - p0[1]) / 6], [b[0] - (p3[0] - a[0]) / 6, b[1] - (p3[1] - a[1]) / 6], b]); }
     else segs.push([a, a, b, b]);
   }
   return segs;
 }
 function pathD(l) {
   const S0 = pathSegs(l); if (!S0.length) return ''; const f = (q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1);
-  return 'M' + f(S0[0][0]) + S0.map((q) => (l.smooth && l.pts.length > 2 ? 'C' + f(q[1]) + ' ' + f(q[2]) + ' ' + f(q[3]) : 'L' + f(q[3]))).join('') + (l.closed && l.pts.length > 2 ? 'Z' : '');
+  return 'M' + f(S0[0][0]) + S0.map((q) => (pathHasHandles(l) || (l.smooth && l.pts.length > 2) ? 'C' + f(q[1]) + ' ' + f(q[2]) + ' ' + f(q[3]) : 'L' + f(q[3]))).join('') + (l.closed && l.pts.length > 2 ? 'Z' : '');
 }
 function shapeLen(l) {
   switch (l.type) {
@@ -40,7 +45,7 @@ const dashGap = (l) => Math.max(1, Math.round(l.dgap ?? l.dash * 1.2));
 function shapeSvg0(l) {
   const fillA = l.fill === false ? 'none' : fillVal(l);
   const sw = l.type === 'ring' ? (l.sw ?? 14) : l.type === 'line' ? (l.sw ?? 12) : l.type === 'path' ? (l.sw ?? 8) : (l.sw || 0);
-  const stk = hasStroke(l) && sw > 0 ? ` stroke="${l.type === 'ring' || l.type === 'path' ? l.hue : (l.sc || '#ffffff')}" stroke-width="${sw}" stroke-linecap="${l.cap || 'round'}" stroke-linejoin="${l.join || 'round'}"${l.dash > 0 ? ` stroke-dasharray="${l.dash} ${dashGap(l)}" data-dash="${l.dash} ${dashGap(l)}"` : ''}${l.dash > 0 && l.doff ? ` stroke-dashoffset="${l.doff}" data-doff="${l.doff}"` : ''}${(l.sop ?? 100) < 100 ? ` stroke-opacity="${(l.sop / 100).toFixed(2)}"` : ''} class="tp" data-len="${shapeLen(l).toFixed(1)}"` : '';
+  const stk = hasStroke(l) && sw > 0 ? ` stroke="${l.type === 'path' && l.sc ? l.sc : l.type === 'ring' || l.type === 'path' ? l.hue : (l.sc || '#ffffff')}" stroke-width="${sw}" stroke-linecap="${l.cap || 'round'}" stroke-linejoin="${l.join || 'round'}"${l.dash > 0 ? ` stroke-dasharray="${l.dash} ${dashGap(l)}" data-dash="${l.dash} ${dashGap(l)}"` : ''}${l.dash > 0 && l.doff ? ` stroke-dashoffset="${l.doff}" data-doff="${l.doff}"` : ''}${(l.sop ?? 100) < 100 ? ` stroke-opacity="${(l.sop / 100).toFixed(2)}"` : ''} class="tp" data-len="${shapeLen(l).toFixed(1)}"` : '';
   const fop = (l.fop ?? 100) < 100 ? ` fill-opacity="${(l.fop / 100).toFixed(2)}"` : '';
   switch (l.type) {
     case 'text': return textSvg(l);

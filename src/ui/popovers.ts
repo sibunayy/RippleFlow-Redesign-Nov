@@ -38,6 +38,7 @@ export function renderPop() {
     const tp = S.themePref;
     html = `<div class="pop menu" role="menu" aria-label="More">
       <button class="mi" role="menuitem" data-act="settings">${ic('settings', 's')}Project settings…</button>
+      <button class="mi" role="menuitem" data-act="customise">${ic('sliders', 's')}Customise…</button>
       <button class="mi" role="menuitem" data-act="help">${ic('help', 's')}Help & shortcuts<kbd>?</kbd></button>
       <div class="mhr"></div><div class="mlbl">Appearance</div>
       <div class="seg" role="group" aria-label="Appearance">${['auto', 'dark', 'light'].map((t) => `<button data-act="theme" data-v="${t}" aria-pressed="${tp === t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
@@ -113,7 +114,7 @@ export function renderPop() {
     pos = { left: Math.max(8, Math.min(b.left - a.left - 190, a.width - 190)), top: Math.max(8, Math.min(b.top - a.top - 20, a.height - 240)) };
   } else if (S.pop.type === 'selmodes') {
     const b = $('#selbtn').getBoundingClientRect();
-    html = `<div class="pop menu" role="menu" aria-label="Selection tools" style="min-width:220px">${SELMODES.map(([id, n, k]) => `<button class="mi" role="menuitem" data-act="picksel" data-v="${id}">${ic(id, 's')}${n}<kbd>${k}</kbd></button>`).join('')}</div>`;
+    html = `<div class="pop menu" role="menu" aria-label="Selection tools" style="min-width:220px">${SELMODES.slice(1).map(([id, n, k]) => `<button class="mi" role="menuitem" data-act="picksel" data-v="${id}">${ic(id, 's')}${n}<kbd>${k}</kbd></button>`).join('')}</div>`;
     pos = { left: b.right - a.left + 8, top: b.top - a.top - 8 };
   } else if (S.pop.type === 'align') {
     const fromStrip = S.pop.from === 'rstrip', b = $(fromStrip ? '#rstrip [data-act=align]' : '#qbar [data-act=align]').getBoundingClientRect(), n = selIds().length;

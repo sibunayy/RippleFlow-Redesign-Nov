@@ -18,7 +18,7 @@ import { fbfDelete, fbfHold, fbfInsert, fbfMove, fbfNewLayer, fbfZoom } from '..
 
 /** Tools, brush and drawing cels. Keys are data-act names. */
 export const drawingActions = {
-  tool: (el) => { S.tool = el.dataset.v; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); },
+  tool: (el) => { S.tool = el.dataset.v; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (S.tool === 'marquee' || S.tool === 'lasso') S.areaMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); },
   pickdraw: (el) => { S.drawMode = S.tool = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); if (S.fbf) renderRight(); },
   bpre: (el) => { S.brush.pre = el.dataset.v; if (S.tool !== 'brush') { S.tool = S.drawMode = 'brush'; renderStrips(); } saveBrush(); renderFloats(); if (S.fbf) renderRight(); },
   btog: (el) => { const k = el.dataset.k; S.brush[k] = !S.brush[k]; saveBrush(); renderBrushBar(); if (S.fbf) renderRight(); toast(k === 'pr' ? (S.brush.pr ? 'Pressure changes width' : 'Pressure off') : (S.brush.tl ? 'Tilt the Pencil to shade' : 'Tilt off')); },
@@ -49,7 +49,7 @@ export const drawingActions = {
     else { const f = freeFrame(l, c.f + 1); if (f < 0) { toast('No free frame after this cel.'); renderPop(); return; } insertCel(l, f, el.dataset.v === 'dup' ? c.strokes : []); commit(el.dataset.v === 'dup' ? 'Duplicate cel' : 'Blank cel'); seek(f); }
     renderPop(); updateCanvas(); renderTL(); renderRight();
   },
-  picksel: (el) => { S.selMode = S.tool = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); },
+  picksel: (el) => { S.selMode = S.tool = S.areaMode = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); },
   pickshape: (el) => { S.shape = S.tool = el.dataset.v; S.pop = null; renderStrips(); renderPop(); renderFloats(); },
   flip: (el) => { const on = el.getAttribute('aria-pressed') !== 'true'; el.setAttribute('aria-pressed', on); },
   flipseg: (el) => { $$('button', el.parentElement).forEach((b) => b.setAttribute('aria-pressed', b === el)); },
