@@ -31,9 +31,13 @@ try {
 /** Set while a library project is open: the library saves it and owns the "Autosaved" status. */
 let saveHook: (() => void) | null = null;
 export function setSaveHook(fn: (() => void) | null) { saveHook = fn; }
-export function saveProj() {
+/** `layersJson` is the layers already turned into text (the undo step), so a commit does not stringify the whole project twice. */
+export function saveProj(layersJson?: string) {
   let ok = true;
-  try { localStorage.setItem('rfp-project', JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS })); } catch { ok = false; }
+  try {
+    const rest = JSON.stringify({ markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS });
+    localStorage.setItem('rfp-project', layersJson ? `{"layers":${layersJson},${rest.slice(1)}` : JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS }));
+  } catch { ok = false; }
   if (saveHook) { saveHook(); return; }
   const sv = document.querySelector('.save'); if (sv) sv.classList.toggle('off', !ok);
 }

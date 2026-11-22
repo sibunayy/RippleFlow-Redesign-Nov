@@ -92,14 +92,26 @@ export function updateCanvas() {
   }
   placeSel();
 }
-export function layoutStage() {
-  if (frozen) {
-    const v = vp.getBoundingClientRect(), k = S.zoom / frozen.zoom, W = frozen.w * k, H = frozen.h * k;
-    const cx = frozen.cx + S.pan[0] - frozen.pan[0], cy = frozen.cy + S.pan[1] - frozen.pan[1];
-    Object.assign(stage.style, { width: W + 'px', height: H + 'px', left: (cx - W / 2 - v.left) + 'px', top: (cy - H / 2 - v.top) + 'px' });
-    const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(W / CW * 100) + '%';
-    placeSel(); return;
-  }
+// While a zoom is in progress the stage is scaled with a CSS transform (cheap, done by the GPU) instead of being resized.
+// A resize makes Safari redraw every SVG filter at the new size on each step, which stutters with Bloom, Halftone and similar effects.
+// When the zoom pauses, the stage gets its real size once and the filters are drawn sharp.
+let base: { W: number; H: number; x: number; y: number } | null = null, settleT = 0, liveRaf = 0;
+const SETTLE_MS = 140;
+function settle() { settleT = 0; stage.style.willChange = ''; layoutStage(); }
+/** Fast path for wheel and pinch zoom. Falls back to a full layout when there is no base size to scale from. */
+export function layoutStageLive() {
+  if (frozen || !base) { layoutStage(); return; }
+  const g = fitBox();
+  const sx = g.W / base.W;
+  stage.style.willChange = 'transform';
+  stage.style.transform = `translate(${g.x - base.x}px, ${g.y - base.y}px) scale(${sx})`;
+  const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(g.sc * 100) + '%';
+  // The selection box and overlay follow once per frame, not once per input event.
+  if (!liveRaf) liveRaf = requestAnimationFrame(() => { liveRaf = 0; placeSel(); });
+  clearTimeout(settleT); settleT = window.setTimeout(settle, SETTLE_MS);
+}
+/** Where the stage should sit for the current zoom and pan. */
+function fitBox() {
   const w = vp.clientWidth;
   let h = vp.clientHeight;
   // On a phone the settings sheet covers most of the canvas width, so fit the canvas into the part above the sheet.
@@ -110,8 +122,21 @@ export function layoutStage() {
   const fit = Math.min((w - 56) / CW, (h - 56) / CH);
   const sc = Math.max(.05, fit * S.zoom);
   const W = CW * sc, H = CH * sc;
-  Object.assign(stage.style, { width: W + 'px', height: H + 'px', left: ((w - W) / 2 + S.pan[0]) + 'px', top: ((h - H) / 2 + S.pan[1]) + 'px' });
-  const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(sc * 100) + '%';
+  return { W, H, sc, x: (w - W) / 2 + S.pan[0], y: (h - H) / 2 + S.pan[1] };
+}
+export function layoutStage() {
+  clearTimeout(settleT); settleT = 0; stage.style.transform = '';
+  if (frozen) {
+    const v = vp.getBoundingClientRect(), k = S.zoom / frozen.zoom, W = frozen.w * k, H = frozen.h * k;
+    const cx = frozen.cx + S.pan[0] - frozen.pan[0], cy = frozen.cy + S.pan[1] - frozen.pan[1];
+    Object.assign(stage.style, { width: W + 'px', height: H + 'px', left: (cx - W / 2 - v.left) + 'px', top: (cy - H / 2 - v.top) + 'px' });
+    const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(W / CW * 100) + '%';
+    base = null; placeSel(); return;
+  }
+  const g = fitBox();
+  Object.assign(stage.style, { width: g.W + 'px', height: g.H + 'px', left: g.x + 'px', top: g.y + 'px' });
+  base = { W: g.W, H: g.H, x: g.x, y: g.y };
+  const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(g.sc * 100) + '%';
   placeSel();
 }
 export function compPt(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * CW, (e.clientY - r.top) / r.height * CH]; }

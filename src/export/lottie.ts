@@ -61,7 +61,6 @@ export function lpaint(l, bb, trim, part?) {
 }
 export async function exportLottie(job) {
   const warn = new Set(), out = [], assets = [], fonts = [];
-  const tr = (q) => ({ x: q.x, y: q.y });
   let idx = 1;
   for (let li = 0; li < layers.length; li++) {
     const l = layers[li]; if (job.cancel) return null;

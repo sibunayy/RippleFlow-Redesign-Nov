@@ -9,7 +9,7 @@ export let hist = [JSON.stringify(layers)], hi = 0;
 // Undo keeps the last HIST_MAX steps. Each step is a full copy of the project (drawings and images included), so an
 // unlimited history grew memory until Safari reloaded the tab after a long session.
 // The limit is a Customise setting (60 by default).
-export function commit(label) { const HIST_MAX = PF.undo; hist = hist.slice(0, hi + 1); hist.push(JSON.stringify(layers)); if (hist.length > HIST_MAX) hist = hist.slice(hist.length - HIST_MAX); hi = hist.length - 1; lastLabel = label; saveProj(); if (S.fbf) syncFbfUndo(); }
+export function commit(label) { const HIST_MAX = PF.undo; const snap = JSON.stringify(layers); hist = hist.slice(0, hi + 1); hist.push(snap); if (hist.length > HIST_MAX) hist = hist.slice(hist.length - HIST_MAX); hi = hist.length - 1; lastLabel = label; saveProj(snap); if (S.fbf) syncFbfUndo(); }
 // The workspace's tool strip stays on screen while drawing, so its Undo and Redo must follow each change.
 function syncFbfUndo() {
   const u = document.querySelector<HTMLButtonElement>('#lstrip [data-act="undo"]'), r = document.querySelector<HTMLButtonElement>('#lstrip [data-act="redo"]');

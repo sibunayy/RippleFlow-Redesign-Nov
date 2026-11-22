@@ -1,4 +1,4 @@
-import { S, selIds } from '../../state/state';
+import { selIds } from '../../state/state';
 import { TYPE_NAME } from '../left-panel';
 import { esc } from '../../core/dom';
 

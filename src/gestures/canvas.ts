@@ -5,7 +5,7 @@ import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, selIds } from '../state/state';
 import { commit, hi, hist, setLastLabel } from '../state/history';
 import { setVal } from '../anim/keys';
-import { buildCanvas, compPt, layoutStage, placeSel, stage, toLocal, updateCanvas, vp } from '../render/stage';
+import { buildCanvas, compPt, layoutStage, layoutStageLive, placeSel, stage, toLocal, updateCanvas, vp } from '../render/stage';
 import { renderStrips } from '../ui/strips';
 import { updateFields } from '../ui/inspector/index';
 import { renderFloats } from '../ui/floats';
@@ -117,8 +117,8 @@ const endPtr = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = nu
 export function listen() {
   installPenUndo();
   addEventListener('pointerdown', (e) => { setSuppressClick(false); if (e.pointerType === 'pen') penSeen = true; }, true);
-  vp.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch0 && ptrs.size === 2) { const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); const z = Math.max(.25, Math.min(6, pinch0.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0.d)), k = z / pinch0.z; const cx = (a[0] + b[0]) / 2 - v.left, cy = (a[1] + b[1]) / 2 - v.top, mx = v.width / 2, my = v.height / 2; S.zoom = z; S.pan = [cx - mx - (pinch0.c[0] - mx - pinch0.pan[0]) * k, cy - my - (pinch0.c[1] - my - pinch0.pan[1]) * k]; layoutStage(); } });
+  vp.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch0 && ptrs.size === 2) { const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); const z = Math.max(.25, Math.min(6, pinch0.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0.d)), k = z / pinch0.z; const cx = (a[0] + b[0]) / 2 - v.left, cy = (a[1] + b[1]) / 2 - v.top, mx = v.width / 2, my = v.height / 2; S.zoom = z; S.pan = [cx - mx - (pinch0.c[0] - mx - pinch0.pan[0]) * k, cy - my - (pinch0.c[1] - my - pinch0.pan[1]) * k]; layoutStageLive(); } });
   vp.addEventListener('pointerup', endPtr); vp.addEventListener('pointercancel', endPtr);
-  vp.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) S.zoom = Math.max(.25, Math.min(6, S.zoom * (e.deltaY < 0 ? 1.08 : .92))); else S.pan = [S.pan[0] - e.deltaX, S.pan[1] - e.deltaY]; layoutStage(); }, { passive: false });
+  vp.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) S.zoom = Math.max(.25, Math.min(6, S.zoom * (e.deltaY < 0 ? 1.08 : .92))); else S.pan = [S.pan[0] - e.deltaX, S.pan[1] - e.deltaY]; layoutStageLive(); }, { passive: false });
   vp.addEventListener('dblclick', (e) => { const g = e.target.closest('g[data-id]'); const L = g && lay(g.dataset.id); if (L && L.type === 'text') { S.right = 'props'; S.collapsed.delete('app'); renderAll(); setTimeout(() => { const t = $('#ltext'); if (t) { t.focus(); t.select(); } }, 80); } });
 }

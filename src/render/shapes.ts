@@ -4,7 +4,6 @@ import { textSvg } from './text';
 import { BLANK } from '../drawing/cels';
 
 function ptsArr(n, ro, ri) { const a = []; for (let i = 0; i < n * 2; i++) { const r = i % 2 ? ri : ro, t = Math.PI * i / n - Math.PI / 2; a.push([Math.cos(t) * r, Math.sin(t) * r]); } return a; }
-function starPts(n, ro, ri) { return ptsArr(n, ro, ri).map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '); }
 export const polyOf = (l) => l.type === 'star' ? ptsArr(l.n || 5, 120, 120 * (l.ir ?? 43) / 100) : ptsArr(l.n || 3, 120, 120 * Math.cos(Math.PI / (l.n || 3)));
 export const STROKABLE = ['rect', 'ellipse', 'star', 'polygon'];
 export const hasStroke = (l) => l.type === 'ring' || l.type === 'line' || l.type === 'path' || (STROKABLE.includes(l.type) && (l.sw || 0) > 0);
