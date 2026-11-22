@@ -10,7 +10,11 @@ export let hist = [JSON.stringify(layers)], hi = 0;
 const HIST_MAX = 60;
 export function commit(label) { hist = hist.slice(0, hi + 1); hist.push(JSON.stringify(layers)); if (hist.length > HIST_MAX) hist = hist.slice(hist.length - HIST_MAX); hi = hist.length - 1; lastLabel = label; saveProj(); }
 export let lastLabel = '';
-export function undo() { if (hi <= 0) return; hi--; setLayers(JSON.parse(hist[hi])); afterHist(); }
-export function redo() { if (hi >= hist.length - 1) return; hi++; setLayers(JSON.parse(hist[hi])); afterHist(); }
+// The two- and three-finger tap gestures listen on the whole page, so they must do nothing while the library is showing.
+const inLibrary = () => document.documentElement.classList.contains('lib-open');
+export function undo() { if (inLibrary() || hi <= 0) return; hi--; setLayers(JSON.parse(hist[hi])); afterHist(); saveProj(); }
+export function redo() { if (inLibrary() || hi >= hist.length - 1) return; hi++; setLayers(JSON.parse(hist[hi])); afterHist(); saveProj(); }
+/** A newly opened project starts with its own undo history. */
+export function resetHistory() { hist = [JSON.stringify(layers)]; hi = 0; lastLabel = ''; }
 function afterHist() { if (S.sel && !lay(S.sel)) S.sel = null; S.keys = S.keys.filter((k) => lay(k.l)); buildCanvas(); renderAll(); }
 export function setLastLabel(v) { return (lastLabel = v); }

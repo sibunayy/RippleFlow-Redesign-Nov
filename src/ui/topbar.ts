@@ -9,7 +9,7 @@ import { hi, hist, lastLabel } from '../state/history';
 const GUIDE_NEXT = { off: 'safe', safe: 'thirds', thirds: 'off' }, GUIDE_NAME = { off: 'Off', safe: 'Safe areas', thirds: 'Grid' };
 export function renderTop() {
   $('#top').innerHTML = `
-    <button class="ib back" style="width:auto" aria-label="Back to library">${ic('left', 's')}<span style="font-size:var(--fs-s)">Library</span></button>
+    <button class="ib back" style="width:auto" data-act="library" aria-label="Back to library">${ic('left', 's')}<span style="font-size:var(--fs-s)">Library</span></button>
     <input class="name" id="pname" value="${esc(projName)}" aria-label="Project name"><span class="meta tc">30 fps · 1920×1080</span>
     <span class="save" role="status"><i></i>Autosaved</span>
     <span class="spacer"></span>

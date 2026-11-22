@@ -10,7 +10,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const MAX_SIDE = 2048; // keeps the baked picture small enough to save with the project
 
 // Blob links only work inside this page, so pictures are copied in as data before drawing.
-async function inlineImages(root) {
+export async function inlineImages(root) {
   for (const im of [...root.querySelectorAll('image')]) {
     const h = im.getAttribute('href') || '';
     if (!h.startsWith('blob:')) continue;

@@ -15,6 +15,9 @@ export let layers: Layer[] = [
 ];
 layers.forEach((l) => { l.p.ax = l.p.ax || st(0); l.p.ay = l.p.ay || st(0); l.p.ts = l.p.ts || st(0); l.p.te = l.p.te || st(l.type === 'ring' ? 70 : 100); });
 export const markers: Marker[] = [{ f: 30, name: 'Logo hit' }, { f: 86, name: 'Tagline' }];
+const SAMPLE = JSON.stringify({ layers, markers, dur: 150, name: 'Logo sting', bg: null });
+/** A fresh copy of the demo project, for the library's sample and "Reset to demo project". */
+export const sampleDoc = () => JSON.parse(SAMPLE);
 try {
   const pj = JSON.parse(localStorage.getItem('rfp-project') || 'null');
   if (pj && Array.isArray(pj.layers) && pj.layers.length) {
@@ -23,9 +26,18 @@ try {
     DUR = pj.dur || 150; if (pj.name) projName = pj.name; if (pj.bg) compBg = pj.bg;
   }
 } catch { /* no saved project */ }
+/** Set while a library project is open: the library saves it and owns the "Autosaved" status. */
+let saveHook: (() => void) | null = null;
+export function setSaveHook(fn: (() => void) | null) { saveHook = fn; }
 export function saveProj() {
-  try { localStorage.setItem('rfp-project', JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg })); const sv = document.querySelector('.save'); if (sv) sv.classList.remove('off'); } catch { const sv = document.querySelector('.save'); if (sv) sv.classList.add('off'); }
+  let ok = true;
+  try { localStorage.setItem('rfp-project', JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg })); } catch { ok = false; }
+  if (saveHook) { saveHook(); return; }
+  const sv = document.querySelector('.save'); if (sv) sv.classList.toggle('off', !ok);
 }
+export const docSnapshot = () => ({ layers, markers, dur: DUR, name: projName, bg: compBg });
+/** Swaps the whole document (opening a project from the library). */
+export function replaceDoc(d) { layers = d.layers || []; markers.splice(0, markers.length, ...(d.markers || [])); DUR = d.dur || 150; projName = d.name || 'Untitled'; compBg = d.bg || null; }
 export function setLayers(v) { return (layers = v); }
 export function setCompBg(v) { return (compBg = v); }
 export function setDUR(v) { return (DUR = v); }

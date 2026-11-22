@@ -5,6 +5,7 @@ import { stage, updateCanvas } from '../render/stage';
 import { postT } from '../fx/defs';
 import { fxShaderSize, renderShader, shaderOf } from '../shader/runtime';
 import { setExporting } from '../drawing/cels';
+import { inlineImages } from '../fx/bake';
 
 /* Draw the composition at frame f into ctx (w x h). */
 export async function rasterFrame(f, w, h, ctx, transparent) {
@@ -18,6 +19,7 @@ export async function rasterFrame(f, w, h, ctx, transparent) {
     const rt = sl && owner && owner.vis ? (fo.dataset.sh ? renderShader(sl, postT(owner, f), Math.min(1920, w), Math.min(1080, h), false) : renderShader(sl, postT(owner, f), fxShaderSize, Math.round(fxShaderSize * 9 / 16), false)) : null;
     if (rt && rt.ok) { const im = document.createElementNS('http://www.w3.org/2000/svg', 'image'); ['x', 'y', 'width', 'height'].forEach((k) => im.setAttribute(k, fo.getAttribute(k))); im.setAttribute('preserveAspectRatio', 'none'); im.setAttribute('href', rt.canvas.toDataURL('image/png')); fo.replaceWith(im); } else fo.remove();
   });
+  if (svg.querySelector('image[href^="blob:"]')) await inlineImages(svg); // blob links do not load inside an SVG picture
   svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); svg.setAttribute('width', w); svg.setAttribute('height', h);
   const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' }));
   try {

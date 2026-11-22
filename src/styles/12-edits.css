@@ -65,6 +65,56 @@ html.kb-open body { padding-bottom: 0; }
 }
 @media (max-width: 520px) { :root { --name: 158px; } .peek .stp { display: none; } }
 
+/* Library: the landing page. Built from the app's tokens and its .primary, .line-btn, .search, .seg, .menu and .dlg parts. */
+body { position: relative; }
+#library { position: absolute; inset: 0; z-index: 200; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
+#library[hidden] { display: none; }
+.lib-top { flex: none; display: flex; align-items: center; gap: 8px; min-height: calc(56px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+.lib-top h1 { display: flex; align-items: center; gap: 8px; margin: 0 auto 0 0; font-size: var(--fs-l); font-weight: 650; white-space: nowrap; }
+.lib-top h1 img { display: block; border-radius: 6px; }
+.lib-top .primary { min-height: 38px; flex: none; }
+.lib-search { flex: 0 1 260px; min-width: 0; margin: 0; }
+.lib-search input::-webkit-search-cancel-button { display: none; }
+.lib-import { position: relative; flex: none; overflow: hidden; }
+.lib-import input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.lib-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.lib-wrap { max-width: 1400px; margin: 0 auto; padding: 22px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lib-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.lib-head h2 { margin: 0; font-size: var(--fs-m); font-weight: 650; }
+.lib-head span { color: var(--faint); font-size: var(--fs-xs); }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 18px 14px; }
+.lib-card { position: relative; min-width: 0; }
+.lib-card-open { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; border-radius: var(--r-panel); }
+.lib-thumb { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--r-panel); background: var(--comp-bg); box-shadow: var(--rest); color: var(--faint); }
+.lib-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lib-thumb svg.i { width: 26px; height: 26px; }
+.lib-card-open:hover .lib-thumb, .lib-card-open:focus-visible .lib-thumb { box-shadow: var(--lit); }
+.lib-card-open:focus-visible { outline: none; }
+.lib-card-open:active .lib-thumb { box-shadow: var(--lit-press); }
+.lib-new { background: var(--surface); color: var(--acc-text); }
+.lib-dur { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: rgb(0 0 0 / .62); color: #f4efe9; font-size: var(--fs-xs); }
+.lib-cap { display: block; min-height: 44px; padding: 7px 42px 0 2px; }
+.lib-cap b, .lib-cap small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-cap b { font-size: var(--fs-m); font-weight: 600; }
+.lib-cap small { margin-top: 1px; color: var(--muted); font-size: var(--fs-xs); }
+.lib-more { position: absolute; right: 0; bottom: 0; width: 40px; height: 40px; }
+.lib-none { margin: 40px 0; color: var(--muted); text-align: center; }
+.lib-foot { margin: 26px 0 0; color: var(--faint); font-size: var(--fs-xs); }
+.lib-menu { position: fixed; z-index: 10; min-width: 208px; }
+.lib-field { display: grid; gap: 5px; color: var(--muted); font-size: var(--fs-s); }
+.lib-field input { width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: var(--r-field); background: var(--surface-2); box-shadow: var(--rest); color: var(--text); font-size: 16px; outline: none; }
+.lib-field input:focus { box-shadow: var(--lit); }
+#library .dlg-scrim { z-index: 20; padding: max(16px, env(safe-area-inset-top, 0px)) 16px 16px; }
+#library .dlg .primary { min-height: 38px; }
+.lib-toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 30; padding: 10px 14px; }
+@media (max-width: 620px) {
+  .lib-top { flex-wrap: wrap; padding-bottom: 8px; }
+  .lib-top h1 { flex: 1 0 100%; min-height: 40px; }
+  .lib-search { flex: 1 1 100%; order: 3; }
+  .lib-top .primary, .lib-import { flex: 1; justify-content: center; }
+  .lib-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
+}
+
 /* Effect card options (Colour, Style, Preset) and colour chips, above the number fields. */
 .fxopts { display: grid; gap: 6px; padding: 0 0 6px; }
 .fxopts:empty { display: none; }

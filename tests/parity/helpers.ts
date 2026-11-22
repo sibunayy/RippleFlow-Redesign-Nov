@@ -45,7 +45,8 @@ export async function openApp(page: Page, opts: { clear?: boolean; storage?: Rec
       for (const [k, v] of Object.entries(storage || {})) localStorage.setItem('rfp-' + k, JSON.stringify(v));
     }, { storage: opts.storage || {} });
   }
-  await page.goto(url);
+  // ?editor skips the library landing page, so these specs start in the editor as they always have.
+  await page.goto(url + (url.includes('?') ? '&' : '?') + 'editor');
   await expect(page.locator('#rpanel .phead, #tl .peek').first()).toBeVisible();
   await page.evaluate(() => document.fonts && document.fonts.ready);
   // Two frames so the first layoutStage/placeSel in requestAnimationFrame has run.

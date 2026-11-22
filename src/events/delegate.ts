@@ -1,5 +1,6 @@
 import { $ } from '../core/dom';
 import { HUES, layers, markers, saveProj, setProjName } from '../model/project';
+import { rememberMedia } from '../library/db';
 import { earr } from '../anim/easing';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
@@ -81,7 +82,7 @@ export function listen() {
       if (file.type.startsWith('audio/')) { renderPop(); importAudio(file); return; }
       if (!file.type.startsWith('image/')) { renderPop(); toast(`Imported ${file.name}. Video playback is not part of this prototype.`); return; }
       const url = URL.createObjectURL(file), img = new Image();
-      img.onload = () => { const k = Math.min(1, 900 / img.width, 600 / img.height); newLayer('image', { src: url, w: img.width * k, h: img.height * k, name: file.name, hue: HUES[4] }); };
+      img.onload = () => { const k = Math.min(1, 900 / img.width, 600 / img.height); newLayer('image', { src: url, mediaId: rememberMedia(file), w: img.width * k, h: img.height * k, name: file.name, hue: HUES[4] }); };
       img.src = url;
     }
   });

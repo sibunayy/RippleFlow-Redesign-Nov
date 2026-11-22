@@ -205,3 +205,18 @@ areas, Safari's back-swipe, and frame rate on an iPad.
   padding, gaps and border were applied to the whole app. They are now cleared on the shell (`12-edits.css`).
 - Reference screenshots were re-taken for this intended change. Not testable without a device: real status bar and home
   bar spacing on an iPad.
+
+## Library (landing page) with local save and load
+
+- **Landing page.** RippleFlow now opens on a library of your projects, built from the app's own colours, type, buttons,
+  menus and dialogs. The editor's "Library" button returns to it. (The "Design System" artifact is empty, so the app's
+  tokens are the design system.)
+- **Projects.** Blank project in one tap, or New project with a name, length and a blank or sample start. Search, open,
+  rename, duplicate and delete (two taps). Cards show a picture of the project, its length and when it was edited.
+- **Saving.** Each project autosaves on this device in IndexedDB (`library/db.ts`), which has room for drawings, images
+  and audio. Imported images and audio now come back after reopening; before, they were lost on reload. Undo and redo
+  now save too. The project already on a device becomes its first card.
+- **Backup.** "Save a copy to Files" writes a `.ripple.json` file with its media. Import brings it back and checks the
+  file first.
+- **Tests.** `tests/parity/14-library.spec.ts`. Older specs open with `?editor`, which skips the landing page.
+  Not testable without a device: Safari's storage limits, the share sheet, and the Home Screen app's safe areas.

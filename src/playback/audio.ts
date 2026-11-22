@@ -4,6 +4,7 @@ import { S } from '../state/state';
 import { tc } from '../ui/inspector/controls';
 import { toast } from '../ui/toast';
 import { newLayer } from '../actions/layers';
+import { rememberMedia } from '../library/db';
 
 /* ---------- playback ---------- */
 export const aud = {};
@@ -36,7 +37,7 @@ export function importAudio(file) {
     } catch { wave = []; }
     const id = 'a' + Date.now().toString(36);
     aud[id] = el;
-    newLayer('audio', { id, name: file.name, src: url, adur, wave, vol: 100, mute: false, hue: '#8b7cf6', inP: 0, outP: Math.min(DUR, Math.round(adur * FPS)) });
+    newLayer('audio', { id, name: file.name, src: url, mediaId: rememberMedia(file), adur, wave, vol: 100, mute: false, hue: '#8b7cf6', inP: 0, outP: Math.min(DUR, Math.round(adur * FPS)) });
     if (adur * FPS > DUR) toast(`Added ${file.name}. It runs past the end of the composition, so it is cut at ${tc(DUR)}.`);
   }, { once: true });
   el.addEventListener('error', () => toast('Could not read that audio file.'), { once: true });

@@ -74,7 +74,9 @@ import { listen as listenGesturesCanvas } from './gestures/canvas';
 import { listen as listenEventsKeyboard } from './events/keyboard';
 import { registerServiceWorker } from './host/pwa';
 import { guardTouch } from './host/touch-guard';
+import { bootLibrary, listenLibrary } from './library/page';
 
+listenLibrary(); // first, so its key guard runs before the editor's shortcuts
 listenUiTopbar();
 listenUiFloats();
 listenEventsDelegate();
@@ -88,4 +90,5 @@ new ResizeObserver(() => layoutStage()).observe(vp);
 if (S.sel && !lay(S.sel)) S.sel = layers[0] ? layers[0].id : null;
 applyTheme(); buildCanvas(); renderAll();
 requestAnimationFrame(() => { layoutStage(); placeSel(); });
+bootLibrary();
 registerServiceWorker();

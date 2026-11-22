@@ -14,6 +14,8 @@ import { toast } from '../../ui/toast';
 import { DUR, FPS, layers, markers, setDUR } from '../../model/project';
 import { buildCanvas, layoutStage } from '../../render/stage';
 import { store } from '../../core/store';
+import { showLibrary } from '../../library/page';
+import { resetOpenProject } from '../../library/projects';
 
 /** App shell: history, menus, dialogs, panels, theme and settings. Keys are data-act names. */
 export const appActions = {
@@ -47,5 +49,6 @@ export const appActions = {
     S.wa = [0, DUR]; S.f = Math.min(S.f, DUR - 1);
     commit('Duration'); buildCanvas(); renderAll(); renderDialog(); toast(`Duration ${DUR / FPS} s`);
   },
-  resetproj: () => { if (!S.resetArm) { S.resetArm = true; renderDialog(); return; } try { localStorage.removeItem('rfp-project'); } catch { /* ignore */ } location.reload(); },
+  library: () => showLibrary(),
+  resetproj: () => { if (!S.resetArm) { S.resetArm = true; renderDialog(); return; } if (resetOpenProject()) return; try { localStorage.removeItem('rfp-project'); } catch { /* ignore */ } location.reload(); },
 };
