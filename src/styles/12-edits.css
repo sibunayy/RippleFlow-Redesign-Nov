@@ -1,5 +1,5 @@
-/* Edits after the port (Notion test checklist, "Bugs/Fixes that need to be made"). Loads after the v8 inspector pass, so
-   it only adds rules; it never changes the order of the earlier files. */
+/* Edits after the port (Notion test checklist, "Bugs/Fixes that need to be made"). Loads just before the v8 inspector
+   pass, which must stay last. Its inspector rules are more specific than the v8 rules, so they still apply. */
 
 /* Info pop-outs: explainer text lives behind a small (i) button instead of in the panel. */
 .ib.info { width: calc(22px * var(--k)); height: calc(22px * var(--k)); margin-left: calc(2px * var(--k)); vertical-align: middle; color: var(--faint); border-radius: 50%; }

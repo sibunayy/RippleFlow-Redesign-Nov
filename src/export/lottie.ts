@@ -93,7 +93,7 @@ export async function exportLottie(job) {
         if (l.grad) warn.add('gradient text');
       } else if (l.type === 'solid') { L.ty = 1; L.sc = l.hue; L.sw = CW; L.sh = CH; L.ks.a = { a: 0, k: [(CW / 2), (CH / 2)] }; }
       else if (l.type === 'image') {
-        let p = ''; try { const b = await (await fetch(l.src)).blob(); p = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(b); }); } catch { warn.add('an image that could not be read'); continue; }
+        let p = ''; try { if (!l.src) throw new Error('missing'); const b = await (await fetch(l.src)).blob(); p = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(b); }); } catch { warn.add('an image that could not be read'); continue; }
         const id = 'img_' + assets.length; assets.push({ id, w: Math.round(l.w), h: Math.round(l.h), u: '', p, e: 1 });
         L.ty = 2; L.refId = id; L.ks.a = { a: 0, k: [lr(l.w / 2), lr(l.h / 2)] };
       } else {

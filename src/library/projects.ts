@@ -43,17 +43,23 @@ async function makeThumb() {
   } catch { return null; } finally { S.f = f0; updateCanvas(); }
 }
 
-/** Gives image and audio layers working links to their stored files. */
+/** The links made for the open project's stored files. They are freed when another project opens. */
+let liveUrls: string[] = [];
+/** Gives image and audio layers working links to their stored files. Returns how many files could not be found.
+    A layer whose file is missing is kept (it shows nothing), so the next autosave does not delete it for good. */
 async function hydrate(doc) {
   for (const k of Object.keys(aud)) { aud[k].pause(); delete aud[k]; }
+  liveUrls.forEach((u) => URL.revokeObjectURL(u)); liveUrls = [];
   const urls: Record<string, string> = {};
-  for (const id of mediaIds(doc)) { const b = await getMedia(id); if (b) urls[id] = URL.createObjectURL(b); }
-  doc.layers = doc.layers.filter((l) => !(l.mediaId && !urls[l.mediaId]) && !(!l.mediaId && String(l.src || '').startsWith('blob:')));
+  for (const id of mediaIds(doc)) { const b = await getMedia(id); if (b) liveUrls.push(urls[id] = URL.createObjectURL(b)); }
+  let missing = 0;
   for (const l of doc.layers) {
-    if (!l.mediaId) continue;
-    l.src = urls[l.mediaId];
+    if (!l.mediaId) { if (String(l.src || '').startsWith('blob:')) { l.src = ''; missing++; } continue; } // a link from an earlier visit no longer works
+    l.src = urls[l.mediaId] || '';
+    if (!l.src) { missing++; continue; }
     if (l.type === 'audio') { const el = new Audio(l.src); el.preload = 'auto'; aud[l.id] = el; }
   }
+  return missing;
 }
 
 function resetEditor(frame: number) {
@@ -70,10 +76,10 @@ export const listProjects = async () => (await listMeta()).sort((a, b) => b.upda
 export async function openProject(id: string) {
   const m = await getMeta(id), json = await getDocJson(id);
   if (!m || !json) return false;
-  const doc = JSON.parse(json); await hydrate(doc);
+  const doc = JSON.parse(json), missing = await hydrate(doc);
   setSaveHook(null); replaceDoc(doc); cur = m; dirty = false; changed = false;
   resetEditor(m.f); setSaveHook(queueSave); session.set(id);
-  return true;
+  return { missing };
 }
 
 /** Saves and leaves the open project. Returns false if it could not be saved, so the editor stays open. */

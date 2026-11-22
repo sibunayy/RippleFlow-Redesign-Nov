@@ -1,5 +1,5 @@
 import { $$ } from '../core/dom';
-import { FPS, layers } from '../model/project';
+import { CH, CW, FPS, layers } from '../model/project';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
 import { buildCanvas, stage, updateCanvas } from '../render/stage';
@@ -11,7 +11,7 @@ export let gpuState = (navigator as any).gpu ? 'pending' : 'none', gpuDev = null
 if ((navigator as any).gpu) {
   (navigator as any).gpu.requestAdapter().then((a) => (a ? a.requestDevice() : null)).then((d) => {
     gpuDev = d; gpuState = d ? 'ok' : 'none'; if (d) { gpuFmt = (navigator as any).gpu.getPreferredCanvasFormat(); d.lost.then(() => { gpuState = 'none'; gpuDev = null; }); }
-    if (layers.some((l) => l.type === 'shader' || l.fx.some((e) => e.id === 'shader'))) { for (const k in SH) delete SH[k]; buildCanvas(); renderRight(); }
+    if (layers.some((l) => l.type === 'shader' || l.fx.some((e) => e.id === 'shader'))) { for (const k in SH) { disposeRt(SH[k]); delete SH[k]; } buildCanvas(); renderRight(); }
   }).catch(() => { gpuState = 'none'; });
 }
 export function shSource(l) {
@@ -27,7 +27,7 @@ function shUniforms(l, f, w, h) {
 let shNoiseData = null;
 function shNoise() { if (!shNoiseData) { shNoiseData = new Uint8Array(256 * 256 * 4); let s = 1234567; for (let i = 0; i < shNoiseData.length; i++) { s = (s * 1103515245 + 12345) >>> 0; shNoiseData[i] = s >>> 24; } } return shNoiseData; }
 function shBuildGl(rt, code) {
-  const gl = rt.canvas.getContext('webgl2', { premultipliedAlpha: false, preserveDrawingBuffer: true, alpha: true });
+  const gl = rt.gl = rt.canvas.getContext('webgl2', { premultipliedAlpha: false, preserveDrawingBuffer: true, alpha: true });
   if (!gl) { rt.err = 'This browser cannot run GLSL shaders (WebGL2 is unavailable).'; return; }
   const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
   const vs = mk(gl.VERTEX_SHADER, '#version 300 es\nin vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }');
@@ -56,15 +56,17 @@ function shBuildGl(rt, code) {
 }
 async function shBuildGpu(rt, code) {
   if (gpuState !== 'ok') { rt.err = gpuState === 'pending' ? 'Starting WebGPU…' : 'This browser cannot run WGSL shaders (WebGPU is unavailable). Use a GLSL shader instead.'; return; }
-  const dev = gpuDev, ctx = rt.canvas.getContext('webgpu');
+  const dev = gpuDev, ctx = rt.ctx = rt.canvas.getContext('webgpu');
   ctx.configure({ device: dev, format: gpuFmt, alphaMode: 'premultiplied' });
   const pre = SH_WGSL_PRE.split('\n').length - 1, mod = dev.createShaderModule({ code: SH_WGSL_PRE + code + SH_WGSL_POST });
   const info = await mod.getCompilationInfo(), errs = info.messages.filter((m) => m.type === 'error');
   if (errs.length) { rt.err = errs.slice(0, 6).map((m) => `Line ${Math.max(1, m.lineNum - pre)}: ${m.message}`).join('\n'); return; }
+  if (rt.dead) return;
   let pipe;
   try { pipe = await dev.createRenderPipelineAsync({ layout: 'auto', vertex: { module: mod, entryPoint: 'shVs_' }, fragment: { module: mod, entryPoint: 'shFs_', targets: [{ format: gpuFmt }] }, primitive: { topology: 'triangle-list' } }); }
   catch (e) { rt.err = (e && e.message) || 'Pipeline error. Check that mainImage(fragCoord: vec2f) -> vec4f exists.'; return; }
-  const ubuf = dev.createBuffer({ size: 96, usage: (globalThis as any).GPUBufferUsage.UNIFORM | (globalThis as any).GPUBufferUsage.COPY_DST });
+  if (rt.dead) return;
+  const ubuf = rt.ubuf = dev.createBuffer({ size: 96, usage: (globalThis as any).GPUBufferUsage.UNIFORM | (globalThis as any).GPUBufferUsage.COPY_DST });
   const bind = dev.createBindGroup({ layout: pipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: ubuf } }] });
   const data = new Float32Array(24);
   rt.draw = (q) => {
@@ -78,12 +80,19 @@ async function shBuildGpu(rt, code) {
 /* The shader draws on a GPU canvas that is never put on the page. Each frame is copied onto plain 2D canvases inside
    the layer (one per duplicator copy). Safari draws a GPU canvas inside the SVG at screen size and outside the
    composition; a plain canvas follows the layer's position, size and the composition edge like any other layer. */
+/** Frees a replaced runtime's GPU context. Safari allows only a few live WebGL contexts and drops the oldest ones. */
+function disposeRt(rt) {
+  if (!rt) return;
+  try { rt.gl?.getExtension('WEBGL_lose_context')?.loseContext(); rt.ubuf?.destroy(); rt.ctx?.unconfigure?.(); } catch { /* already gone */ }
+  rt.gl = rt.ctx = rt.ubuf = null; rt.draw = null; rt.ok = false; rt.dead = true;
+}
 function shRuntime(l) {
   const src = shSource(l), key = src.lang + '|' + gpuState + '|' + src.code;
   let rt = SH[l.id];
   if (rt && rt.key === key) return rt;
+  disposeRt(rt);
   const cv = document.createElement('canvas'); cv.width = 1280; cv.height = 720;
-  rt = SH[l.id] = { key, lang: src.lang, canvas: cv, views: rt ? rt.views : [], ok: false, err: '', draw: null };
+  rt = SH[l.id] = { key, lang: src.lang, canvas: cv, views: rt ? rt.views : [], ok: false, err: '', draw: null, gl: null, ctx: null, ubuf: null };
   if (src.lang === 'wgsl') shBuildGpu(rt, src.code).then(() => { if (SH[l.id] === rt) { updateCanvas(); if (S.sel === l.id) renderRight(); if (S.dialog === 'shader') renderDialog(); } });
   else shBuildGl(rt, src.code);
   return rt;
@@ -125,6 +134,8 @@ export function shaderOf(fo) {
   return l && l.fx[+j] && l.fx[+j].id === 'shader' ? fxShaderLayer(l, +j) : null;
 }
 export const fxShaderSize = 960;
+/** A Shader fill's canvas size: `long` pixels on the longer side, in the composition's shape (not always 16:9). */
+export const fxShaderDims = (long = fxShaderSize): [number, number] => CW >= CH ? [long, Math.max(1, Math.round(long * CH / CW))] : [Math.max(1, Math.round(long * CW / CH)), long];
 export function mountShaders() {
   const seen: Record<string, number> = {};
   $$('foreignObject.shfo, foreignObject.shfx', stage).forEach((fo) => {

@@ -31,14 +31,16 @@ try {
 /** Set while a library project is open: the library saves it and owns the "Autosaved" status. */
 let saveHook: (() => void) | null = null;
 export function setSaveHook(fn: (() => void) | null) { saveHook = fn; }
-/** `layersJson` is the layers already turned into text (the undo step), so a commit does not stringify the whole project twice. */
-export function saveProj(layersJson?: string) {
+/** Saves the project. While a library project is open the library saves it (to IndexedDB, after a short pause), so the
+   copy in localStorage is not written: it doubled the work on each edit and big pictures ran it out of space.
+   `layersJson` gives the layers already turned into text (the undo step), so a commit does not stringify them twice. */
+export function saveProj(layersJson?: () => string) {
+  if (saveHook) { saveHook(); return; }
   let ok = true;
   try {
     const rest = JSON.stringify({ markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS });
-    localStorage.setItem('rfp-project', layersJson ? `{"layers":${layersJson},${rest.slice(1)}` : JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS }));
+    localStorage.setItem('rfp-project', layersJson ? `{"layers":${layersJson()},${rest.slice(1)}` : JSON.stringify({ layers, markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS }));
   } catch { ok = false; }
-  if (saveHook) { saveHook(); return; }
   const sv = document.querySelector('.save'); if (sv) sv.classList.toggle('off', !ok);
 }
 export const docSnapshot = () => ({ layers, markers, dur: DUR, name: projName, bg: compBg, w: CW, h: CH, fps: FPS });

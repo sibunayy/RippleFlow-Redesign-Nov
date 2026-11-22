@@ -3,7 +3,7 @@ import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
 import { stage, updateCanvas } from '../render/stage';
 import { postT } from '../fx/defs';
-import { fxShaderSize, renderShader, shaderOf } from '../shader/runtime';
+import { fxShaderDims, renderShader, shaderOf } from '../shader/runtime';
 import { setExporting } from '../drawing/cels';
 import { inlineImages } from '../fx/bake';
 
@@ -16,7 +16,7 @@ export async function rasterFrame(f, w, h, ctx, transparent) {
   if (bg) { if (transparent) bg.remove(); else { bg.removeAttribute('style'); bg.setAttribute('fill', compBg || getComputedStyle(document.documentElement).getPropertyValue('--comp-bg').trim() || '#15120f'); } }
   svg.querySelectorAll('foreignObject.shfo, foreignObject.shfx').forEach((fo) => {
     const sl = shaderOf(fo), owner = fo.dataset.sh ? sl : lay(String(fo.dataset.fx || '').split('~fx')[0]);
-    const rt = sl && owner && owner.vis ? (fo.dataset.sh ? renderShader(sl, postT(owner, f), Math.min(CW, w), Math.min(CH, h), false) : renderShader(sl, postT(owner, f), fxShaderSize, Math.round(fxShaderSize * 9 / 16), false)) : null;
+    const rt = sl && owner && owner.vis ? (fo.dataset.sh ? renderShader(sl, postT(owner, f), Math.min(CW, w), Math.min(CH, h), false) : renderShader(sl, postT(owner, f), ...fxShaderDims(), false)) : null;
     if (rt && rt.ok) { const im = document.createElementNS('http://www.w3.org/2000/svg', 'image'); ['x', 'y', 'width', 'height'].forEach((k) => im.setAttribute(k, fo.getAttribute(k))); im.setAttribute('preserveAspectRatio', 'none'); im.setAttribute('href', rt.canvas.toDataURL('image/png')); fo.replaceWith(im); } else fo.remove();
   });
   if (svg.querySelector('image[href^="blob:"]')) await inlineImages(svg); // blob links do not load inside an SVG picture

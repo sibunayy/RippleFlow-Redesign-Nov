@@ -3,7 +3,7 @@ import { $ } from '../core/dom';
 import { layers, CW, CH } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, selIds } from '../state/state';
-import { commit, hi, hist, setLastLabel } from '../state/history';
+import { amendTop, commit } from '../state/history';
 import { setVal } from '../anim/keys';
 import { buildCanvas, compPt, layoutStage, layoutStageLive, placeSel, stage, toLocal, updateCanvas, vp } from '../render/stage';
 import { renderStrips } from '../ui/strips';
@@ -100,7 +100,7 @@ function shapeDrag(e, cx, cy) {
   const up = () => {
     vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up); setDragging(false);
     if (!moved) newLayer(type, { x: Math.round(cx), y: Math.round(cy) });
-    else { hist[hi] = JSON.stringify(layers); setLastLabel('Add ' + L.name); renderAll(); }
+    else { amendTop('Add ' + L.name); renderAll(); }
     S.tool = 'select'; renderStrips(); renderFloats();
   };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);

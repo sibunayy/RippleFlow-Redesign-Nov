@@ -11,6 +11,7 @@ import { foldEnd, foldStart } from '../ui/autofold';
 let raf = 0, lastT = 0, fpsAcc = [];
 function loop(t) {
   if (!S.playing) return;
+  placeSel(); // measures the frame on screen now, before this frame's changes (the box can be one frame behind while playing)
   const dt = lastT ? (t - lastT) / 1000 : 0; lastT = t;
   fpsAcc.push(dt); if (fpsAcc.length > 30) fpsAcc.shift();
   let f = S.f + dt * FPS, wrap = false; if (f >= S.wa[1] || f < S.wa[0]) { if (!S.loop && f >= S.wa[1]) { seek(S.wa[1] - 1); play(false); return; } f = S.wa[0]; wrap = true; }

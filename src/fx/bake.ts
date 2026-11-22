@@ -66,12 +66,26 @@ export async function bakeLayer(l) {
   toast(`Baked ${l.name} into a picture`, true);
 }
 
+/** The pixel box [left, top, right, bottom] around everything visible, or null if nothing is. It scans in from each
+    edge and stops at the first visible pixel, so it reads only the empty margin, not the whole canvas. */
+function alphaBounds(px: Uint8ClampedArray, W: number, H: number) {
+  const on = (x: number, y: number) => px[(y * W + x) * 4 + 3] > 2;
+  const rowOn = (y: number) => { for (let x = 0; x < W; x++) if (on(x, y)) return true; return false; };
+  let top = 0; while (top < H && !rowOn(top)) top++;
+  if (top === H) return null;
+  let bot = H - 1; while (bot > top && !rowOn(bot)) bot--;
+  const colOn = (x: number) => { for (let y = top; y <= bot; y++) if (on(x, y)) return true; return false; };
+  let left = 0; while (!colOn(left)) left++;
+  let right = W - 1; while (right > left && !colOn(right)) right--;
+  return [left, top, right, bot];
+}
+
 /** Frame-by-frame layers: every cel is baked on its own, so the layer stays a drawing with the same cels, timing and holds. */
 async function bakeDrawLayer(l) {
   const fxs = l.fx.filter(isFilterFx);
   if (l.fxOff || !fxs.length) return;
   const cels = (l.cels || []).filter((c) => (c.strokes || []).length);
-  const rects = cels.map((c) => celRaster(c)).filter((e) => e.w > 0);
+  const ras = cels.map((c) => celRaster(c)), rects = ras.filter((e) => e.w > 0);
   if (!rects.length) { toast('Nothing to bake. Draw on this layer first'); return; }
   // One shared area for every cel, with room for glows, shadows and glitches that reach outside the drawing.
   const pad = 40 + Math.max(0, ...fxs.map((e) => Math.max(e.radius ?? 0, e.dist ?? 0, (e.off ?? 0) * 2) * 2));
@@ -80,8 +94,8 @@ async function bakeDrawLayer(l) {
   const k = Math.min(1, MAX_SIDE / box.w, MAX_SIDE / box.h), W = Math.max(1, Math.round(box.w * k)), H = Math.max(1, Math.round(box.h * k));
   toast(`Baking ${cels.length} drawing${cels.length > 1 ? 's' : ''}…`);
   const baked = [];
-  for (const c of cels) {
-    const e = celRaster(c);
+  for (const [i, c] of cels.entries()) {
+    const e = ras[i];
     const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('xmlns', NS); svg.setAttribute('width', String(W)); svg.setAttribute('height', String(H));
     svg.setAttribute('viewBox', `${box.x} ${box.y} ${box.w} ${box.h}`);
@@ -107,11 +121,9 @@ async function bakeDrawLayer(l) {
       cv = document.createElement('canvas'); cv.width = W; cv.height = H;
       cv.getContext('2d').drawImage(img, 0, 0, W, H);
     } catch { toast('Could not bake this layer'); return; } finally { URL.revokeObjectURL(url); }
-    const px = cv.getContext('2d').getImageData(0, 0, W, H).data;
-    let a0 = W, b0 = H, a1 = -1, b1 = -1;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (px[(y * W + x) * 4 + 3] > 2) { if (x < a0) a0 = x; if (x > a1) a1 = x; if (y < b0) b0 = y; if (y > b1) b1 = y; }
-    if (a1 < 0) { baked.push([c, null]); continue; }
-    const cw = a1 - a0 + 1, ch = b1 - b0 + 1, out = document.createElement('canvas'); out.width = cw; out.height = ch;
+    const bb = alphaBounds(cv.getContext('2d').getImageData(0, 0, W, H).data, W, H);
+    if (!bb) { baked.push([c, null]); continue; }
+    const [a0, b0, a1, b1] = bb, cw = a1 - a0 + 1, ch = b1 - b0 + 1, out = document.createElement('canvas'); out.width = cw; out.height = ch;
     out.getContext('2d').drawImage(cv, a0, b0, cw, ch, 0, 0, cw, ch);
     const pic = { k: 'img', url: out.toDataURL('image/png'), x: box.x + a0 / k, y: box.y + b0 / k, w: cw / k, h: ch / k };
     await warmPicture(pic.url);

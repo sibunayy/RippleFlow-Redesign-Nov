@@ -7,7 +7,7 @@ import { shapeSvg } from './shapes';
 import { isFilterFx, postT, rippleBF } from '../fx/defs';
 import { fxDefs } from '../fx/filters';
 import { mat, mstr, pose, relM, repN, repXf, setXfEls, world, xfEls } from '../anim/pose';
-import { fxShaderId, fxShaderLayer, fxShaderSize, mountShaders, renderShader } from '../shader/runtime';
+import { fxShaderDims, fxShaderId, fxShaderLayer, fxShaderSize, mountShaders, renderShader } from '../shader/runtime';
 
 /** The layer's first switched-on Shader fill effect, if any (only one is drawn per layer). */
 export const shaderFill = (l) => { if (l.fxOff || l.type === 'audio') return null; const j = l.fx.findIndex((e) => e.on && e.id === 'shader'); return j < 0 ? null : { j }; };
@@ -63,9 +63,9 @@ export function updateFx(l) {
 // Effect elements that change every frame (noise seeds, ripple frequency), found once instead of by a document search on each frame.
 const fxElCache = new Map<string, Element | null>();
 const fxEl = (id: string) => { let e = fxElCache.get(id); if (!e || !e.isConnected) { e = stage.querySelector('#' + id); fxElCache.set(id, e); } return e; };
-/** The size (in pixels) a Shader fill is drawn at: enough for how big it is on screen, never more than the 960 maximum. */
+/** The longer side (in pixels) a Shader fill is drawn at: enough for how big it is on screen, never more than the 960 maximum. */
 function shaderPx(scalePct: number) {
-  const px = stage.clientWidth * (scalePct / 100) * Math.min(window.devicePixelRatio || 1, 2);
+  const px = Math.max(stage.clientWidth, stage.clientHeight) * (scalePct / 100) * Math.min(window.devicePixelRatio || 1, 2);
   return Math.max(320, Math.min(fxShaderSize, Math.ceil(px / 160) * 160));
 }
 export function updateCanvas() {
@@ -92,14 +92,16 @@ export function updateCanvas() {
     });
     g.setAttribute('opacity', String(lightboxOn() && l.id !== S.sel ? .2 : 1));
     if (l.type === 'shader') { const rt = renderShader(l, f); const ph = g.querySelector('.shph'); if (ph) ph.style.display = rt.ok ? 'none' : ''; }
-    const sf = shaderFill(l); if (sf) { const w = shaderPx(l.fx[sf.j].scale ?? 100); renderShader(fxShaderLayer(l, sf.j), f, w, Math.round(w * 9 / 16)); }
+    const sf = shaderFill(l); if (sf) { renderShader(fxShaderLayer(l, sf.j), f, ...fxShaderDims(shaderPx(l.fx[sf.j].scale ?? 100))); }
     if (l.type === 'text' && (l.anims || []).length) applyTextAnims(l, g, f);
     l.fx.forEach((e, j) => {
       if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = fxEl(`rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', String(e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / FPS) % 997)); }
       if (e.on && e.id === 'ripple') { const tb = fxEl(`rt-${l.id}-${j}`); if (tb) { const bf = rippleBF(e), sp = (e.speed ?? 30) * .12; tb.setAttribute('baseFrequency', `${(bf * (1 + .22 * Math.sin(t * sp))).toFixed(5)} ${(bf * (1 + .22 * Math.cos(t * sp * .83))).toFixed(5)}`); } }
     });
   }
-  placeSel();
+  // During playback the playback loop places the selection at the start of each frame, while the layout is still clean.
+  // Here it would measure straight after the writes above and make the browser lay out the page twice per frame.
+  if (!S.playing) placeSel();
 }
 // While a zoom is in progress the stage is scaled with a CSS transform (cheap, done by the GPU) instead of being resized.
 // A resize makes Safari redraw every SVG filter at the new size on each step, which stutters with Bloom, Halftone and similar effects.

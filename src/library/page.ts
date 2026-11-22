@@ -87,7 +87,12 @@ function render() {
   const s = $('.lib-scroll', el); if (s) s.scrollTop = prev;
 }
 
-function note(text: string) { ui.note = text; clearTimeout(noteTimer); noteTimer = setTimeout(() => { ui.note = ''; $('.lib-toast', el)?.remove(); }, 3600); render(); }
+/** Shows a short message. Only the message is redrawn, so an open dialog keeps its typed text and focus. */
+function note(text: string) {
+  ui.note = text; clearTimeout(noteTimer); noteTimer = setTimeout(() => { ui.note = ''; $('.lib-toast', el)?.remove(); }, 3600);
+  $('.lib-toast', el)?.remove();
+  el.insertAdjacentHTML('beforeend', `<div class="toast lib-toast" role="status"><span>${esc(text)}</span></div>`);
+}
 async function refresh() { ui.list = await listProjects(); render(); }
 
 function setOpen(open: boolean) {
@@ -95,10 +100,17 @@ function setOpen(open: boolean) {
   (app as HTMLElement & { inert: boolean }).inert = open;
 }
 
-async function enter(id: string) {
+const warnMissing = (n: number) => { if (n) editorToast(`${n} picture or sound file${n > 1 ? 's are' : ' is'} missing from this device. Those layers show nothing.`); };
+/** Opens a project. `id` can also be a step that makes the project first, so a double tap cannot make two. */
+async function enter(id: string | (() => Promise<Meta>)) {
   if (busy) return; busy = true;
   try {
-    if (await openProject(id)) { ui.menu = null; ui.dialog = null; setOpen(false); } else { await refresh(); note('That project could not be found.'); }
+    if (typeof id !== 'string') id = (await id()).id;
+    const r = await openProject(id);
+    if (r) {
+      ui.menu = null; ui.dialog = null; setOpen(false);
+      warnMissing(r.missing);
+    } else { await refresh(); note('That project could not be found.'); }
   } catch { note('That project could not be opened.'); } finally { busy = false; }
 }
 
@@ -119,7 +131,8 @@ export async function bootLibrary() {
   try {
     await adoptSavedProject();
     const again = resumeId();
-    if (again && await openProject(again)) { setOpen(false); return; }
+    const r = again && await openProject(again);
+    if (r) { setOpen(false); warnMissing(r.missing); return; }
     await refresh();
   } catch { available = false; setOpen(false); } // no storage here (private host): fall back to the plain editor
 }
@@ -128,8 +141,8 @@ async function act(name: string, t: HTMLElement, e: Event) {
   const id = t.dataset.id || ui.menu?.id;
   switch (name) {
     case 'open': return enter(t.dataset.id!);
-    case 'blank': { const m = await createBlank(await nextUntitled()); return enter(m.id); }
-    case 'sample': { const m = await createSample(); return enter(m.id); }
+    case 'blank': return enter(async () => createBlank(await nextUntitled()));
+    case 'sample': return enter(() => createSample());
     case 'new': ui.menu = null; ui.dialog = { type: 'new', name: '', dur: PF.newLen * FPS, start: 'blank' }; return render();
     case 'menu': { if (ui.menu?.id === id) { ui.menu = null; return render(); } const r = t.getBoundingClientRect(); ui.menu = { id: id!, x: r.right, y: r.bottom + 4, arm: false }; return render(); }
     case 'dur': keepName(); ui.dialog!.dur = +t.dataset.v! * FPS; return render();
@@ -156,9 +169,10 @@ const keepName = () => { const n = $('#lib-name', el); if (n && ui.dialog) ui.di
 async function submit() {
   keepName(); const d = ui.dialog; if (!d) return;
   if (d.type === 'rename') { ui.dialog = null; await renameProject(d.id!, d.name); return refresh(); }
-  const name = d.name.trim() || await nextUntitled();
-  const m = d.start === 'sample' ? await createSample(name, d.dur) : await createBlank(name, d.dur);
-  return enter(m.id);
+  return enter(async () => {
+    const name = d.name.trim() || await nextUntitled();
+    return d.start === 'sample' ? createSample(name, d.dur) : createBlank(name, d.dur);
+  });
 }
 
 /** The library handles its own input, so taps and keys never reach the editor underneath it. */
