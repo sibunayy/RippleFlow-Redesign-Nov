@@ -150,5 +150,11 @@ export function renderPop() {
   host.innerHTML = html;
   const p = host.firstElementChild; if (!p) return;
   for (const k in pos) p.style[k] = Math.round(pos[k]) + 'px';
+  // Keep the whole menu on screen. Slide it up when its bottom would leave the app, and scroll it when it is still too tall.
+  if ('top' in pos) {
+    const room = a.height - 16, h = p.offsetHeight;
+    if (h > room) { p.style.maxHeight = room + 'px'; p.style.overflowY = 'auto'; }
+    p.style.top = Math.max(8, Math.min(Math.round(pos['top'] as number), a.height - 8 - Math.min(h, room))) + 'px';
+  }
   setTimeout(() => { const f = p.querySelector('button'); if (f && S.pop && S.pop !== 'menu') f.focus({ preventScroll: true }); }, 0);
 }

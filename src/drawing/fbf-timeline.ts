@@ -57,6 +57,7 @@ export function renderFbfTimeline() {
       <span class="spacer"></span>
       <div class="fgrp" role="group" aria-label="View">
         <button class="ib ${S.onion.on ? 'on' : ''}" data-act="onion" data-onion aria-pressed="${S.onion.on}" aria-label="Onion skin (hold for settings)" title="Onion skin · hold for settings">${ic('onion', 's')}</button>
+        <button class="ib" data-flip aria-label="Flipbook: hold to see the previous drawing, drag to flip through drawings" title="Flipbook · hold, then drag to flip through drawings">${ic('flip', 's')}</button>
         <button class="ib ${S.loop ? 'on' : ''}" data-act="loopt" aria-pressed="${S.loop}" aria-label="Loop playback" title="Loop playback">${ic('loop', 's')}</button>
         <button class="ib" data-act="fzoom" data-v="-1" aria-label="Narrower frames" title="Narrower frames">${ic('zout', 's')}</button>
         <button class="ib" data-act="fzoom" data-v="1" aria-label="Wider frames" title="Wider frames">${ic('zin', 's')}</button>

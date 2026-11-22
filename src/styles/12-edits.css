@@ -240,3 +240,13 @@ body { position: relative; }
 .cz-preset[aria-pressed="true"] { background: var(--lit-bg); box-shadow: var(--lit); color: var(--acc-text); }
 .cz-chip { position: relative; display: block; height: 34px; border-radius: var(--r-field); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .1); }
 .cz-chip i { position: absolute; right: 6px; bottom: 6px; width: 12px; height: 12px; border-radius: 50%; }
+
+/* Effects: menus scroll inside the app instead of running off the screen. */
+.pop.menu { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+/* Effects: two colour chips (Shader fill colours A and B) share one row without widening the panel. */
+.pbody { overflow-x: hidden; }
+.fxopts .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.fxopts .cchip { min-width: 0; gap: 8px; }
+.fxopts .cchip > span:not(.cc) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fxopts .two .cchip .hex { display: none; }
+.fxopts .kv .sel { min-width: 0; }

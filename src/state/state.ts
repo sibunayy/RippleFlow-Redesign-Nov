@@ -23,8 +23,8 @@ interface LateState { shDraft?: any; shImport?: any; resetArm?: any; fbf?: boole
 export const S: typeof state & LateState = state;
 // Multi-selection: S.multi only counts while it contains the primary S.sel, so single-select code stays valid.
 export const selIds = () => (S.sel && S.multi.size > 1 && S.multi.has(S.sel)) ? [...S.multi].filter((id) => lay(id)) : (S.sel && lay(S.sel) ? [S.sel] : []);
-export const isDrawTool = (t) => t === 'brush' || t === 'erase' || t === 'fill';
-export const DRAWMODES = [['brush', 'Brush', 'B'], ['erase', 'Eraser', 'X'], ['fill', 'Fill', 'G']];
+export const isDrawTool = (t) => t === 'brush' || t === 'dfill' || t === 'erase' || t === 'fill';
+export const DRAWMODES = [['brush', 'Brush', 'B'], ['dfill', 'Draw & fill', 'F'], ['erase', 'Eraser', 'X'], ['fill', 'Fill', 'G']];
 export const BPRE = [['pencil', 'Pencil'], ['ink', 'Ink'], ['marker', 'Marker'], ['air', 'Airbrush']];
 export const isSelTool = (t) => t === 'select' || t === 'marquee' || t === 'lasso';
 export const SELMODES = [['select', 'Select', 'V'], ['marquee', 'Marquee', 'M'], ['lasso', 'Lasso', 'Q']];

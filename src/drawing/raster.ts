@@ -73,8 +73,35 @@ function floodFill(ctx, s) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-over'; ctx.globalAlpha = 1; ctx.drawImage(SC, 0, 0); ctx.restore();
   return [x0 - 962, y0 - 542, x1 - 958, y1 - 538];
 }
+// A shape fill: the points of a finished stroke, joined end to start, filled with one colour.
+function polyFill(ctx, s) {
+  const P = s.pts; if (!P || P.length < 3) return null;
+  ctx.setTransform(1, 0, 0, 1, 960, 540); ctx.globalAlpha = (s.op ?? 100) / 100; ctx.fillStyle = s.c;
+  ctx.beginPath(); P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; P.forEach((p) => { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); });
+  return [x0 - 2, y0 - 2, x1 + 2, y1 + 2];
+}
+// A baked picture: a finished image (effects already applied) placed on the cel. It is decoded once and kept.
+const pics = new Map<string, HTMLImageElement>();
+let pendingPic = false;
+/** Loads and decodes a baked picture, so that the next raster of its cel can draw it straight away. */
+export async function warmPicture(url: string) {
+  let im = pics.get(url); if (!im) { im = new Image(); im.src = url; pics.set(url, im); }
+  try { await im.decode(); } catch { /* the picture could not load; the cel stays blank */ }
+}
+function picStroke(ctx, s) {
+  let im = pics.get(s.url);
+  if (!im) { im = new Image(); im.onload = () => dispatchEvent(new Event('rf-picture-ready')); im.src = s.url; pics.set(s.url, im); }
+  if (!im.complete) { pendingPic = true; return null; }
+  if (!im.naturalWidth) return null; // it failed to load: the cel stays blank
+  ctx.setTransform(1, 0, 0, 1, 960, 540); ctx.globalAlpha = 1; ctx.drawImage(im, s.x, s.y, s.w, s.h);
+  return [s.x, s.y, s.x + s.w, s.y + s.h];
+}
 function paintStroke(ctx, s) {
   if (s.k === 'fill') return floodFill(ctx, s);
+  if (s.k === 'img') return picStroke(ctx, s);
+  if (s.k === 'pfill') return polyFill(ctx, s);
   ctx.setTransform(1, 0, 0, 1, 960, 540);
   if (s.k === 'erase') { ctx.save(); ctx.globalCompositeOperation = 'destination-out'; stampStroke(ctx, s, {}, s.op / 100); ctx.restore(); return null; }
   sx.setTransform(1, 0, 0, 1, 0, 0); sx.clearRect(0, 0, 1920, 1080); sx.setTransform(1, 0, 0, 1, 960, 540); sx.globalAlpha = 1;
@@ -86,10 +113,10 @@ function paintStroke(ctx, s) {
 }
 export function rasterCel(c) {
   rx.setTransform(1, 0, 0, 1, 0, 0); rx.globalAlpha = 1; rx.globalCompositeOperation = 'source-over'; rx.clearRect(0, 0, 1920, 1080);
-  let bb = null;
+  let bb = null; pendingPic = false;
   for (const s of c.strokes) { const b = paintStroke(rx, s); if (b && s.k !== 'erase') bb = bb ? [Math.min(bb[0], b[0]), Math.min(bb[1], b[1]), Math.max(bb[2], b[2]), Math.max(bb[3], b[3])] : b; }
   rx.setTransform(1, 0, 0, 1, 0, 0);
-  const e: any = { sig: c.strokes.length + ':' + (c.v || 0), url: BLANK, x: 0, y: 0, w: 0, h: 0 };
+  const e: any = { sig: c.strokes.length + ':' + (c.v || 0), pending: pendingPic, url: BLANK, x: 0, y: 0, w: 0, h: 0 };
   if (bb) {
     const X0 = Math.max(0, Math.floor(bb[0] + 960)), Y0 = Math.max(0, Math.floor(bb[1] + 540)), X1 = Math.min(1920, Math.ceil(bb[2] + 960)), Y1 = Math.min(1080, Math.ceil(bb[3] + 540));
     if (X1 > X0 && Y1 > Y0) {
@@ -100,7 +127,7 @@ export function rasterCel(c) {
   }
   celCache.set(c, e); return e;
 }
-export function celRaster(c) { const e = celCache.get(c); return e && e.sig === c.strokes.length + ':' + (c.v || 0) ? e : rasterCel(c); }
+export function celRaster(c) { const e = celCache.get(c); return e && !e.pending && e.sig === c.strokes.length + ':' + (c.v || 0) ? e : rasterCel(c); }
 const setImg = (im, e, op?) => { im.setAttribute('href', e.url); im.setAttribute('x', e.x); im.setAttribute('y', e.y); im.setAttribute('width', e.w); im.setAttribute('height', e.h); if (op != null) im.setAttribute('opacity', op); };
 /* ---- per-frame: exposed cel + onion skins ---- */
 export function drawXf(l, xf, i, f) {
