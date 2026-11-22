@@ -233,3 +233,12 @@ areas, Safari's back-swipe, and frame rate on an iPad.
 - **Two fixes over the published version.** Dragging no longer rebuilds the block under the finger, which could make
   Safari cancel the drag. Undo now lights up right after each change in the workspace.
 - **Tests.** `tests/parity/15-frame-by-frame.spec.ts`. Not tested on a real iPad with touch and Apple Pencil.
+
+## iOS 27 top blur and active layer row
+- **Top blur.** iOS 27 draws a blur over the top of Home Screen apps that use the old "black-translucent" status bar
+  setting. Apple has deprecated that setting, so it is removed. iOS only reads it when an app is added, so the icon must
+  be removed and added again from Safari. A thin solid strip at the top is a backup for icons that are not re-added.
+- **Bottom gap.** The Home Screen app now sizes itself from the real screen instead of a reported viewport height.
+- **Active layer row.** The collapsed timeline shows the selected layer's name, time span, keyframes and cels on the same
+  time axis as the scrubber. It is display only. Short screens and the frame-by-frame workspace keep the slim timeline.
+- **Tests.** Reference screenshots re-taken for the taller collapsed timeline. Not tested on a real iPad running iOS 27.

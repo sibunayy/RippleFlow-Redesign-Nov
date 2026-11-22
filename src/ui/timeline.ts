@@ -16,7 +16,16 @@ import { renderFbfTimeline } from '../drawing/fbf-timeline';
 export function tlHeight() {
   const H = app.clientHeight;
   if (S.tlPx != null) return S.tlPx;
-  return S.tl === 'peek' ? 58 : S.tl === 'mid' ? Math.round(H * .4) : Math.round(H * .64);
+  return S.tl === 'peek' ? peekHeight() : S.tl === 'mid' ? Math.round(H * .4) : Math.round(H * .64);
+}
+/** Collapsed height: the transport plus a row for the active layer. Short screens and the frame workspace keep the transport only. */
+export function peekHeight() { return S.fbf || app.clientHeight < 560 ? 58 : 88; }
+/** The active layer while the timeline is collapsed: its name, time span, keyframes and cels. It only displays; the transport above stays the control. */
+function activeLayerRow(l, ticks: number[]) {
+  if (!l) return `<div class="tla empty"><div class="tla-name"><span class="nm">No layer selected</span></div><div class="tla-track"><span class="phl"></span></div><span></span></div>`;
+  const cels = l.type === 'draw' ? (l.cels || []).map((c) => `<i class="tla-cel" style="left:${c.f / DUR * 100}%"></i>`).join('') : '';
+  const keys = ticks.map((t) => `<span class="pk" style="left:${t / DUR * 100}%"></span>`).join('');
+  return `<div class="tla" role="group" aria-label="Active layer: ${esc(l.name)}"><div class="tla-name"><span class="chip-dot" style="background:${l.hue}"></span><span class="nm">${esc(l.name)}</span></div><div class="tla-track" style="--hue:${l.hue}"><span class="bar" style="left:${(l.inP ?? 0) / DUR * 100}%;right:${(DUR - (l.outP ?? DUR)) / DUR * 100}%"></span>${cels}${keys}<span class="phl"></span></div><span></span></div>`;
 }
 function rulerHtml() {
   let h = '';
@@ -88,7 +97,7 @@ export function renderTL() {
         <button class="ib ${S.onion.on ? 'on' : ''}" data-act="onion" data-onion aria-pressed="${S.onion.on}" aria-label="Onion skin (hold for settings)" title="Onion skin · hold for settings">${ic('onion', 's')}</button>
         <button class="ib" data-flip aria-label="Flip: hold to see the previous cel, drag to flip through cels" title="Hold to flip">${ic('flip', 's')}</button>
       </div>` : '<span></span>'}
-    </div>${body}`;
+    </div>${!expanded && peekHeight() > 58 ? activeLayerRow(l, ticks) : ''}${body}`;
   el.classList.toggle('drawsel', !!(l && l.type === 'draw'));
   if (expanded && S.tlMode === 'graph') drawGraph();
 }

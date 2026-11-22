@@ -11,7 +11,7 @@ import { renderLeft } from '../ui/left-panel';
 import { fmt } from '../ui/inspector/controls';
 import { selectedKeyObjs } from '../anim/clipboard';
 import { renderRight } from '../ui/inspector/index';
-import { renderTL, tlHeight } from '../ui/timeline';
+import { peekHeight, renderTL, tlHeight } from '../ui/timeline';
 import { clamp } from '../ui/graph';
 import { renderPop } from '../ui/popovers';
 import { toast } from '../ui/toast';
@@ -49,12 +49,12 @@ export function layerDrag(e, grip) {
 export function tlDrag(e) {
   const h0 = tlHeight(), y0 = e.clientY, hd = $('#tlh'); let moved = false;
   app.classList.remove('anim'); hd.classList.add('drag'); hd.setPointerCapture(e.pointerId);
-  const mv = (ev) => { const dy = y0 - ev.clientY; if (Math.abs(dy) > 4) moved = true; S.tlPx = Math.max(58, Math.min(app.clientHeight * .78, h0 + dy)); app.style.setProperty('--tlh', S.tlPx + 'px'); if ((S.tlPx > 90) !== ($('.tl-body') !== null)) renderTL(); layoutStage(); };
+  const mv = (ev) => { const dy = y0 - ev.clientY; if (Math.abs(dy) > 4) moved = true; S.tlPx = Math.max(peekHeight(), Math.min(app.clientHeight * .78, h0 + dy)); app.style.setProperty('--tlh', S.tlPx + 'px'); if ((S.tlPx > 90) !== ($('.tl-body') !== null)) renderTL(); layoutStage(); };
   const up = () => {
     hd.removeEventListener('pointermove', mv); hd.removeEventListener('pointerup', up); hd.removeEventListener('pointercancel', up);
     const H = app.clientHeight, cur = S.tlPx ?? h0;
     if (!moved) S.tl = S.tl === 'peek' ? 'mid' : 'peek';
-    else { const opts: [string, number][] = [['peek', 58], ['mid', H * .4], ['tall', H * .64]]; S.tl = opts.reduce((a, b) => (Math.abs(b[1] - cur) < Math.abs(a[1] - cur) ? b : a))[0]; }
+    else { const opts: [string, number][] = [['peek', peekHeight()], ['mid', H * .4], ['tall', H * .64]]; S.tl = opts.reduce((a, b) => (Math.abs(b[1] - cur) < Math.abs(a[1] - cur) ? b : a))[0]; }
     S.tlPx = null; app.classList.add('anim'); renderAll(); setTimeout(layoutStage, 240);
   };
   hd.addEventListener('pointermove', mv); hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
