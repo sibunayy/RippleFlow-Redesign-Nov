@@ -47,7 +47,7 @@ export function buildCanvas() {
   }).join('');
   defs += hidden.join('');
   stage.innerHTML = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Composition: ${esc(projName)}, ${CW} by ${CH}"><defs>${defs}<filter id="onB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 .28  0 0 0 0 .32  0 0 0 1 0"/></filter><filter id="onA"><feColorMatrix type="matrix" values="0 0 0 0 .22  0 0 0 0 .86  0 0 0 0 .5  0 0 0 1 0"/></filter></defs><rect width="${CW}" height="${CH}" style="fill: ${compBg || 'var(--comp-bg)'}"/>${body}</svg>${guideHtml()}`;
-  gEls = {}; setXfEls({});
+  gEls = {}; setXfEls({}); fxElCache.clear();
   mountShaders();
   $$('g[data-id]', stage).forEach((g) => { gEls[g.dataset.id] = g; xfEls[g.dataset.id] = []; $$(':scope > .xf', g).forEach((x) => { xfEls[g.dataset.id][+x.dataset.i] = x; }); });
   updateCanvas();
@@ -58,13 +58,23 @@ export function updateFx(l) {
   tmp.innerHTML = fxDefs(l);
   const nf = tmp.querySelector(`filter#fx-${l.id}`);
   if (!old || !nf) { buildCanvas(); return; }
-  old.replaceWith(nf); updateCanvas();
+  old.replaceWith(nf); fxElCache.clear(); updateCanvas();
+}
+// Effect elements that change every frame (noise seeds, ripple frequency), found once instead of by a document search on each frame.
+const fxElCache = new Map<string, Element | null>();
+const fxEl = (id: string) => { let e = fxElCache.get(id); if (!e || !e.isConnected) { e = stage.querySelector('#' + id); fxElCache.set(id, e); } return e; };
+/** The size (in pixels) a Shader fill is drawn at: enough for how big it is on screen, never more than the 960 maximum. */
+function shaderPx(scalePct: number) {
+  const px = stage.clientWidth * (scalePct / 100) * Math.min(window.devicePixelRatio || 1, 2);
+  return Math.max(320, Math.min(fxShaderSize, Math.ceil(px / 160) * 160));
 }
 export function updateCanvas() {
   const F0 = S.f;
   for (const l of layers) {
     const f = postT(l, F0), t = f / FPS;
     const g = gEls[l.id], xs = xfEls[l.id]; if (!g || !xs) continue;
+    const vis = l.vis && (!S.solo.size || S.solo.has(l.id)) && F0 >= (l.inP ?? 0) && F0 < (l.outP ?? DUR);
+    if (!vis) { g.setAttribute('opacity', '0'); continue; } // a hidden layer needs no pose, effect or shader work
     const base = l.parent && lay(l.parent) ? relM(l, f, 0) : null;
     xs.forEach((xf, i) => {
       if (!xf) return;
@@ -80,14 +90,13 @@ export function updateCanvas() {
         else { tp.setAttribute('stroke-dasharray', `${((hi - lo) / 100 * len).toFixed(2)} ${(len * 2).toFixed(1)}`); tp.setAttribute('stroke-dashoffset', (-lo / 100 * len).toFixed(2)); tp.style.strokeOpacity = hi - lo < .05 ? '0' : ''; }
       }
     });
-    const vis = l.vis && (!S.solo.size || S.solo.has(l.id)) && F0 >= (l.inP ?? 0) && F0 < (l.outP ?? DUR);
-    g.setAttribute('opacity', vis ? (lightboxOn() && l.id !== S.sel ? .2 : 1) : 0);
-    if (l.type === 'shader' && vis) { const rt = renderShader(l, f); const ph = g.querySelector('.shph'); if (ph) ph.style.display = rt.ok ? 'none' : ''; }
-    const sf = vis && shaderFill(l); if (sf) renderShader(fxShaderLayer(l, sf.j), f, fxShaderSize, Math.round(fxShaderSize * 9 / 16));
+    g.setAttribute('opacity', String(lightboxOn() && l.id !== S.sel ? .2 : 1));
+    if (l.type === 'shader') { const rt = renderShader(l, f); const ph = g.querySelector('.shph'); if (ph) ph.style.display = rt.ok ? 'none' : ''; }
+    const sf = shaderFill(l); if (sf) { const w = shaderPx(l.fx[sf.j].scale ?? 100); renderShader(fxShaderLayer(l, sf.j), f, w, Math.round(w * 9 / 16)); }
     if (l.type === 'text' && (l.anims || []).length) applyTextAnims(l, g, f);
     l.fx.forEach((e, j) => {
-      if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = stage.querySelector(`#rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / FPS) % 997); }
-      if (e.on && e.id === 'ripple') { const tb = stage.querySelector(`#rt-${l.id}-${j}`); if (tb) { const bf = rippleBF(e), sp = (e.speed ?? 30) * .12; tb.setAttribute('baseFrequency', `${(bf * (1 + .22 * Math.sin(t * sp))).toFixed(5)} ${(bf * (1 + .22 * Math.cos(t * sp * .83))).toFixed(5)}`); } }
+      if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = fxEl(`rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', String(e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / FPS) % 997)); }
+      if (e.on && e.id === 'ripple') { const tb = fxEl(`rt-${l.id}-${j}`); if (tb) { const bf = rippleBF(e), sp = (e.speed ?? 30) * .12; tb.setAttribute('baseFrequency', `${(bf * (1 + .22 * Math.sin(t * sp))).toFixed(5)} ${(bf * (1 + .22 * Math.cos(t * sp * .83))).toFixed(5)}`); } }
     });
   }
   placeSel();
@@ -97,7 +106,7 @@ export function updateCanvas() {
 // When the zoom pauses, the stage gets its real size once and the filters are drawn sharp.
 let base: { W: number; H: number; x: number; y: number } | null = null, settleT = 0, liveRaf = 0;
 const SETTLE_MS = 140;
-function settle() { settleT = 0; stage.style.willChange = ''; layoutStage(); }
+function settle() { settleT = 0; stage.style.willChange = ''; layoutStage(); if (layers.some(shaderFill)) updateCanvas(); } // a Shader fill is redrawn at the new on-screen size
 /** Fast path for wheel and pinch zoom. Falls back to a full layout when there is no base size to scale from. */
 export function layoutStageLive() {
   if (frozen || !base) { layoutStage(); return; }
