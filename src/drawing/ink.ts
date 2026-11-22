@@ -76,7 +76,7 @@ export function drawDown(e) {
   const mv = (ev) => {
     if (cancelled) return;
     if (ptrs.size > 1) { cancelled = true; inkClear(); return; }
-    if (!folded && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 4) { folded = true; foldStart('drag'); }
+    if (!folded && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 4) { folded = true; foldStart('drag', 'pointer'); }
     const evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
     for (const q of (evs.length ? evs : [ev])) { let [qx, qy] = localPt(l, q); const [qp, qa] = penData(q); lastRaw = [Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]; if (follow < 1) { sx += (qx - sx) * follow; sy += (qy - sy) * follow; qx = sx; qy = sy; } const last = s.pts[s.pts.length - 1]; if (Math.hypot(qx - last[0], qy - last[1]) < 0.4) continue; s.pts.push([Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]); }
     stampStroke(ictx, s, stt, s.k === 'erase' ? s.op / 100 : 1);

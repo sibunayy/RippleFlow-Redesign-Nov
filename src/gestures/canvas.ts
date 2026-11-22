@@ -38,7 +38,7 @@ export function penUndo() { S.penPts.pop(); drawOverlay(); renderFloats(); }
 export function canvasDown(e) {
   if (ptrs.size === 0 && e.pointerType === 'touch') preTouchSel = { t: performance.now(), sel: S.sel, multi: [...S.multi], keys: [...S.keys] };
   ptrs.set(e.pointerId, [e.clientX, e.clientY]); vp.setPointerCapture(e.pointerId);
-  if (ptrs.size === 2) { foldStart('drag'); const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); pinch0 = { d: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])), z: S.zoom, pan: [...S.pan], c: [(a[0] + b[0]) / 2 - v.left, (a[1] + b[1]) / 2 - v.top] }; setDragging(false); return; }
+  if (ptrs.size === 2) { foldStart('drag', 'stage'); const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); pinch0 = { d: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])), z: S.zoom, pan: [...S.pan], c: [(a[0] + b[0]) / 2 - v.left, (a[1] + b[1]) / 2 - v.top] }; setDragging(false); return; }
   if (S.eyedrop) {
     const g = e.target.closest('g[data-id]'), src = g && lay(g.dataset.id), dst = S.sel && lay(S.sel);
     const key: string = typeof S.eyedrop === 'string' ? S.eyedrop : 'hue'; S.eyedrop = false; renderFloats();
@@ -111,7 +111,7 @@ function shapeDrag(e, cx, cy) {
 function panStart(e) {
   const p0 = [...S.pan], x0 = e.clientX, y0 = e.clientY;
   let moved = false;
-  const mv = (ev) => { if (ptrs.size > 1) return; if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 4) return; if (!moved) { moved = true; foldStart('drag'); } S.pan = [p0[0] + ev.clientX - x0, p0[1] + ev.clientY - y0]; layoutStage(); };
+  const mv = (ev) => { if (ptrs.size > 1) return; if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 4) return; if (!moved) { moved = true; foldStart('drag', 'stage'); } S.pan = [p0[0] + ev.clientX - x0, p0[1] + ev.clientY - y0]; layoutStage(); };
   const up = () => { vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); foldEnd('drag'); };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up);
 }

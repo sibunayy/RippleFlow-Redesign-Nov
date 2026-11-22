@@ -242,3 +242,10 @@ areas, Safari's back-swipe, and frame rate on an iPad.
 - **Active layer row.** The collapsed timeline shows the selected layer's name, time span, keyframes and cels on the same
   time axis as the scrubber. It is display only. Short screens and the frame-by-frame workspace keep the slim timeline.
 - **Tests.** Reference screenshots re-taken for the taller collapsed timeline. Not tested on a real iPad running iOS 27.
+
+## Right panel stays open while dragging
+- **Right panel.** During a canvas drag it now stays open until it covers 60% of what is being dragged, and comes back
+  when the item is dragged out (below 50%, so it doesn't flicker at the limit). It still folds during playback.
+- **What counts as dragged.** The selected layers, the whole canvas when panning or pinching, and the brush tip when drawing.
+- **Top blur.** The solid backup strip is replaced by an invisible one (`.remove-blur`), so it cannot paint over the header.
+- **Tests.** `tests/parity/16-right-panel-fold.spec.ts`. Not tested on a real iPad.

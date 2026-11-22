@@ -10,7 +10,8 @@
 .app.anim { transition: grid-template-columns .22s var(--ease), grid-template-rows .22s var(--ease); }
 .app.left-open:not(.portrait) { --lw: 280px; }
 .app.right-open:not(.portrait) { --rw: 264px; }
-.app.folding.folding:not(.portrait) { --lw: 0px; --rw: 0px; } /* auto-fold while dragging on the canvas or playing */
+.app.folding.folding:not(.portrait) { --lw: 0px; } /* auto-fold while dragging on the canvas or playing */
+.app.fold-right.fold-right:not(.portrait) { --rw: 0px; } /* the right panel: during playback, or when it covers 60% of a drag */
 .app.preview-portrait { max-width: none; width: auto; aspect-ratio: 820 / 1180; height: 100%; }
 
 .top { grid-area: top; display: flex; align-items: center; gap: 2px; padding: 0 6px 0 4px; background: var(--surface); border-bottom: 1px solid var(--line-soft); min-width: 0; }
