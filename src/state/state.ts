@@ -7,7 +7,7 @@ import { PF } from '../ui/prefs';
 /* ---------- state ---------- */
 const state = {
   tool: 'select', shape: 'rect', left: store.get('left', null), right: PF.rightStart === 'closed' ? null : PF.rightStart === 'open' ? (store.get('right', 'props') || 'props') : store.get('right', 'props'), sel: 'logo', keys: [], f: 42, playing: false,
-  tl: PF.tlStart === 'last' ? store.get('tl', 'peek') : PF.tlStart, tlPx: null, full: false, autoKey: PF.autoKey, snap: true, zoom: 1, pan: [0, 0], perf: false, mb: false,
+  tl: PF.tlStart === 'last' ? store.get('tl', 'peek') : PF.tlStart, tlPx: null, full: false, autoKey: PF.autoKey, keyMulti: false, snap: true, zoom: 1, pan: [0, 0], perf: false, mb: false,
   open: new Set(['logo']), tlMode: 'dope', pop: null, dialog: null, cat: 'All', q: '', collapsed: new Set(store.get('collapsed', ['blend', 'masks', 'trim', 'repeat'])),
   portraitPreview: false, toast: null, hostTheme: root.getAttribute('data-theme'), themePref: store.get('theme', 'auto'), glow: store.get('glow', 'full'), tint: store.get('tint', 'classic'),
   autoFold: store.get('autofold', true), eyedrop: false, penPts: [],

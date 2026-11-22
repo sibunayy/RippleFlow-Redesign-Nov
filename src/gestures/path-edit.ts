@@ -163,7 +163,7 @@ export function peDown(e) {
   const sec = (ev) => { if (ev.pointerId !== e.pointerId) multi = true; };
   const end = (ev) => { if (ev.pointerId !== e.pointerId) return; vp.removeEventListener('pointerdown', sec); vp.removeEventListener('pointerup', end); vp.removeEventListener('pointercancel', end); if (ev.type === 'pointerup' && !multi && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) peExit(); };
   vp.addEventListener('pointerdown', sec); vp.addEventListener('pointerup', end); vp.addEventListener('pointercancel', end);
-  panStart(e);
+  if (e.pointerType !== 'pen') panStart(e); // the Pencil never moves the canvas while a curve is edited; a finger or mouse still pans
 }
 const bez = (q, t) => { const v = 1 - t, f = (i) => v * v * v * q[0][i] + 3 * v * v * t * q[1][i] + 3 * v * t * t * q[2][i] + t * t * t * q[3][i]; return [f(0), f(1)]; };
 

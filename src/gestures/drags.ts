@@ -81,20 +81,30 @@ export function scrubDrag(e, el) {
 export function keyDown(e, dk) {
   e.stopPropagation();
   const L = lay(dk.dataset.l);
-  const pick = () => {
-    if (dk.dataset.dk === 'one') { const k = { l: L.id, p: dk.dataset.p, i: +dk.dataset.i }; const has = S.keys.findIndex((s) => s.l === k.l && s.p === k.p && s.i === k.i); if (e.shiftKey) { has >= 0 ? S.keys.splice(has, 1) : S.keys.push(k); } else S.keys = [k]; }
-    else { const t = +dk.dataset.t; S.keys = TF.flatMap((p) => animated(L.p[p]) ? L.p[p].keys.map((k, i) => ({ k, i, p })).filter((o) => Math.abs(o.k.t - t) < .5).map((o) => ({ l: L.id, p: o.p, i: o.i })) : []); }
+  const same = (s, k) => s.l === k.l && s.p === k.p && s.i === k.i;
+  // tap = select (or add / remove in multi-select); drag = keep the selection when the key is already in it, so the group moves together
+  const pick = (drag = false) => {
+    if (dk.dataset.dk === 'one') {
+      const k = { l: L.id, p: dk.dataset.p, i: +dk.dataset.i }, has = S.keys.findIndex((s) => same(s, k)), add = e.shiftKey || S.keyMulti;
+      if (drag) { if (has < 0) { if (add) S.keys.push(k); else S.keys = [k]; } }
+      else if (add) { has >= 0 ? S.keys.splice(has, 1) : S.keys.push(k); } else S.keys = [k];
+    } else {
+      const t = +dk.dataset.t, at = TF.flatMap((p) => animated(L.p[p]) ? L.p[p].keys.map((k, i) => ({ k, i, p })).filter((o) => Math.abs(o.k.t - t) < .5).map((o) => ({ l: L.id, p: o.p, i: o.i })) : []);
+      if (S.keyMulti || e.shiftKey) { const all = at.every((k) => S.keys.some((s) => same(s, k))); S.keys = all ? S.keys.filter((s) => !at.some((k) => same(s, k))) : [...S.keys, ...at.filter((k) => !S.keys.some((s) => same(s, k)))]; }
+      else if (!(drag && at.every((k) => S.keys.some((s) => same(s, k))))) S.keys = at;
+    }
     S.sel = L.id;
   };
-  const isLong = longPress(e, () => { pick(); seek(+(dk.dataset.t ?? L.p[dk.dataset.p].keys[+dk.dataset.i].t)); const r = dk.getBoundingClientRect(); S.pop = { type: 'ease', x: r.left + r.width / 2, y: r.top }; renderAll(); });
+  const isLong = longPress(e, () => { pick(true); seek(+(dk.dataset.t ?? L.p[dk.dataset.p].keys[+dk.dataset.i].t)); const r = dk.getBoundingClientRect(); S.pop = { type: 'ease', x: r.left + r.width / 2, y: r.top }; renderAll(); });
   // drag to retime
-  const x0 = e.clientX, track = dk.parentElement; let moved = false;
+  const x0 = e.clientX, track = dk.parentElement; let moved = false, group: HTMLElement[] = [dk], ts: number[] = [];
   const mv = (ev) => {
     if (isLong()) return;
     const dx = ev.clientX - x0; if (Math.abs(dx) < 6 && !moved) return;
-    if (!moved) { moved = true; pick(); }
-    const df = Math.round(dx / track.clientWidth * DUR);
-    dk.style.transform = `translateX(${df / DUR * track.clientWidth}px)`; dk.dataset.df = df;
+    if (!moved) { moved = true; pick(true); S.keys = S.keys.filter((s) => lay(s.l)); group = [dk, ...S.keys.map((s) => document.querySelector(`#tlrows .dk[data-dk="one"][data-l="${s.l}"][data-p="${s.p}"][data-i="${s.i}"]`) as HTMLElement).filter((x) => x && x !== dk)]; ts = S.keys.map((s) => lay(s.l).p[s.p].keys[s.i].t); }
+    // no key in the group may leave the timeline, so the group keeps its spacing
+    const df = clamp(Math.round(dx / track.clientWidth * DUR), ts.length ? -Math.min(...ts) : 0, ts.length ? DUR - 1 - Math.max(...ts) : 0);
+    group.forEach((g) => { g.style.transform = `translateX(${df / DUR * track.clientWidth}px)`; }); dk.dataset.df = String(df);
   };
   const up = () => {
     removeEventListener('pointermove', mv); removeEventListener('pointerup', up);

@@ -46,6 +46,7 @@ export function renderTL() {
       <button class="line-btn ghost ${S.loop ? '' : ''}" data-act="loopt" aria-pressed="${S.loop}" style="${S.loop ? 'color:var(--acc-text)' : ''}" title="Loop playback inside the work area">${ic('loop', 's')}Loop</button>
       ${S.wa[0] > 0 || S.wa[1] < DUR ? `<button class="line-btn ghost" data-act="wareset" title="Reset work area to the full timeline">Full range</button>` : ''}
       <span class="spacer"></span>
+      <button class="line-btn ghost" data-act="keymulti" aria-pressed="${S.keyMulti}" style="${S.keyMulti ? 'color:var(--acc-text);box-shadow:var(--lit);background:var(--lit-bg)' : ''}" title="Tap keyframes to select several, then drag one to move them all">${ic('selall', 's')}Multi-select</button>
       ${S.sel && lay(S.sel) && TF.some((p) => animated(lay(S.sel).p[p])) ? `<button class="line-btn ghost" data-act="keysall" aria-label="Select all keyframes on the selected layer">${ic('selall', 's')}All keys</button>` : ''}
       ${S.keys.length ? `<button class="line-btn ghost" data-act="copykeys" aria-label="Copy selected keyframes">Copy</button>` : ''}${keyClip && S.sel ? `<button class="line-btn ghost" data-act="pastekeys" aria-label="Paste keyframes at playhead">Paste</button>` : ''}
       ${S.keys.length ? `<button class="line-btn ghost" data-act="keysdel" aria-label="Delete selected keyframes" style="color:var(--danger)">${ic('trash', 's')}Delete</button>` : ''}
