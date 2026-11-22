@@ -6,6 +6,7 @@ import { buildCanvas, updateCanvas } from '../../render/stage';
 import { renderRight } from '../../ui/inspector/index';
 import { renderTL } from '../../ui/timeline';
 import { toast } from '../../ui/toast';
+import { renderPop } from '../../ui/popovers';
 import { tc } from '../../ui/inspector/controls';
 
 /** Duplicator, behaviours and text animators. Keys are data-act names. */
@@ -15,8 +16,9 @@ export const proceduralActions = {
   modadd: (el) => {
     const l = lay(S.sel); if (!l) return; const kind = el.dataset.v; l.mods = l.mods || [];
     const base = { spin: { tgt: 'rot', amp: 90, freq: 1 }, wiggle: { tgt: 'x', amp: 30, freq: 1.2 }, jitter: { tgt: 'rot', amp: 8, freq: 2 }, bounce: { tgt: 'scale', amp: 40, freq: 1.6, dec: 4 }, pulse: { tgt: 'scale', amp: 15, freq: 2, dec: 6 }, orbit: { tgt: 'x', amp: 80, freq: .4, ell: 100 }, drift: { tgt: 'x', amp: 40, freq: 1 } }[kind] || { tgt: 'y', amp: 20, freq: .5 };
-    l.mods.push({ kind, on: true, ph: 0, seed: 1 + Math.floor(Math.random() * 80), ...base }); commit('Add behaviour'); updateCanvas(); renderRight();
+    l.mods.push({ kind, on: true, ph: 0, seed: 1 + Math.floor(Math.random() * 80), ...base }); S.pop = null; renderPop(); commit('Add behaviour'); updateCanvas(); renderRight();
   },
+  addbeh: () => { S.pop = { type: 'beh' }; renderPop(); },
   moddel: (el) => { const l = lay(S.sel); l.mods.splice(+el.dataset.v, 1); commit('Remove behaviour'); updateCanvas(); renderRight(); },
   modon: (el) => { const l = lay(S.sel), m = l.mods[+el.dataset.v]; m.on = !m.on; commit('Toggle behaviour'); updateCanvas(); renderRight(); },
   animadd: (el) => { const l = lay(S.sel); const t = el.dataset.v, d = ANIMS[t]; l.anims = [...(l.anims || []), { type: t, start: Math.round(S.f), stagger: d[2], dur: d[1] || 1 }]; S.collapsed.delete('tanim'); commit('Add text animator'); buildCanvas(); renderRight(); renderTL(); toast(`${d[0]} starts at ${tc(S.f)}. Press play to see it.`, true); },

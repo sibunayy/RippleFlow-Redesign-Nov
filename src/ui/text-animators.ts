@@ -2,15 +2,14 @@ import { $$ } from '../core/dom';
 import { ic } from './icons';
 import { EASES, bez } from '../anim/easing';
 import { ANIMS } from '../state/state';
-import { grid2, pf, tc } from './inspector/controls';
+import { grid2, info, pf, tc } from './inspector/controls';
 import { clamp } from './graph';
 
 export function animHtml(l) {
   const list = (l.anims || []).map((a, i) => `<div class="mod"><div class="fx-h" style="font-size:var(--fs-s)">${ANIMS[a.type][0]}<span class="tc" style="color:var(--muted);font-weight:400;font-size:var(--fs-xs)">from ${tc(a.start)}</span><span class="spacer"></span>
       <button class="ib" data-act="animstart" data-v="${i}" aria-label="Start ${ANIMS[a.type][0]} at the playhead" title="Start at playhead">${ic('marker', 's')}</button><button class="ib" data-act="animdel" data-v="${i}" aria-label="Remove ${ANIMS[a.type][0]}">${ic('trash', 's')}</button></div>
       ${a.type === 'wave' ? '' : grid2([a.type === 'track' ? '' : pf(a, 'an', i, 'stagger', 'Stagger', 0, 20, .05, ' f'), pf(a, 'an', i, 'dur', 'Duration', 1, 60, .1, ' f')].filter(Boolean))}</div>`).join('');
-  return list + `<div class="chips" style="padding:4px 0 0;flex-wrap:wrap">${Object.entries(ANIMS).map(([k, [n]]) => `<button class="chip" data-act="animadd" data-v="${k}">＋ ${n}</button>`).join('')}</div>
-    <p class="hint" style="padding:2px 0 0">Animators start at the playhead and move each character in turn.</p>`;
+  return `<div class="kv"><span>Per-character motion ${info('Animators start at the playhead and move each character in turn.')}</span></div>` + list + `<div class="chips" style="padding:4px 0 0;flex-wrap:wrap">${Object.entries(ANIMS).map(([k, [n]]) => `<button class="chip" data-act="animadd" data-v="${k}">＋ ${n}</button>`).join('')}</div>`;
 }
 export function applyTextAnims(l, g, f) {
   const eo = bez(EASES.out), size = +l.size || 100;

@@ -1,3 +1,4 @@
+import { cTarget } from '../ui/color-picker';
 import { $ } from '../core/dom';
 import { layers } from '../model/project';
 import { lay, val } from '../anim/interpolate';
@@ -21,6 +22,9 @@ import { drawOverlay } from '../drawing/overlay';
 import { longPress, setDragging, setSuppressClick } from '../events/delegate';
 
 // Canvas: select/move, hand pan, pinch zoom, place shapes and text.
+// The selection as it was when the first finger touched down. A two-finger tap (undo/redo) starts with one
+// finger, which can deselect or reselect before the second finger lands, so undo restores this.
+export let preTouchSel: { t: number; sel: string | null; multi: string[]; keys: any[] } | null = null;
 export const ptrs = new Map(); export let pinch0 = null, penSeen = false;
  // a stale suppress flag from a drag that ended off-target must not eat the next tap
 export function penFinish(close) {
@@ -32,13 +36,14 @@ export function penFinish(close) {
 }
 export function penUndo() { S.penPts.pop(); drawOverlay(); renderFloats(); }
 export function canvasDown(e) {
+  if (ptrs.size === 0 && e.pointerType === 'touch') preTouchSel = { t: performance.now(), sel: S.sel, multi: [...S.multi], keys: [...S.keys] };
   ptrs.set(e.pointerId, [e.clientX, e.clientY]); vp.setPointerCapture(e.pointerId);
   if (ptrs.size === 2) { foldStart('drag'); const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); pinch0 = { d: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])), z: S.zoom, pan: [...S.pan], c: [(a[0] + b[0]) / 2 - v.left, (a[1] + b[1]) / 2 - v.top] }; setDragging(false); return; }
   if (S.eyedrop) {
     const g = e.target.closest('g[data-id]'), src = g && lay(g.dataset.id), dst = S.sel && lay(S.sel);
     const key: string = typeof S.eyedrop === 'string' ? S.eyedrop : 'hue'; S.eyedrop = false; renderFloats();
     if (key === 'brush' && src) { S.brush.c = src.hue; saveBrush(); renderBrushBar(); toast(`Brush colour ${String(src.hue).toUpperCase()} from ${src.name}`); return; }
-    if (src && dst) { dst[key] = src.hue; commit('Pick colour'); buildCanvas(); renderAll(); toast(`Picked ${String(src.hue).toUpperCase()} from ${src.name}`, true); }
+    if (src && dst) { const [o, k] = cTarget(dst, key); o[k] = src.hue; commit('Pick colour'); buildCanvas(); renderAll(); toast(`Picked ${String(src.hue).toUpperCase()} from ${src.name}`, true); }
     else toast('No layer there. Tap the eyedropper and try again.');
     return;
   }

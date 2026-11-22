@@ -30,6 +30,7 @@ export const appActions = {
   right: (el) => { const v = el.dataset.v; S.right = S.right === v ? null : v; if (S.right && app.classList.contains('portrait')) S.left = null; if (S.right && !app.classList.contains('portrait') && S.left && app.clientWidth - 96 - 576 < 520) S.left = null; S.pop = null; renderAll(); },
   acat: (el) => { S.acat = el.dataset.v; renderLeft(); },
   cat: (el) => { S.cat = el.dataset.v; renderRight(); },
+  info: (el) => { const same = S.pop && S.pop.type === 'info' && S.pop.text === el.dataset.t; if (same) { S.pop = null; renderPop(); return; } const r = el.getBoundingClientRect(); S.pop = { type: 'info', text: el.dataset.t, x: r.left, y: r.bottom, top: r.top }; renderPop(); },
   sec: (el) => { const v = el.dataset.v; S.collapsed.has(v) ? S.collapsed.delete(v) : S.collapsed.add(v); renderRight(); persist(); },
   toast: (el) => toast(el.dataset.v),
   theme: (el) => { S.themePref = el.dataset.v; applyTheme(); renderPop(); },

@@ -23,7 +23,9 @@ export function renderStrips() {
     <button class="sb insert" data-act="insert" aria-label="Insert" aria-haspopup="dialog" aria-expanded="${S.pop === 'insert'}" title="Insert layer, shape or media">${ic('plus')}</button>`;
   const hasKeys = S.keys.length > 0;
   $('#rstrip').innerHTML = `
-    ${[['props', 'Properties'], ['effects', 'Effects'], ['easing', 'Easing'], ['presets', 'Presets']].map(([id, n]) => `<button class="sb ${S.right === id ? 'on' : ''}" data-act="right" data-v="${id}" aria-label="${n}" aria-pressed="${S.right === id}" title="${n}">${ic(id)}${id === 'easing' && hasKeys ? '<span class="dot"></span>' : ''}</button>`).join('')}
+    ${[['props', 'Properties', 'props'], ['effects', 'Effects', 'effects'], ['dup', 'Duplicator', 'copy'], ['presets', 'Presets', 'presets']].map(([id, n, icn]) => `<button class="sb ${S.right === id ? 'on' : ''}" data-act="right" data-v="${id}" aria-label="${n}" aria-pressed="${S.right === id}" title="${n}">${ic(icn)}</button>`).join('')}
     <span class="grow"></span>
+    <button class="sb ${S.pop && S.pop.type === 'align' && S.pop.from === 'rstrip' ? 'on' : ''}" data-act="align" aria-haspopup="dialog" aria-label="Align" title="Align to composition or selection">${ic('alC')}</button>
+    <button class="sb ${S.right === 'easing' ? 'on' : ''}" data-act="right" data-v="easing" aria-label="Easing" aria-pressed="${S.right === 'easing'}" title="Easing">${ic('easing')}${hasKeys ? '<span class="dot"></span>' : ''}</button>
     <button class="sb" data-act="help" aria-label="Help and shortcuts" title="Help">${ic('help')}</button>`;
 }

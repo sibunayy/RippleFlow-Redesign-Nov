@@ -50,6 +50,11 @@ export interface Layer {
   fxOff?: boolean;
   /** Transform properties by name (x, y, scale, rot, op, ax, ay, ts, te). */
   p: Record<string, Prop>;
+  /** The parent's placement when it was linked (six DOMMatrix numbers), so the child follows later moves. */
+  pw?: number[];
+  /** Offset of a picture from the layer's anchor (set when effects are baked). */
+  ox?: number;
+  oy?: number;
   // Timing and links
   inP?: number; outP?: number; parent?: string | null; pt?: number; matte?: string | null; blend?: string;
   flipX?: boolean; flipY?: boolean;

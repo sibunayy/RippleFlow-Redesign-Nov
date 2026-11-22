@@ -4,10 +4,13 @@ import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, isSelTool, selIds } from '../state/state';
 import { guideHtml } from './guides';
 import { shapeSvg } from './shapes';
-import { postT, rippleBF } from '../fx/defs';
+import { isFilterFx, postT, rippleBF } from '../fx/defs';
 import { fxDefs } from '../fx/filters';
 import { mat, mstr, pose, relM, repN, repXf, setXfEls, world, xfEls } from '../anim/pose';
-import { mountShaders, renderShader } from '../shader/runtime';
+import { fxShaderId, fxShaderLayer, fxShaderSize, mountShaders, renderShader } from '../shader/runtime';
+
+/** The layer's first switched-on Shader fill effect, if any (only one is drawn per layer). */
+export const shaderFill = (l) => { if (l.fxOff || l.type === 'audio') return null; const j = l.fx.findIndex((e) => e.on && e.id === 'shader'); return j < 0 ? null : { j }; };
 import { frozen } from '../ui/autofold';
 import { lightboxOn } from '../drawing/cels';
 import { drawXf } from '../drawing/raster';
@@ -19,7 +22,7 @@ import { dragging } from '../events/delegate';
 export const stage = $('#stage'), vp = $('#vp');
 export let gEls = {};
 export function buildCanvas() {
-  let defs = layers.map(fxDefs).join('') + '<filter id="mtw" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/></filter><filter id="mtk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"/></filter><filter id="mtl" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .2126 .7152 .0722 0 0" result="a"/><feComposite in="a" in2="SourceAlpha" operator="in"/></filter>';
+  let defs = layers.map((l) => fxDefs(l)).join('') +'<filter id="mtw" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/></filter><filter id="mtk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0"/></filter><filter id="mtl" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .2126 .7152 .0722 0 0" result="a"/><feComposite in="a" in2="SourceAlpha" operator="in"/></filter>';
   const srcOf = (l) => { const i = layers.indexOf(l); return l.matte && i > 0 ? layers[i - 1] : null; };
   const mSrc = new Set(layers.map(srcOf).filter(Boolean).map((x) => x.id));
   const W = '<rect x="-6000" y="-6000" width="14000" height="14000" fill="#fff"/>';
@@ -27,11 +30,18 @@ export function buildCanvas() {
     defs += `<mask id="mt-${l.id}" maskUnits="userSpaceOnUse" x="-6000" y="-6000" width="14000" height="14000">${l.matte === 'alpha' ? u + ' filter="url(#mtw)"/>' : l.matte === 'alphainv' ? W + u + ' filter="url(#mtk)"/>' : l.matte === 'luma' ? u + '/>' : W + u + ' filter="url(#mtl)"/>'}</mask>`; });
   const hidden = [];
   const body = [...layers].reverse().map((l) => {
-    const n = repN(l), sh = shapeSvg(l);
-    const copies = Array.from({ length: n }, (_, k) => `<g class="xf" data-i="${n - 1 - k}">${sh}</g>`).join('');
+    const n = repN(l), sh = shapeSvg(l), sf = shaderFill(l);
+    // Shader fill effect: the shader canvas sits on top of the shape, masked to the shape's own outline.
+    const copy = (i) => {
+      if (!sf) return sh;
+      const e = l.fx[sf.j], s = (e.scale ?? 100) / 100, w = 1920 * s, h = 1080 * s, mid = `shm-${l.id}-${i}`;
+      defs += `<mask id="${mid}" maskUnits="userSpaceOnUse" x="-6000" y="-6000" width="14000" height="14000"><use href="#sb-${l.id}-${i}" filter="url(#mtw)"/></mask>`;
+      return `<g id="sb-${l.id}-${i}">${sh}</g><g mask="url(#${mid})" opacity="${((e.mix ?? 100) / 100).toFixed(3)}"${e.blend && e.blend !== 'normal' ? ` style="mix-blend-mode:${e.blend}"` : ''} pointer-events="none"><foreignObject class="shfx" data-fx="${fxShaderId(l, sf.j)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}"></foreignObject></g>`;
+    };
+    const copies = Array.from({ length: n }, (_, k) => `<g class="xf" data-i="${n - 1 - k}">${copy(n - 1 - k)}</g>`).join('');
     const bl = l.blend && l.blend !== 'normal' ? ` style="mix-blend-mode:${l.blend}"` : '';
     const mk = srcOf(l) ? ` mask="url(#mt-${l.id})"` : '';
-    const gs = `<g data-id="${l.id}"${mSrc.has(l.id) ? ` id="mg-${l.id}"` : ''}${bl}${mk} ${!l.fxOff && l.fx.some((e) => e.on && e.id !== 'postime') ? `filter="url(#fx-${l.id})"` : ''} ${l.type === 'adjust' ? 'pointer-events="none"' : ''}>${copies}</g>`;
+    const gs = `<g data-id="${l.id}"${mSrc.has(l.id) ? ` id="mg-${l.id}"` : ''}${bl}${mk} ${!l.fxOff && l.fx.some(isFilterFx) ? `filter="url(#fx-${l.id})"` : ''} ${l.type === 'adjust' ? 'pointer-events="none"' : ''}>${copies}</g>`;
     if (mSrc.has(l.id)) { hidden.push(gs); return ''; }
     return mk ? `<g>${gs}</g>` : gs;
   }).join('');
@@ -41,6 +51,14 @@ export function buildCanvas() {
   mountShaders();
   $$('g[data-id]', stage).forEach((g) => { gEls[g.dataset.id] = g; xfEls[g.dataset.id] = []; $$(':scope > .xf', g).forEach((x) => { xfEls[g.dataset.id][+x.dataset.i] = x; }); });
   updateCanvas();
+}
+/** Redraw only one layer's effect filter (much cheaper than rebuilding the whole canvas while a slider is dragged). */
+export function updateFx(l) {
+  const old = stage.querySelector(`filter#fx-${l.id}`), tmp = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  tmp.innerHTML = fxDefs(l);
+  const nf = tmp.querySelector(`filter#fx-${l.id}`);
+  if (!old || !nf) { buildCanvas(); return; }
+  old.replaceWith(nf); updateCanvas();
 }
 export function updateCanvas() {
   const F0 = S.f;
@@ -65,6 +83,7 @@ export function updateCanvas() {
     const vis = l.vis && (!S.solo.size || S.solo.has(l.id)) && F0 >= (l.inP ?? 0) && F0 < (l.outP ?? DUR);
     g.setAttribute('opacity', vis ? (lightboxOn() && l.id !== S.sel ? .2 : 1) : 0);
     if (l.type === 'shader' && vis) { const rt = renderShader(l, f); const ph = g.querySelector('.shph'); if (ph) ph.style.display = rt.ok ? 'none' : ''; }
+    const sf = vis && shaderFill(l); if (sf) renderShader(fxShaderLayer(l, sf.j), f, fxShaderSize, Math.round(fxShaderSize * 9 / 16));
     if (l.type === 'text' && (l.anims || []).length) applyTextAnims(l, g, f);
     l.fx.forEach((e, j) => {
       if (e.on && (e.id === 'roughen' || e.id === 'grain' || e.id === 'glitch')) { const tb = stage.querySelector(`#rf-${l.id}-${j}`); if (tb) tb.setAttribute('seed', e.id === 'grain' ? 1 + Math.floor(F0) % 97 : 1 + Math.floor(F0 * (e.speed || 0) / 30) % 997); }
@@ -81,7 +100,13 @@ export function layoutStage() {
     const pct = $('#zoom .pct'); if (pct) pct.textContent = Math.round(W / 1920 * 100) + '%';
     placeSel(); return;
   }
-  const w = vp.clientWidth, h = vp.clientHeight;
+  const w = vp.clientWidth;
+  let h = vp.clientHeight;
+  // On a phone the settings sheet covers most of the canvas width, so fit the canvas into the part above the sheet.
+  const app = vp.closest('.app'), pr = $('.panel.r');
+  if (app && pr && app.classList.contains('portrait') && app.classList.contains('right-open') && pr.offsetWidth > w * .6) {
+    const above = pr.offsetTop - vp.offsetTop; if (above > 120) h = Math.min(h, above);
+  }
   const fit = Math.min((w - 56) / 1920, (h - 56) / 1080);
   const sc = Math.max(.05, fit * S.zoom);
   const W = 1920 * sc, H = 1080 * sc;
@@ -94,7 +119,11 @@ export function selRect() {
   let r = null;
   for (const id of selIds()) {
     const l = lay(id), g = gEls[id]; if (!g || !l || !l.vis) continue;
-    const b = g.getBoundingClientRect(); if (b.width < 1 && b.height < 1) continue;
+    // With a Shader fill, measure the shape itself, not the (larger, masked) shader canvas on top of it.
+    const parts = shaderFill(l) ? [...g.querySelectorAll('[id^="sb-"]')] : [g];
+    const bs = parts.map((p) => p.getBoundingClientRect()), b = bs.reduce((u, q) => ({ left: Math.min(u.left, q.left), top: Math.min(u.top, q.top), right: Math.max(u.right, q.right), bottom: Math.max(u.bottom, q.bottom), width: 0, height: 0 }), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity, width: 0, height: 0 });
+    b.width = b.right - b.left; b.height = b.bottom - b.top;
+    if (!isFinite(b.width) || (b.width < 1 && b.height < 1)) continue;
     r = r ? { left: Math.min(r.left, b.left), top: Math.min(r.top, b.top), right: Math.max(r.right, b.right), bottom: Math.max(r.bottom, b.bottom) } : { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
   }
   if (r) { r.width = r.right - r.left; r.height = r.bottom - r.top; }
@@ -110,7 +139,7 @@ export function toLocal(l, dx, dy, f = S.f) {
 export function placeSel() {
   const box = $('#selbox'), qb = $('#qbar'), anc = $('#anc'), v = vp.getBoundingClientRect(), dt = isDrawTool(S.tool), r = dt ? null : selRect();
   drawOverlay();
-  $('#bbar').classList.toggle('show', dt && !S.playing);
+  $('#bbar').classList.toggle('show', dt && !S.playing && !S.fbf);
   if (!r) { box.hidden = true; anc.hidden = true; qb.classList.remove('show'); return; }
   const multi = selIds().length > 1, l = lay(S.sel);
   box.hidden = false; box.classList.toggle('multi', multi);

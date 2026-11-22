@@ -33,7 +33,7 @@ export const inspectorActions = {
   hue: (el) => { const l = lay(S.sel); l.hue = el.dataset.v; commit('Colour'); buildCanvas(); renderAll(); },
   tset: (el) => { const l = lay(S.sel); if (!l) return; const k = el.dataset.k; if (k === 'italic' || k === 'under' || k === 'strike') l[k] = !l[k]; else l[k] = el.dataset.v; commit('Text style'); buildCanvas(); renderRight(); },
   weight: (el) => { const l = lay(S.sel); l.weight = +el.dataset.v; commit('Weight'); buildCanvas(); renderRight(); },
-  align: () => { S.pop = { type: 'align' }; renderPop(); },
+  align: (el) => { S.pop = { type: 'align', from: el.closest('#rstrip') ? 'rstrip' : 'qbar' }; renderPop(); },
   anchorpick: () => { S.pop = { type: 'anchor' }; renderPop(); },
   anchor: (el) => {
     const l = S.sel && lay(S.sel), g = l && gEls[l.id]; if (!g) return;

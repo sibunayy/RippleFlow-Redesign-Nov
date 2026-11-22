@@ -5,7 +5,7 @@ import { PROPS, TF } from '../model/schema';
 import { animated, lay, val } from '../anim/interpolate';
 import { S } from '../state/state';
 import { commit } from '../state/history';
-import { buildCanvas, layoutStage, placeSel, updateCanvas } from '../render/stage';
+import { buildCanvas, layoutStage, placeSel, updateCanvas, updateFx } from '../render/stage';
 import { renderTop } from '../ui/topbar';
 import { renderLeft } from '../ui/left-panel';
 import { fmt } from '../ui/inspector/controls';
@@ -114,15 +114,17 @@ export function keyDown(e, dk) {
 // Moving the finger further above the field speeds it up (×2/×5/×10), further below slows it (×0.5/×0.2/×0.1).
 export function fieldDrag(e, fl) {
   e.preventDefault();
-  const o = fl.dataset.o, isObj = o != null, isOpt = o === 'po' || o === 'br' || o === 'on';
+  const o = fl.dataset.o, isObj = o != null, isOpt = o === 'po' || o === 'br' || o === 'bs' || o === 'on';
   const l: any = isOpt ? {} : lay(isObj ? S.sel : fl.dataset.l); if (!l) return;
   const p = fl.dataset.p, key = fl.dataset.k, ii = +fl.dataset.i, isInt = fl.dataset.int === '1';
-  const tgt = () => (o === 'br' ? brushCur() : o === 'on' ? S.onion : isOpt ? S : o === 'fx' ? l.fx[ii] : o === 'rep' ? l.rep : o === 'mod' ? (l.mods || [])[ii] : o === 'an' ? (l.anims || [])[ii] : l);
+  const tgt = () => (o === 'br' ? brushCur() : o === 'bs' ? S.brush : o === 'on' ? S.onion : isOpt ? S : o === 'fx' ? l.fx[ii] : o === 'rep' ? l.rep : o === 'mod' ? (l.mods || [])[ii] : o === 'an' ? (l.anims || [])[ii] : l);
   if (isObj && !tgt()) return;
   const m = isObj ? { step: +fl.dataset.step || .5, min: +fl.dataset.min, max: +fl.dataset.max, u: fl.dataset.u || '', label: fl.getAttribute('aria-label') } : PROPS[p];
   const getV = () => (isObj ? tgt()[key] : val(l.p[p], S.f));
-  const setV = (nv) => { if (isObj) { tgt()[key] = isInt ? Math.round(nv) : nv; if (key === 'inP' || key === 'outP') { l.inP = Math.min(l.inP ?? 0, (l.outP ?? DUR) - 1); } if (isOpt) { if (o === 'br') saveBrush(); else if (o === 'on') { saveOnion(); updateCanvas(); } return; } if (o === 'mod') updateCanvas(); else buildCanvas(); } else { applyProp(l, p, nv); updateCanvas(); } };
-  let v = getV();
+  const setV = (nv) => { if (isObj) { tgt()[key] = isInt ? Math.round(nv) : nv; if (key === 'inP' || key === 'outP') { l.inP = Math.min(l.inP ?? 0, (l.outP ?? DUR) - 1); } if (isOpt) { if (o === 'br' || o === 'bs') saveBrush(); else if (o === 'on') { saveOnion(); updateCanvas(); } return; } if (o === 'mod') updateCanvas(); else if (o === 'fx' && l.fx[ii] && l.fx[ii].id !== 'shader') updateFx(l); else buildCanvas(); } else { applyProp(l, p, nv); updateCanvas(); } };
+  // A setting that was never set (a new shape's Dash, say) has no value yet. Start the drag from the field's minimum
+  // (or 0), so dragging works straight away instead of producing "not a number".
+  let v = +getV(); if (!isFinite(v)) v = clamp(0, m.min, m.max);
   const r0 = fl.getBoundingClientRect(), cy0 = r0.top + r0.height / 2, x0 = e.clientX; let lastX = e.clientX, moved = false;
   const badge = $('#spd');
   fl.setPointerCapture(e.pointerId);
@@ -142,7 +144,7 @@ export function fieldDrag(e, fl) {
     fl.classList.remove('drag'); setDragging(false); badge.hidden = true;
     if (moved) { if (isOpt) { renderRight(); renderBrushBar(); if (S.pop && S.pop.type === 'onion') renderPop(); return; } commit('Edit ' + m.label); renderTop(); renderTL(); renderRight(); placeSel(); return; }
     // tap: type an exact value
-    const span = fl.querySelector('.v'), cur = getV();
+    const span = fl.querySelector('.v'), cur = isFinite(+getV()) ? +getV() : 0;
     const inp = document.createElement('input'); inp.type = 'text'; inp.inputMode = 'decimal'; inp.value = (Math.round(cur * 10) / 10) as any; // the browser turns it into text inp.setAttribute('aria-label', fl.getAttribute('aria-label'));
     span.replaceWith(inp); inp.focus(); inp.select();
     const done = (ok) => { if (ok) { const nv = parseFloat(inp.value); if (!isNaN(nv)) { setV(clamp(nv, m.min, m.max)); if (!isOpt) commit('Edit'); } } renderBrushBar(); if (S.pop && S.pop.type === 'onion') renderPop(); renderRight(); renderTL(); renderTop(); };

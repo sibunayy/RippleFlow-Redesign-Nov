@@ -13,7 +13,7 @@ import { pf } from './inspector/controls';
 import { selectedKeyObjs } from '../anim/clipboard';
 import { renderRight } from './inspector/index';
 import { renderTL } from './timeline';
-import { cp, hexToHsv, setCp } from './color-picker';
+import { cTarget, cp, hexToHsv, setCp } from './color-picker';
 
 export function renderPop() {
   // closing the colour picker commits its live edits as one undo step
@@ -69,9 +69,19 @@ export function renderPop() {
     pos = { left: Math.max(8, Math.min(S.pop.x - a.left - 135, a.width - 280)), top: Math.max(8, S.pop.y - a.top - 300) };
   } else if (S.pop.type === 'fx') {
     const b = $('#rpanel [data-act=addfx]').getBoundingClientRect();
-    const groups: [string, string[]][] = [['Stylise', ['glow', 'bloom', 'shadow', 'longshadow', 'outline', 'halftone', 'pixelate', 'grain', 'vignette']], ['Blur', ['blur', 'dirblur']], ['Distort', ['ripple', 'roughen', 'rgbsplit', 'glitch']], ['Colour', ['hue', 'sat', 'bright', 'tint', 'duotone', 'posterize', 'invert']], ['Time', ['postime']]];
+    const groups: [string, string[]][] = [['Stylise', ['glow', 'bloom', 'shadow', 'longshadow', 'outline', 'halftone', 'pixelate', 'grain', 'vignette']], ['Blur', ['blur', 'dirblur']], ['Distort', ['ripple', 'roughen', 'rgbsplit', 'glitch']], ['Colour', ['hue', 'sat', 'bright', 'tint', 'duotone', 'posterize', 'invert']], ['Generate', ['shader']], ['Time', ['postime']]];
     html = `<div class="pop menu" role="menu" aria-label="Add effect" style="max-height:${a.height - 24}px;overflow:auto">${groups.map(([g, ids]) => `<div class="mlbl">${g}</div>${ids.map((id) => `<button class="mi" role="menuitem" data-act="fxadd" data-v="${id}">${FXDEF[id].name}</button>`).join('')}`).join('')}</div>`;
     pos = { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 470)) };
+  } else if (S.pop.type === 'info') {
+    html = `<div class="pop infopop" role="tooltip">${esc(S.pop.text)}</div>`;
+    // Open below the button, or above it when the button is near the bottom, so the pop-out never covers its own button.
+    const left = Math.max(8, Math.min(S.pop.x - a.left - 24, a.width - 248));
+    pos = S.pop.y > a.bottom - 170 ? { left, bottom: Math.max(8, a.bottom - S.pop.top + 8) } : { left, top: Math.max(8, S.pop.y - a.top + 8) };
+  } else if (S.pop.type === 'beh') {
+    const b = $('#rpanel [data-act=addbeh]').getBoundingClientRect();
+    const kinds = [['wiggle', 'Wiggle', 'Random drift'], ['jitter', 'Jitter', 'Stepped shake'], ['osc', 'Oscillate', 'Smooth back and forth'], ['bounce', 'Bounce', 'Settles like a spring'], ['pulse', 'Pulse', 'Beats to a rhythm'], ['orbit', 'Orbit', 'Circles around its position'], ['drift', 'Drift', 'Moves steadily'], ['spin', 'Spin', 'Rotates continuously']];
+    html = `<div class="pop menu" role="menu" aria-label="Add behaviour">${kinds.map(([id, n, d]) => `<button class="mi" role="menuitem" data-act="modadd" data-v="${id}">${n}<small style="margin-left:auto;color:var(--muted)">${d}</small></button>`).join('')}</div>`;
+    pos = { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 360)) };
   } else if (S.pop.type === 'fxm') {
     const l = lay(S.sel), i = S.pop.i, n = l ? l.fx.length : 0;
     html = `<div class="pop menu" role="menu" aria-label="Effect options">
@@ -82,18 +92,18 @@ export function renderPop() {
       <div class="mhr"></div><button class="mi danger" role="menuitem" data-act="fxdel" data-v="${i}">${ic('trash', 's')}Remove</button></div>`;
     pos = { left: Math.max(8, Math.min(S.pop.x - a.left - 220, a.width - 260)), top: Math.max(8, Math.min(S.pop.y - a.top + 8, a.height - 300)) };
   } else if (S.pop.type === 'color') {
-    const key = S.pop.key || 'hue', l = key === 'brush' ? S.brush : lay(S.sel), b = (key === 'brush' ? $('#bbar .bcol') : $(`#rpanel .cchip[data-key="${key}"]`)).getBoundingClientRect();
+    const key = S.pop.key || 'hue', l0 = key === 'brush' ? S.brush : lay(S.sel), [l, ck] = key === 'brush' ? [l0, key] : cTarget(l0, key), b = (key === 'brush' ? ($('#bbar .bcol') || $('#rpanel .bcol')) : $(`#rpanel .cchip[data-key="${key}"]`)).getBoundingClientRect(), inPanel = key === 'brush' && !!S.fbf;
     if (key === 'brush') l.brush = l.c;
-    if (!cp) setCp({ ...hexToHsv(l[key] || '#ffffff'), key, dirty: false });
+    if (!cp) setCp({ ...hexToHsv(l[ck] || '#ffffff'), key, dirty: false });
     const sw = [...new Set([...layers.map((x) => String(x.hue).toLowerCase()).filter((h) => /^#[0-9a-f]{6}$/.test(h)), ...HUES.map((h) => h.toLowerCase())])].slice(0, 14);
     html = `<div class="pop cp" role="dialog" aria-label="Colour">
       <div class="mlbl" style="padding:2px 4px 0">Document colours</div>
-      <div class="swatches">${sw.map((h) => `<button class="sw ${h === String(l[key] || '').toLowerCase() ? 'on' : ''}" style="background:${h}" data-act="cpsw" data-v="${h}" aria-label="Colour ${h}"></button>`).join('')}</div>
+      <div class="swatches">${sw.map((h) => `<button class="sw ${h === String(l[ck] || '').toLowerCase() ? 'on' : ''}" style="background:${h}" data-act="cpsw" data-v="${h}" aria-label="Colour ${h}"></button>`).join('')}</div>
       <div class="sv" data-cp="sv" style="--hue:${cp.h}" role="slider" aria-label="Saturation and brightness" aria-valuenow="${Math.round(cp.s * 100)}"><i style="left:${cp.s * 100}%;top:${(1 - cp.v) * 100}%"></i></div>
       <div class="hue" data-cp="hue" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360" aria-valuenow="${Math.round(cp.h)}"><i style="left:${cp.h / 360 * 100}%"></i></div>
-      <div class="cprow"><span class="cpchip" style="background:${l[key]}"></span><input id="cphex" class="txt tc" value="${String(l[key]).toUpperCase()}" aria-label="Hex colour" maxlength="7" spellcheck="false" autocomplete="off"><button class="ib" data-act="eyedrop" aria-label="Pick colour from canvas" title="Eyedropper">${ic('eyedrop', 's')}</button></div>
+      <div class="cprow"><span class="cpchip" style="background:${l[ck]}"></span><input id="cphex" class="txt tc" value="${String(l[ck]).toUpperCase()}" aria-label="Hex colour" maxlength="7" spellcheck="false" autocomplete="off"><button class="ib" data-act="eyedrop" aria-label="Pick colour from canvas" title="Eyedropper">${ic('eyedrop', 's')}</button></div>
       <p class="hint" style="padding:0 4px">The eyedropper picks a layer's colour in this prototype.</p></div>`;
-    pos = key === 'brush' ? { left: Math.max(8, Math.min(b.left - a.left - 110, a.width - 272)), top: Math.max(8, b.top - a.top - 410) } : { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 400)) };
+    pos = inPanel ? { right: Math.max(8, a.right - b.left + 8), top: Math.max(8, Math.min(b.top - a.top - 120, a.height - 400)) } : key === 'brush' ? { left: Math.max(8, Math.min(b.left - a.left - 110, a.width - 272)), top: Math.max(8, b.top - a.top - 410) } : { right: Math.max(8, a.right - b.right), top: Math.max(8, Math.min(b.bottom - a.top + 6, a.height - 400)) };
   } else if (S.pop.type === 'anchor') {
     const b = $('#rpanel [data-act=anchorpick]').getBoundingClientRect();
     const rows = ['Top', 'Middle', 'Bottom'], cols = ['left', 'centre', 'right'];
@@ -106,11 +116,11 @@ export function renderPop() {
     html = `<div class="pop menu" role="menu" aria-label="Selection tools" style="min-width:220px">${SELMODES.map(([id, n, k]) => `<button class="mi" role="menuitem" data-act="picksel" data-v="${id}">${ic(id, 's')}${n}<kbd>${k}</kbd></button>`).join('')}</div>`;
     pos = { left: b.right - a.left + 8, top: b.top - a.top - 8 };
   } else if (S.pop.type === 'align') {
-    const b = $('#qbar [data-act=align]').getBoundingClientRect(), n = selIds().length;
+    const fromStrip = S.pop.from === 'rstrip', b = $(fromStrip ? '#rstrip [data-act=align]' : '#qbar [data-act=align]').getBoundingClientRect(), n = selIds().length;
     html = `<div class="pop" role="dialog" aria-label="Align"><div class="mlbl" style="padding:2px 4px 6px">Align to ${n > 1 ? 'selection' : 'composition'}</div>
       <div class="al">${[['left', 'Left', 'alL'], ['hcenter', 'Centre', 'alC'], ['right', 'Right', 'alR'], ['top', 'Top', 'alT'], ['vcenter', 'Middle', 'alM'], ['bottom', 'Bottom', 'alB']].map(([v, nm, icn]) => `<button data-act="alignto" data-v="${v}" aria-label="Align ${nm.toLowerCase()}">${ic(icn, 's')}<span>${nm}</span></button>`).join('')}</div>
       ${n >= 3 ? `<div class="al" style="grid-template-columns:1fr 1fr;margin-top:6px"><button data-act="alignto" data-v="dh" aria-label="Distribute horizontally">${ic('distH', 's')}<span>Distribute ↔</span></button><button data-act="alignto" data-v="dv" aria-label="Distribute vertically">${ic('distV', 's')}<span>Distribute ↕</span></button></div>` : ''}</div>`;
-    pos = { left: Math.max(8, Math.min(b.left - a.left - 70, a.width - 240)), top: Math.max(8, b.top - a.top - (n >= 3 ? 196 : 140)) };
+    pos = fromStrip ? { right: a.right - b.left + 8, bottom: Math.max(8, a.bottom - b.bottom) } : { left: Math.max(8, Math.min(b.left - a.left - 70, a.width - 240)), top: Math.max(8, b.top - a.top - (n >= 3 ? 196 : 140)) };
   } else if (S.pop.type === 'drawmodes') {
     const b = $('#brushbtn').getBoundingClientRect();
     html = `<div class="pop menu" role="menu" aria-label="Drawing tools" style="min-width:200px">${DRAWMODES.map(([id, n, k]) => `<button class="mi" role="menuitem" data-act="pickdraw" data-v="${id}">${ic(id, 's')}${n}<kbd>${k}</kbd></button>`).join('')}</div>`;

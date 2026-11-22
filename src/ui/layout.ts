@@ -15,6 +15,7 @@ import { renderPop } from './popovers';
 /* ---------- layout ---------- */
 export function applyLayout() {
   const w = app.clientWidth, h = app.clientHeight;
+  if (S.right === 'fbf' && !S.fbf) S.right = null;
   const portrait = S.portraitPreview || w < 900 || w / h < 1;
   app.classList.toggle('portrait', portrait);
   app.classList.toggle('preview-portrait', S.portraitPreview);

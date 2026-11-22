@@ -11,6 +11,7 @@ import { brushCur } from './cels';
 let lastBarTool = null;
 export function renderBrushBar() {
   const B = S.brush, t = S.tool, el = $('#bbar'); if (!el) return;
+  if (S.fbf) { el.innerHTML = ''; el.classList.remove('show'); return; }
   if (!isDrawTool(t)) { lastBarTool = t; el.innerHTML = ''; el.classList.remove('show'); return; }
   // picking a drawing tool in portrait folds the inspector sheet so the canvas is clear (it can be reopened while drawing)
   if (lastBarTool !== t && !isDrawTool(lastBarTool) && app.classList.contains('portrait') && S.right) { S.right = null; applyLayout(); renderRight(); renderStrips(); }

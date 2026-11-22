@@ -14,5 +14,6 @@ export function gradUi(l) {
 export const chip = (l, lbl, key) => { const cv = l[key] ?? '#ffffff'; return `<button class="cchip" data-act="colour" data-key="${key}" aria-haspopup="dialog" aria-label="${lbl} colour ${cv}"><span class="cc" style="background:${cv}"></span><span>${lbl}</span><span class="tc hex">${String(cv).toUpperCase()}</span></button>`; };
 export const grpHead = (lbl, act, on) => `<div class="kv sh"><span class="sublbl">${lbl}</span><button class="tog" data-act="${act}" aria-pressed="${on}" aria-label="${lbl} on"></button></div>`;
 export const capJoin = (l) => [selH('cap', 0, [['round', 'Round cap'], ['butt', 'Flat cap'], ['square', 'Square cap']], l.cap || 'round', 'Line cap'), selH('join', 0, [['round', 'Round join'], ['miter', 'Sharp join'], ['bevel', 'Bevel join']], l.join || 'round', 'Corner join')];
-export const dashF = (l) => [pf(l, 'lp', 0, 'dash', 'Dash', 0, 120, .4, '')].concat(l.dash > 0 ? [pf(l, 'lp', 0, 'dgap', 'Gap', 1, 200, .4), pf(l, 'lp', 0, 'doff', 'Offset', -500, 500, 1)] : []);
+export const dashF = (l) => { if (l.dash > 0) { if (l.dgap == null) l.dgap = Math.max(1, Math.round(l.dash * 1.2)); if (l.doff == null) l.doff = 0; } return dashF0(l); };
+const dashF0 = (l) => [pf(l, 'lp', 0, 'dash', 'Dash', 0, 120, .4, '')].concat(l.dash > 0 ? [pf(l, 'lp', 0, 'dgap', 'Gap', 1, 200, .4), pf(l, 'lp', 0, 'doff', 'Offset', -500, 500, 1)] : []);
 export const trimRow = (l) => (hasStroke(l) ? propRow(l, 'trim') : '');

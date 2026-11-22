@@ -137,3 +137,62 @@ Nathan approved this phase (HANDOFF section 13, decision 3).
 - New `tests/parity/12-pwa.spec.ts` (build only): the manifest and icons load, and the app reloads with the
   network off.
 - Parity: 242/242 on the build, 238/238 on the dev server. Unit: 25/25.
+
+## Post-V1 edits: Notion test checklist, "Bugs/Fixes that need to be made"
+
+These change the UI on purpose, so the screenshots and the legacy DOM comparison no longer apply (see below).
+Work is local and on the Claude artifact copy only. Nothing has been pushed to GitHub since V1.
+
+1. **Two-finger undo keeps the selection.** The first finger of the tap used to deselect (empty canvas) before the
+   second landed. The selection from the moment the first finger touched is restored after undo/redo.
+2. **Properties panel.**
+   - Explainer text moved into small (i) buttons that open a pop-out (`info()` in `controls.ts`, pop-out in `popovers.ts`).
+   - Header is one line, "Layer type – name", the name underlined and editable. The two-line header and the boxed rename field are gone.
+   - Align is a pop-out button in the right strip, above Help. Easing moved down beside it.
+   - Behaviours moved to the Effects tab as their own section. Duplicator has its own tab (right strip, under Effects).
+   - Properties now has Transform, Layer, Appearance (and Fill), Text animators, Timing & links.
+3. **Zoom pill.** Safe area and Grid buttons are gone. One header button, next to the ⋯ menu, cycles Off, Safe areas, Grid.
+4. **Behaviours.** "Add behaviour" opens a menu like Add effect.
+5. **Duplicator.** Own tab (item 2).
+6. **Layer Hide / Lock / Solo** are small icons at the top of Transform.
+7. **Frame by frame.** A header toggle (centre) opens a drawing workspace: left panel folded, a brush panel on the
+   right (tool, brush, size, opacity, smoothing, colour, pressure, tilt, onion skin, cel stepping and adding),
+   timeline at 30% height. Switching it off restores the panels, timeline and tool. New **pen smoothing**
+   (Brush option, default 20%) steadies strokes and ends exactly where the pen lifts.
+
+Interpretations to confirm with Nathan: "Easing tabs above the help button" is the Easing tab button moved down
+beside Align; "Behaviours in the Effects tab" is one Behaviours section.
+
+Tests: the controls that moved were updated, new tests cover selection after undo, info pop-outs, header, overlay
+cycle, behaviours menu, Duplicator tab, workspace toggle and smoothing. Reference screenshots were re-taken
+(`tests/reference/`). `10-dom-parity` is skipped unless `RF_LEGACY_PARITY=1`, because the DOM now differs from the
+prototype on purpose. New styles are in `src/styles/12-edits.css`, loaded after the v8 inspector block.
+
+Artifact copy: `npm run build:artifact` writes `dist-artifact/`; the page fragment is `dist-artifact/rippleflow.html`.
+
+## Notion checklist, round 2: every unchecked item (2026-11-20)
+
+- **Parenting.** A child now remembers where its parent was when they were linked (`l.pw`, `parentRef()` in
+  `anim/pose.ts`), so moving a parent with no keyframes moves the child too.
+- **Text keyboard.** `host/touch-guard.ts` shrinks the page to the visible area while the on-screen keyboard is open,
+  so the field being edited stays in view.
+- **Dash.** Dragging a field that has no value yet starts from its minimum instead of doing nothing; Gap and Offset
+  get starting values as soon as Dash is on.
+- **Duplicator grid.** Rows use Spacing Y (it was 0, so grid looked like a line); switching to grid fills it in.
+- **Effects.** Glow and Outline colours, Drop shadow distance and angle, Roughen styles (smooth, jagged, torn),
+  RGB split is now Chromatic aberration (lens or linear), Glitch has four styles plus an Offset that reaches outside
+  the layer. Vignette, Pixelate and Halftone were rebuilt without large images or oversized filter areas (the cause of
+  the Safari breakage). New **Shader fill** effect puts a shader inside any shape or photo. New **Bake effects into
+  layer** (`fx/bake.ts`) turns a layer and its filter effects into one picture, keeping its movement.
+- **Shaders.** The GPU canvas is now copied into a plain 2D canvas on the stage, so shader layers clip to the
+  composition and scale with zoom in Safari.
+- **Gestures.** Safari pinch-zoom, edge back-swipe, text selection and the long-press callout are blocked on the
+  canvas; double-tap zoom is off.
+- **Performance.** Undo history is capped at 60 steps (it grew without limit, which can crash Safari after long
+  sessions). Dragging an effect slider redraws only that layer's filter.
+- **iPhone layout.** No outer frame, tool strips scroll, the canvas fits above the settings sheet, and the timeline
+  keeps room for the time readout.
+
+Tests: `tests/parity/13-checklist-fixes.spec.ts` and a parenting unit test. The Add effect menu now lists 24.
+Effects-tab reference screenshots were re-taken. Not testable without a device: the real keyboard, Home Screen safe
+areas, Safari's back-swipe, and frame rate on an iPad.

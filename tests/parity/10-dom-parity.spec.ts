@@ -37,7 +37,10 @@ async function snapshot(browser: Browser, url: string, type: string | null) {
   return { ...out, errors };
 }
 
+// The port has been edited on purpose since phase 6 (Notion checklist fixes), so its DOM no longer matches the
+// prototype's. Set RF_LEGACY_PARITY=1 to run this against a build made from the phase 6 commit.
 test.describe('DOM matches the legacy prototype', () => {
+  test.skip(!process.env.RF_LEGACY_PARITY, 'the UI was changed on purpose after phase 6');
   const types = ['text', 'rect', 'ellipse', 'polygon', 'star', 'line', 'ring', 'solid', 'null', 'adjust', 'shader', 'comp', 'draw'];
   for (const type of [null, ...types]) {
     test(type ? `after inserting ${type}` : 'demo project', async ({ browser }) => {

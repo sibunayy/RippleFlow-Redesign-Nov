@@ -72,6 +72,10 @@ Object.assign(P, {
   air: 'M4 5h.01M7 3h.01M7 7h.01M4 9h.01M10 5h.01M14 6h5v3h-5zM13 9h7v11a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1z',
   onion: 'M12 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM6.6 13.2A6 6 0 0 1 17 8.1M4 9.4A6 6 0 0 1 14.6 4',
   flip: 'M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 20v2M12 14v2M12 8v2M12 2v2',
+  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16v-5M12 8h.01',
+  fbf: 'M3 5h18v14H3zM8 5v14M16 5v14M3 9.5h5M3 14.5h5M16 9.5h5M16 14.5h5',
+  smooth: 'M3 16c3.5-10 6.5-10 9 0s5.5 10 9 0',
+  bake: 'M12 3l9 4.5-9 4.5-9-4.5zM3 12l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5',
   celadd: 'M4 5h16v14H4zM12 9v6M9 12h6', press: 'M3 12h3l3-8 4 16 3-8h5', tilt: 'M4 20h16M6 20L17 5M11 20a7 7 0 0 0-1.5-4.3',
 });
 export const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] && P[n].startsWith('<') ? P[n] : `<path d="${P[n] || ''}"/>`}</svg>`;

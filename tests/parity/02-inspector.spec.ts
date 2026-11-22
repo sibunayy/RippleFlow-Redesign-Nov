@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { openApp, ptr, center, drag, field, fieldValue, layerG, savedProject, expandTimeline, openLeft, settle, isPortrait } from './helpers';
+import { openApp, ptr, center, drag, field, fieldValue, layerG, savedProject, expandTimeline, openLeft, openRight, unfold, settle, isPortrait } from './helpers';
 
 test.beforeEach(async ({ page }) => { await openApp(page); });
 
@@ -90,8 +90,8 @@ test('anchor Presets moves the anchor and the layer stays in place', async ({ pa
   expect(Math.abs(after.y - before.y)).toBeLessThan(2);
 });
 
-test('header Hide / Lock / Solo toggle', async ({ page }) => {
-  const hd = page.locator('#rpanel .phead');
+test('layer Hide / Lock / Solo switches in Transform', async ({ page }) => {
+  const hd = page.locator('#rpanel .lsw');
   await hd.locator('[data-act="vis"]').click();
   await expect(hd.locator('[data-act="vis"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(layerG(page, 'logo')).toHaveAttribute('opacity', '0');
@@ -123,8 +123,9 @@ test('renaming updates the Layers list and the timeline', async ({ page }) => {
   await expect(page.locator('#tl')).toContainText('Brand mark');
 });
 
-test('align to composition, flip and reset', async ({ page }) => {
-  await page.locator('#rpanel [data-act="alignto"][data-v="left"]').click();
+test('align (pop-out above Help), flip and reset', async ({ page }) => {
+  await page.locator('#rstrip [data-act="align"]').click();
+  await page.locator('#layer-pop [data-act="alignto"][data-v="left"]').click();
   expect(await fieldValue(page, 'Position X')).toBeLessThan(600);
   await page.locator('#rpanel [data-act="flipx"]').click();
   await expect(page.locator('#rpanel [data-act="flipx"]')).toHaveAttribute('aria-pressed', 'true');
@@ -172,16 +173,35 @@ test('timing: set in / out at the playhead, parent and matte', async ({ page }) 
   await expect(layerG(page, 'logo')).toHaveAttribute('mask', /url\(#mt-logo\)/);
 });
 
-test('behaviours and duplicator', async ({ page }) => {
-  for (const v of ['beh', 'rep']) {
-    const h = page.locator(`#rpanel .sec-h[data-v="${v}"]`);
-    if ((await h.getAttribute('aria-expanded')) === 'false') await h.click();
-  }
-  await page.locator('#rpanel [data-act="modadd"][data-v="wiggle"]').click();
+test('behaviours (Effects tab, Add menu) and duplicator (own tab)', async ({ page }) => {
+  await openRight(page, 'Effects');
+  await unfold(page, 'beh');
+  await page.locator('#rpanel [data-act="addbeh"]').click();
+  await expect(page.locator('#layer-pop [data-act="modadd"]')).toHaveCount(8);
+  await page.locator('#layer-pop [data-act="modadd"][data-v="wiggle"]').click();
   expect((await logo(page)).mods).toHaveLength(1);
+  await expect(page.locator('#layer-pop .pop')).toHaveCount(0);
+  await openRight(page, 'Duplicator');
   await page.locator('#rpanel [data-act="repon"]').click();
   expect((await logo(page)).rep.on).toBe(true);
   await expect.poll(() => layerG(page, 'logo').locator('.xf').count()).toBeGreaterThan(1);
+  // Neither lives in the Properties tab any more.
+  await openRight(page, 'Properties');
+  await expect(page.locator('#rpanel .sec-h[data-v="beh"], #rpanel .sec-h[data-v="rep"]')).toHaveCount(0);
+});
+
+test('explainer text opens from an info button', async ({ page }) => {
+  await unfold(page, 'adv');
+  await expect(page.locator('#rpanel p.hint')).toHaveCount(0);
+  await page.locator('#rpanel .kv', { hasText: 'Track matte' }).locator('[data-act="info"]').click();
+  await expect(page.locator('#layer-pop .infopop')).toContainText(/matte/);
+  await page.locator('#rpanel .kv', { hasText: 'Track matte' }).locator('[data-act="info"]').click();
+  await expect(page.locator('#layer-pop .infopop')).toHaveCount(0);
+});
+
+test('header reads "Layer type – name" with the name editable', async ({ page }) => {
+  await expect(page.locator('#rpanel .phead .ity')).toHaveText('Text layer');
+  await expect(page.locator('#rpanel .phead #lname')).toHaveValue('YOUR LOGO');
 });
 
 test('portrait: the inspector is a bottom sheet', async ({ page }) => {

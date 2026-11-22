@@ -12,13 +12,13 @@ const state = {
   autoFold: store.get('autofold', true), eyedrop: false, penPts: [],
   selMode: 'select', multi: new Set<string>(), wa: [0, DUR], ctxPrev: null,
   drawMode: 'brush', flip: null,
-  brush: Object.assign({ pre: 'ink', c: '#f4efe9', pr: true, tl: true, P: { pencil: { sz: 6, op: 90 }, ink: { sz: 10, op: 100 }, marker: { sz: 22, op: 75 }, air: { sz: 70, op: 45 } }, er: { sz: 34, op: 100 } }, store.get('brush', {})),
+  brush: Object.assign({ pre: 'ink', c: '#f4efe9', pr: true, tl: true, sm: 20, P: { pencil: { sz: 6, op: 90 }, ink: { sz: 10, op: 100 }, marker: { sz: 22, op: 75 }, air: { sz: 70, op: 45 } }, er: { sz: 34, op: 100 } }, store.get('brush', {})),
   onion: Object.assign({ on: true, nb: 2, na: 1, op: 45, tint: true, lb: false }, store.get('onion', {})),
   solo: new Set<string>(), guide: store.get('guide', 'off'), loop: true, lq: '', acat: 'All', aq: '',
   pDur: 100, pAmt: 100, pDir: 'up', pAt: 'head', pStag: 0, easeClip: null,
 };
 /** Fields the app adds to S later (shader dialog draft and import, the two-tap reset arm). */
-interface LateState { shDraft?: any; shImport?: any; resetArm?: any }
+interface LateState { shDraft?: any; shImport?: any; resetArm?: any; fbf?: boolean; fbfPrev?: any }
 export const S: typeof state & LateState = state;
 // Multi-selection: S.multi only counts while it contains the primary S.sel, so single-select code stays valid.
 export const selIds = () => (S.sel && S.multi.size > 1 && S.multi.has(S.sel)) ? [...S.multi].filter((id) => lay(id)) : (S.sel && lay(S.sel) ? [S.sel] : []);

@@ -13,7 +13,7 @@ import { renderAll, seek } from '../ui/layout';
 import { play } from '../playback/loop';
 import { A } from '../actions/index';
 import { drawOverlay } from '../drawing/overlay';
-import { penFinish, pinch0 } from '../gestures/canvas';
+import { penFinish, pinch0, preTouchSel } from '../gestures/canvas';
 
 // two-finger tap = undo, three-finger tap = redo (touch only)
 let tapStart = null;
@@ -48,5 +48,5 @@ export function listen() {
     if ((e.key === 'Delete' || e.key === 'Backspace') && S.keys.length) { A.keysdel(); } else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel) { A.del(); }
   });
   addEventListener('touchstart', (e) => { if (e.touches.length >= 2) tapStart = { n: e.touches.length, t: performance.now() }; }, { passive: true });
-  addEventListener('touchend', (e) => { if (tapStart && e.touches.length === 0) { if (performance.now() - tapStart.t < 260 && pinch0 === null) { tapStart.n === 2 ? undo() : tapStart.n === 3 && redo(); } tapStart = null; } }, { passive: true });
+  addEventListener('touchend', (e) => { if (tapStart && e.touches.length === 0) { if (performance.now() - tapStart.t < 260 && pinch0 === null) { const pre = preTouchSel && performance.now() - preTouchSel.t < 600 ? preTouchSel : null; tapStart.n === 2 ? undo() : tapStart.n === 3 && redo(); if (pre && pre.sel && lay(pre.sel)) { S.sel = pre.sel; S.multi = new Set(pre.multi.filter((id) => lay(id))); S.keys = pre.keys.filter((k) => lay(k.l)); renderAll(); } } tapStart = null; } }, { passive: true });
 }

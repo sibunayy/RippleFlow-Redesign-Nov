@@ -133,7 +133,7 @@ export const field = (page: Page, label: string) => page.locator(`#rpanel .fld[a
 export const fieldValue = async (page: Page, label: string) => Number(await field(page, label).getAttribute('aria-valuenow'));
 
 /** Opens a right-panel tab (Properties, Effects, Easing, Presets) if it is not open yet. */
-export async function openRight(page: Page, name: 'Properties' | 'Effects' | 'Easing' | 'Presets') {
+export async function openRight(page: Page, name: 'Properties' | 'Effects' | 'Duplicator' | 'Easing' | 'Presets') {
   const b = page.locator(`#rstrip [aria-label="${name}"]`);
   if ((await b.getAttribute('aria-pressed')) !== 'true') await b.click();
   await expect(b).toHaveAttribute('aria-pressed', 'true');

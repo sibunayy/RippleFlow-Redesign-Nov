@@ -13,13 +13,19 @@ export function hexToHsv(hex) {
   return { h: (h * 60 + 360) % 360, s: mx ? d / mx : 0, v: mx };
 }
 function hsvToHex(h, s2, v) { const f = (n) => { const k = (n + h / 60) % 6; return v - v * s2 * Math.max(0, Math.min(k, 4 - k, 1)); }; return '#' + [f(5), f(3), f(1)].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
+/** Where a colour key lives: plain keys are on the layer, `fx2.col` is the `col` of the layer's third effect. */
+export function cTarget(l, key) {
+  const m = /^fx(\d+)\.(\w+)$/.exec(key || '');
+  if (m && l && l.fx && l.fx[+m[1]]) return [l.fx[+m[1]], m[2]];
+  return [l, key || 'hue'];
+}
 export let cp = null;
  // colour picker session: { h, s, v, dirty }
 export function cpApply(hexIn?) {
   const l = S.sel && lay(S.sel); if (!cp || (!l && cp.key !== 'brush')) return;
   const hex = hexIn || hsvToHex(cp.h, cp.s, cp.v);
-  if (cp.key === 'brush') { S.brush.c = hex; saveBrush(); const bc = $('#bbar .bcol'); if (bc) bc.style.background = hex; }
-  else { l[cp.key || 'hue'] = hex; cp.dirty = true; buildCanvas(); }
+  if (cp.key === 'brush') { S.brush.c = hex; saveBrush(); const bc = $('#bbar .bcol') || $('#rpanel .bcol'); if (bc) bc.style.background = hex; }
+  else { const [o, k] = cTarget(l, cp.key); o[k] = hex; cp.dirty = true; buildCanvas(); }
   const pop = $('.pop.cp');
   if (pop) {
     pop.querySelector('.sv').style.setProperty('--hue', cp.h);
