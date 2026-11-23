@@ -20,6 +20,7 @@ import { play } from '../playback/loop';
 import { applyProp } from '../state/selection';
 import { brushCur, saveBrush, saveOnion } from '../drawing/cels';
 import { renderBrushBar } from '../drawing/brush-bar';
+import { shifted } from '../state/modifier';
 import { longPress, setDragging, setSuppressClick } from '../events/delegate';
 
 export function layerDrag(e, grip) {
@@ -85,12 +86,12 @@ export function keyDown(e, dk) {
   // tap = select (or add / remove in multi-select); drag = keep the selection when the key is already in it, so the group moves together
   const pick = (drag = false) => {
     if (dk.dataset.dk === 'one') {
-      const k = { l: L.id, p: dk.dataset.p, i: +dk.dataset.i }, has = S.keys.findIndex((s) => same(s, k)), add = e.shiftKey || S.keyMulti;
+      const k = { l: L.id, p: dk.dataset.p, i: +dk.dataset.i }, has = S.keys.findIndex((s) => same(s, k)), add = shifted(e) || S.keyMulti;
       if (drag) { if (has < 0) { if (add) S.keys.push(k); else S.keys = [k]; } }
       else if (add) { has >= 0 ? S.keys.splice(has, 1) : S.keys.push(k); } else S.keys = [k];
     } else {
       const t = +dk.dataset.t, at = TF.flatMap((p) => animated(L.p[p]) ? L.p[p].keys.map((k, i) => ({ k, i, p })).filter((o) => Math.abs(o.k.t - t) < .5).map((o) => ({ l: L.id, p: o.p, i: o.i })) : []);
-      if (S.keyMulti || e.shiftKey) { const all = at.every((k) => S.keys.some((s) => same(s, k))); S.keys = all ? S.keys.filter((s) => !at.some((k) => same(s, k))) : [...S.keys, ...at.filter((k) => !S.keys.some((s) => same(s, k)))]; }
+      if (S.keyMulti || shifted(e)) { const all = at.every((k) => S.keys.some((s) => same(s, k))); S.keys = all ? S.keys.filter((s) => !at.some((k) => same(s, k))) : [...S.keys, ...at.filter((k) => !S.keys.some((s) => same(s, k)))]; }
       else if (!(drag && at.every((k) => S.keys.some((s) => same(s, k))))) S.keys = at;
     }
     S.sel = L.id;

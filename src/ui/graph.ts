@@ -12,6 +12,7 @@ import { selectedKeyObjs } from '../anim/clipboard';
 import { renderRight, updateFields } from './inspector/index';
 import { renderAll, seek } from './layout';
 import { play } from '../playback/loop';
+import { shifted } from '../state/modifier';
 import { longPress, setDragging, setSuppressClick } from '../events/delegate';
 
 const GCOL = { x: '#4aa8ff', y: '#bfe3f5', scale: '#4fd1c5', rot: '#ef6f7f', op: '#b9d65a', ax: '#a8b4c4', ay: '#8e9aaa', ts: '#e0b04a', te: '#c9915a' };
@@ -97,7 +98,7 @@ export function graphDown(e) {
   if (gk) {
     const p = gk.dataset.p, i = +gk.dataset.i, keys = l.p[p].keys, k = keys[i], m = gmap(l, p), me = { l: l.id, p, i };
     GL = { [p]: m };
-    const j = S.keys.findIndex((s) => s.l === me.l && s.p === p && s.i === i), add = e.shiftKey || S.keyMulti;
+    const j = S.keys.findIndex((s) => s.l === me.l && s.p === p && s.i === i), add = shifted(e) || S.keyMulti;
     // A tap in multi-select adds or removes the key. A drag moves the whole selection when the key is already in it.
     let toggled = false;
     if (add && j >= 0) toggled = true; else if (add) S.keys.push(me); else if (j < 0) S.keys = [me];

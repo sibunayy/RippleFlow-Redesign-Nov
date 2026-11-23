@@ -2,6 +2,7 @@ import { $ } from '../core/dom';
 import { ic } from './icons';
 import { DRAWMODES, S, SELMODES, isDrawTool } from '../state/state';
 import { hi, hist } from '../state/history';
+import { modBtnHtml } from '../state/modifier';
 import { renderFbfStrips } from '../drawing/fbf-timeline';
 
 /* ---------- render: strips ---------- */
@@ -18,6 +19,7 @@ export function renderStrips() {
     <button class="sb ${t === 'text' ? 'on' : ''}" data-act="tool" data-v="text" aria-label="Text" aria-pressed="${t === 'text'}" title="Text · T">${ic('text')}</button>
     <button class="sb ${isDrawTool(t) ? 'on' : ''}" id="brushbtn" data-act="tool" data-v="${S.drawMode}" aria-label="${DRAWMODES.find((m) => m[0] === S.drawMode)[1]} (hold for brush, draw and fill, eraser and fill bucket)" aria-pressed="${isDrawTool(t)}" title="Draw · hold for Brush, Draw &amp; fill, Eraser, Fill">${ic(S.drawMode)}<span class="more"></span></button>
     <span class="grow"></span>
+    ${modBtnHtml(ic('shift'))}
     <button class="sb" data-act="undo" aria-label="Undo" title="Undo" ${hi <= 0 ? 'disabled' : ''}>${ic('undo')}</button>
     <button class="sb" data-act="redo" aria-label="Redo" title="Redo" ${hi >= hist.length - 1 ? 'disabled' : ''}>${ic('redo')}</button>
     <span class="sep"></span>

@@ -21,6 +21,7 @@ import { drawDown } from '../drawing/ink';
 import { renderBrushBar } from '../drawing/brush-bar';
 import { drawOverlay } from '../drawing/overlay';
 import { longPress, setDragging, setSuppressClick } from '../events/delegate';
+import { shifted } from '../state/modifier';
 
 // Canvas: select/move, hand pan, pinch zoom, place shapes and text.
 // The selection as it was when the first finger touched down. A two-finger tap (undo/redo) starts with one
@@ -60,7 +61,8 @@ export function canvasDown(e) {
   const g = e.target.closest('g[data-id]'); let L = g && lay(g.dataset.id);
   if (S.tool !== 'select' && inBox) L = lay(S.sel);
   const prev = selIds();
-  if (L && e.shiftKey) { toggleMember(L.id, prev); return; }
+  if (L && !L.lock && shifted(e)) { toggleMember(L.id, prev); return; }
+  if ((!L || L.lock) && shifted(e) && S.tool === 'select') return areaSelect(e); // modifier + empty space: box-add
   if (!L || L.lock) { if (S.sel) { S.sel = null; S.multi.clear(); S.keys = []; renderAll(); } return; }
   if (!prev.includes(L.id)) { S.sel = L.id; S.multi.clear(); S.keys = []; renderAll(); }
   else if (S.sel !== L.id) { S.sel = L.id; renderAll(); }
@@ -85,9 +87,10 @@ export function canvasDown(e) {
 // Click-drag with a shape tool sizes the new shape: rectangles corner to corner, round shapes from the centre out, lines end to end. A plain tap places the default size.
 function shapeDrag(e, cx, cy) {
   const type = S.tool; let L = null, moved = false;
-  const apply = (nx, ny) => {
-    const dx = nx - cx, dy = ny - cy;
-    if (type === 'rect') { L.w = Math.max(8, Math.round(Math.abs(dx))); L.h = Math.max(8, Math.round(Math.abs(dy))); L.cr = Math.min(L.cr ?? 24, L.w / 2, L.h / 2); setVal(L, 'x', Math.round(cx + dx / 2)); setVal(L, 'y', Math.round(cy + dy / 2)); }
+  const apply = (nx, ny, sq = false) => {
+    let dx = nx - cx, dy = ny - cy;
+    if (sq && type === 'line') { const a = Math.round(Math.atan2(dy, dx) / (Math.PI / 12)) * (Math.PI / 12), d = Math.hypot(dx, dy); dx = Math.cos(a) * d; dy = Math.sin(a) * d; }
+    if (type === 'rect') { if (sq) { const m = Math.max(Math.abs(dx), Math.abs(dy)); dx = Math.sign(dx || 1) * m; dy = Math.sign(dy || 1) * m; } L.w = Math.max(8, Math.round(Math.abs(dx))); L.h = Math.max(8, Math.round(Math.abs(dy))); L.cr = Math.min(L.cr ?? 24, L.w / 2, L.h / 2); setVal(L, 'x', Math.round(cx + dx / 2)); setVal(L, 'y', Math.round(cy + dy / 2)); }
     else if (type === 'line') { L.w = Math.max(8, Math.round(Math.hypot(dx, dy))); setVal(L, 'rot', Math.round(Math.atan2(dy, dx) * 180 / Math.PI)); setVal(L, 'x', Math.round(cx + dx / 2)); setVal(L, 'y', Math.round(cy + dy / 2)); }
     else L.r = Math.max(4, Math.round(Math.hypot(dx, dy)));
   };
@@ -95,7 +98,7 @@ function shapeDrag(e, cx, cy) {
     if (ptrs.size > 1) return;
     const [nx, ny] = compPt(ev);
     if (!moved) { if (Math.hypot(nx - cx, ny - cy) < 6) return; moved = true; setDragging(true); newLayer(type, { x: Math.round(cx), y: Math.round(cy) }); L = lay(S.sel); }
-    apply(nx, ny); buildCanvas(); updateFields();
+    apply(nx, ny, shifted(ev)); buildCanvas(); updateFields();
   };
   const up = () => {
     vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up); setDragging(false);

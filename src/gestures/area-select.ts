@@ -4,13 +4,14 @@ import { S, selIds } from '../state/state';
 import { gEls, vp } from '../render/stage';
 import { toast } from '../ui/toast';
 import { renderAll } from '../ui/layout';
-import { pip } from '../state/selection';
+import { pip, toggleMember } from '../state/selection';
 import { drawOverlay } from '../drawing/overlay';
+import { shifted } from '../state/modifier';
 import { setDragging } from '../events/delegate';
 
 export let areaSvg = '';
 export function areaSelect(e) {
-  const v = vp.getBoundingClientRect(), lasso = S.tool === 'lasso', pts = [[e.clientX - v.left, e.clientY - v.top]], add = e.shiftKey ? selIds() : [];
+  const v = vp.getBoundingClientRect(), lasso = S.tool === 'lasso', pts = [[e.clientX - v.left, e.clientY - v.top]], add = shifted(e) ? selIds() : [];
   let moved = false;
   const mv = (ev) => {
     const q = [ev.clientX - v.left, ev.clientY - v.top];
@@ -23,7 +24,7 @@ export function areaSelect(e) {
   const up = () => {
     removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
     setDragging(false); areaSvg = '';
-    if (!moved) { const g = e.target.closest('g[data-id]'), L = g && lay(g.dataset.id); S.multi.clear(); S.sel = L && !L.lock ? L.id : null; S.keys = []; renderAll(); return; }
+    if (!moved) { const g = e.target.closest('g[data-id]'), L = g && lay(g.dataset.id); if (add.length && L && !L.lock) { toggleMember(L.id, add); return; } if (add.length) return; S.multi.clear(); S.sel = L && !L.lock ? L.id : null; S.keys = []; renderAll(); return; }
     const hit = layers.filter((l) => l.vis && !l.lock && gEls[l.id] && !['solid', 'shader', 'adjust'].includes(l.type) && S.f >= (l.inP ?? 0) && S.f < (l.outP ?? DUR)).filter((l) => {
       const b = gEls[l.id].getBoundingClientRect(); if (b.width < 1 && b.height < 1) return false;
       const r = { l: b.left - v.left, t: b.top - v.top, r: b.right - v.left, b: b.bottom - v.top };

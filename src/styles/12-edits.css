@@ -273,3 +273,10 @@ body { position: relative; }
 /* Composition background: a custom colour swatch. The colour input sits invisibly on top of a rainbow dot. */
 .sw.cust { position: relative; display: inline-block; background: conic-gradient(#f55, #fd5, #5d5, #5df, #55f, #f5d, #f55); overflow: hidden; }
 .sw.cust input { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+/* ---- Modifier button: two tool buttons tall, above Undo and Redo ---- */
+.sb.mod { height: calc(83px * var(--k)); gap: calc(3px * var(--k)); align-content: center; justify-items: center; }
+.sb.mod .modlbl { font-size: calc(10px * var(--k)); font-weight: 650; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
+.sb.mod .mlock { position: absolute; top: calc(6px * var(--k)); right: calc(6px * var(--k)); width: calc(7px * var(--k)); height: calc(7px * var(--k)); border-radius: 50%; background: rgb(var(--acc)); opacity: 0; }
+.sb.mod.latched .mlock { opacity: 1; background: var(--on-acc); }
+.sb.mod { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }

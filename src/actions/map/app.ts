@@ -17,12 +17,14 @@ import { store } from '../../core/store';
 import { showLibrary } from '../../library/page';
 import { resetOpenProject } from '../../library/projects';
 import { czTab, openCustomise, pfColorReset, pfMode, pfPreset, pfResetAll, pfSet, pfToggle } from '../../ui/customise';
+import { modKeyToggle } from '../../state/modifier';
 import { clearAccent } from '../../ui/prefs';
 
 /** App shell: history, menus, dialogs, panels, theme and settings. Keys are data-act names. */
 export const appActions = {
   undo,
   redo,
+  mod: (_el, e) => { if (e && e.detail === 0) modKeyToggle(); }, // pointer taps are read in state/modifier.ts; this is the keyboard path
   menu: () => { S.pop = S.pop === 'menu' ? null : 'menu'; renderTop(); renderPop(); },
   insert: () => { S.pop = S.pop === 'insert' ? null : 'insert'; renderStrips(); renderPop(); },
   export: () => { S.dialog = 'export'; S.pop = null; renderPop(); renderDialog(); },
