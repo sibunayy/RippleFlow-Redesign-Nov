@@ -1,4 +1,5 @@
 import { hsl, isFilterFx, rippleBF } from './defs';
+import { CH, CW } from '../model/project';
 
 /* A small PNG whose red channel runs left to right and green top to bottom. Used as a displacement map, it scales
    the image about its centre, which gives the lens-style chromatic aberration. A raster PNG (not SVG) is used because
@@ -24,16 +25,16 @@ const f3 = (v) => (+v).toFixed(3);
 
 // Pixel-grid effects (pixelate, halftone) need absolute positions, so they use the composition area plus a margin
 // as their filter area. It is kept small on purpose: Safari skips a filter whose area is too large to allocate.
-const COMP_REGION = 'filterUnits="userSpaceOnUse" x="-240" y="-240" width="2400" height="1560"';
+const compRegion = () => `filterUnits="userSpaceOnUse" x="-240" y="-240" width="${CW + 480}" height="${CH + 480}"`;
 
 /** The layer's filter. `box` (a local area) is used when baking: the filter then covers exactly that area. */
 export function fxDefs(l, box = null) {
-  const X0 = box ? box.x : -240, Y0 = box ? box.y : -240, CX = box ? box.x + box.w / 2 : 960, CY = box ? box.y + box.h / 2 : 540;
+  const X0 = box ? box.x : -240, Y0 = box ? box.y : -240, CX = box ? box.x + box.w / 2 : CW / 2, CY = box ? box.y + box.h / 2 : CH / 2;
   let out = '';
   if (l.type === 'shader') out += `<radialGradient id="shd-${l.id}" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="${l.hue}"/><stop offset=".55" stop-color="#0f2a4a"/><stop offset="1" stop-color="#0c0a08"/></radialGradient>`;
   const on = l.fxOff ? [] : l.fx.map((e, j) => [e, j]).filter(([e]) => isFilterFx(e));
   if (!on.length) return out;
-  let body = '', src = 'SourceGraphic', wide = false;
+  let body = '', src = 'SourceGraphic', reach = 0; // reach: how far (in px) an effect pushes pixels outside the layer
   on.forEach(([e, j], i) => {
     const R = e.radius ?? 10, A = e.amount ?? 50;
     if (e.id === 'glow') {
@@ -45,7 +46,7 @@ export function fxDefs(l, box = null) {
     else if (e.id === 'shadow') {
       const d = e.dist ?? R / 2, a = (e.ang ?? 90) * Math.PI / 180;
       body += `<feDropShadow in="${src}" dx="${(Math.cos(a) * d).toFixed(1)}" dy="${(Math.sin(a) * d).toFixed(1)}" stdDeviation="${R / 2}" flood-color="${e.col || '#000000'}" flood-opacity="${A / 100}" result="r${i}"/>`;
-      if (d > 60) wide = true;
+      reach = Math.max(reach, d);
     }
     else if (e.id === 'outline') body += `<feMorphology in="${src === 'SourceGraphic' ? 'SourceAlpha' : src}" operator="dilate" radius="${R}" result="d${i}"/><feFlood flood-color="${e.col || '#ffffff'}" flood-opacity="${A / 100}" result="fl${i}"/><feComposite in="fl${i}" in2="d${i}" operator="in" result="o${i}"/><feMerge result="r${i}"><feMergeNode in="o${i}"/><feMergeNode in="${src}"/></feMerge>`;
     else if (e.id === 'dirblur') { const a = A * Math.PI / 180; body += `<feGaussianBlur in="${src}" stdDeviation="${(R * Math.abs(Math.cos(a)) / 3).toFixed(2)} ${(R * Math.abs(Math.sin(a)) / 3).toFixed(2)}" result="r${i}"/>`; }
@@ -106,13 +107,13 @@ export function fxDefs(l, box = null) {
       if (st === 'rgb') body += `<feDisplacementMap in="${src}" in2="gs${i}" scale="${sc}" xChannelSelector="R" yChannelSelector="G" result="ga${i}"/><feDisplacementMap in="${src}" in2="gs${i}" scale="${-(+sc) * .6}" xChannelSelector="R" yChannelSelector="G" result="gb${i}"/><feColorMatrix in="ga${i}" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="gc${i}"/><feColorMatrix in="gb${i}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="gd${i}"/><feComposite in="gc${i}" in2="gd${i}" operator="arithmetic" k2="1" k3="1" result="r${i}"/>`;
       else if (st === 'scan') body += `<feDisplacementMap in="${src}" in2="gs${i}" scale="${sc}" xChannelSelector="R" yChannelSelector="G" result="ga${i}"/><feTurbulence type="fractalNoise" baseFrequency="0 .35" numOctaves="1" seed="4" result="gl${i}"/><feComponentTransfer in="gl${i}" result="gk${i}"><feFuncA type="discrete" tableValues="1 1 .35 1 1 1 .5 1"/></feComponentTransfer><feComposite in="ga${i}" in2="gk${i}" operator="in" result="r${i}"/>`;
       else body += `<feDisplacementMap in="${src}" in2="gs${i}" scale="${sc}" xChannelSelector="R" yChannelSelector="G" result="r${i}"/>`;
-      wide = true;
+      reach = Math.max(reach, e.off ?? 60);
     }
-    else if (e.id === 'longshadow') { const n = Math.max(4, Math.min(48, Math.round(R / 4))), a = A * Math.PI / 180; let offs = ''; for (let k = 1; k <= n; k++) offs += `<feOffset in="SourceAlpha" dx="${(Math.cos(a) * R * k / n).toFixed(1)}" dy="${(Math.sin(a) * R * k / n).toFixed(1)}" result="lo${i}_${k}"/>`; body += offs + `<feMerge result="lm${i}">${Array.from({ length: n }, (_, k) => `<feMergeNode in="lo${i}_${k + 1}"/>`).join('')}</feMerge><feFlood flood-color="#000" flood-opacity="${((e.op ?? 35) / 100).toFixed(2)}" result="lf${i}"/><feComposite in="lf${i}" in2="lm${i}" operator="in" result="ls${i}"/><feMerge result="r${i}"><feMergeNode in="ls${i}"/><feMergeNode in="${src}"/></feMerge>`; wide = wide || R > 80; }
+    else if (e.id === 'longshadow') { const n = Math.max(4, Math.min(48, Math.round(R / 4))), a = A * Math.PI / 180; let offs = ''; for (let k = 1; k <= n; k++) offs += `<feOffset in="SourceAlpha" dx="${(Math.cos(a) * R * k / n).toFixed(1)}" dy="${(Math.sin(a) * R * k / n).toFixed(1)}" result="lo${i}_${k}"/>`; body += offs + `<feMerge result="lm${i}">${Array.from({ length: n }, (_, k) => `<feMergeNode in="lo${i}_${k + 1}"/>`).join('')}</feMerge><feFlood flood-color="#000" flood-opacity="${((e.op ?? 35) / 100).toFixed(2)}" result="lf${i}"/><feComposite in="lf${i}" in2="lm${i}" operator="in" result="ls${i}"/><feMerge result="r${i}"><feMergeNode in="ls${i}"/><feMergeNode in="${src}"/></feMerge>`; reach = Math.max(reach, R); }
     else if (e.id === 'vignette') {
       // A light above the centre of the composition falls off towards the corners; that falloff darkens the layer.
       // Built with filter lighting, so there is no image to load and no oversized filter area.
-      const z = 150 + Math.max(10, Math.min(100, R)) * 30, ic = z / Math.hypot(1101, z), g = 1 / Math.max(.05, 1 - ic), k = A / 100;
+      const z = 150 + Math.max(10, Math.min(100, R)) * 30, ic = z / Math.hypot(CW / 2, CH / 2, z), g = 1 / Math.max(.05, 1 - ic), k = A / 100;
       body += `<feDiffuseLighting in="SourceAlpha" surfaceScale="0" diffuseConstant="1" lighting-color="#fff" result="vl${i}"><fePointLight x="${CX}" y="${CY}" z="${z}"/></feDiffuseLighting>`
         + `<feColorMatrix in="vl${i}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${f3(-g * k)} 0 0 0 ${f3(g * k)}" result="va${i}"/><feComposite in="va${i}" in2="SourceAlpha" operator="in" result="vi${i}"/><feMerge result="r${i}"><feMergeNode in="${src}"/><feMergeNode in="vi${i}"/></feMerge>`;
     }
@@ -121,6 +122,6 @@ export function fxDefs(l, box = null) {
     if (mx < .995) { body += `<feComposite in="r${i}" in2="${src}" operator="arithmetic" k2="${mx.toFixed(3)}" k3="${(1 - mx).toFixed(3)}" result="mx${i}"/>`; src = 'mx' + i; return; }
     src = 'r' + i;
   });
-  const reg = box ? `filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : on.some(([e]) => ['halftone', 'pixelate'].includes(e.id)) ? COMP_REGION : wide ? 'x="-100%" y="-100%" width="300%" height="300%"' : 'x="-50%" y="-50%" width="200%" height="200%"';
+  const reg = box ? `filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : on.some(([e]) => ['halftone', 'pixelate'].includes(e.id)) ? compRegion() : reach > 120 ? 'x="-100%" y="-100%" width="300%" height="300%"' : reach > 40 ? 'x="-75%" y="-75%" width="250%" height="250%"' : 'x="-50%" y="-50%" width="200%" height="200%"';
   return out + `<filter id="fx-${l.id}" ${reg} color-interpolation-filters="sRGB">${body}</filter>`;
 }

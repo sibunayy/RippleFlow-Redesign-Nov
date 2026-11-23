@@ -1,5 +1,6 @@
+import { toast } from '../../ui/toast';
 import { penFinish } from '../../gestures/canvas';
-import { EDITABLE, peCloseToggle, peDelete, peEnter, peExit, peToggle, penClearRedo, penUndo } from '../../gestures/path-edit';
+import { EDITABLE, peCloseToggle, peDelete, peEnter, peExit, peSetType, peToggle, penClearRedo, penUndo } from '../../gestures/path-edit';
 import { S } from '../../state/state';
 import { drawOverlay } from '../../drawing/overlay';
 import { renderFloats } from '../../ui/floats';
@@ -16,7 +17,8 @@ export const penActions = {
   pencancel: () => { S.penPts = []; penClearRedo(); drawOverlay(); renderFloats(); },
   peedit: () => { const l = lay(S.sel); if (l && EDITABLE.includes(l.type)) peEnter(l); },
   pedone: () => peExit(),
-  petype: () => peToggle(),
+  petype: (el) => (el && el.dataset.v ? peSetType(el.dataset.v) : peToggle()),
+  pepar: () => { S.peParallel = !S.peParallel; renderFloats(); toast(S.peParallel ? 'Dragging a handle moves both handles by the same amount' : 'Handles mirror each other again'); },
   pedel: () => peDelete(),
   peclose: () => peCloseToggle(),
   // Hand-shaped curves and automatic smoothing are two ways to curve a path, so switching this replaces the hand-shaped ones.

@@ -21,7 +21,7 @@ export function graphHtml(l) {
   if (!ps.length) return `<p class="hint">${esc(l.name)} has no animated properties yet. Tap the ${ic('diamond', 'xs')} in Properties to start.</p>`;
   const legend = ps.map((p) => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:12px;font-size:var(--fs-xs);color:var(--muted)"><i style="width:10px;height:3px;border-radius:2px;background:${GCOL[p]}"></i>${PROPS[p].label}</span>`).join('');
   return `<div style="display:grid;grid-template-columns:var(--name) minmax(0,1fr) var(--gut);height:calc(100% - 4px);min-height:160px">
-    <div style="padding:10px 12px">${legend}<div class="tc" id="gread" style="margin-top:8px;font-size:var(--fs-xs);color:var(--acc-text);min-height:16px"></div><p class="hint" style="padding:6px 0 0">Drag the graph to scrub. Drag a point to retime or change its value. Select a point to shape its ease with the handles.</p></div>
+    <div style="padding:10px 12px">${legend}<div class="tc" id="gread" style="margin-top:8px;font-size:var(--fs-xs);color:var(--acc-text);min-height:16px"></div><p class="hint" style="padding:6px 0 0">Drag the graph to scrub. Turn on Multi-select to draw a box round several points; drag one to move them all. Drag a point to retime or change its value. Select a point to shape its ease with the handles.</p></div>
     <div style="position:relative;height:100%;min-height:160px"><svg class="graph" id="gsvg" aria-label="Value graph"></svg><span class="ph" style="top:0"></span></div><span></span></div>`;
 }
 /* Interactive graph editor: scrub, select/drag keyframes, drag ease handles. */
@@ -97,8 +97,15 @@ export function graphDown(e) {
   if (gk) {
     const p = gk.dataset.p, i = +gk.dataset.i, keys = l.p[p].keys, k = keys[i], m = gmap(l, p), me = { l: l.id, p, i };
     GL = { [p]: m };
-    if (e.shiftKey) { const j = S.keys.findIndex((s) => s.l === me.l && s.p === p && s.i === i); j >= 0 ? S.keys.splice(j, 1) : S.keys.push(me); } else S.keys = [me];
-    drawGraph();
+    const j = S.keys.findIndex((s) => s.l === me.l && s.p === p && s.i === i), add = e.shiftKey || S.keyMulti;
+    // A tap in multi-select adds or removes the key. A drag moves the whole selection when the key is already in it.
+    let toggled = false;
+    if (add && j >= 0) toggled = true; else if (add) S.keys.push(me); else if (j < 0) S.keys = [me];
+    const group = S.keys.filter((s) => s.l === l.id && l.p[s.p] && l.p[s.p].keys[s.i]);
+    const multi = group.length > 1 && group.some((s) => s.p === p && s.i === i);
+    const gm = {}; if (multi) group.forEach((s) => { gm[s.p] = gm[s.p] || gmap(l, s.p); }); if (multi) GL = gm;
+    const snap = multi ? group.map((s) => ({ s, k: l.p[s.p].keys[s.i], t0: l.p[s.p].keys[s.i].t, y0: gy(gm[s.p], l.p[s.p].keys[s.i].v) })) : [];
+    const p0 = pt(e); drawGraph();
     const sx = e.clientX, sy = e.clientY; let moved = false;
     const isLong = longPress(e, () => { end(mv, up); GL = null; seek(k.t); S.pop = { type: 'ease', x: sx, y: sy }; renderAll(); });
     const mv = (ev) => {
@@ -106,12 +113,41 @@ export function graphDown(e) {
       if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
       if (!moved) { moved = true; setDragging(true); }
       const [x, y] = pt(ev);
+      if (multi) {
+        // every selected key moves by the same time and the same distance on screen; none may leave the timeline
+        const dt = clamp(Math.round((x - p0[0]) / GM.W * DUR), -Math.min(...snap.map((o) => o.t0)), DUR - 1 - Math.max(...snap.map((o) => o.t0)));
+        snap.forEach((o) => { o.k.t = o.t0 + dt; o.k.v = clamp(gv(gm[o.s.p], clamp(o.y0 + (y - p0[1]), GM.T, GM.H - GM.B)), PROPS[o.s.p].min, PROPS[o.s.p].max); });
+        if (read) read.textContent = `${snap.length} keyframes · ${dt >= 0 ? '+' : ''}${dt} frames`;
+        drawGraph(); updateCanvas(); updateFields(); return;
+      }
       k.t = clamp(Math.round(x / GM.W * DUR), i > 0 ? keys[i - 1].t + 1 : 0, i < keys.length - 1 ? keys[i + 1].t - 1 : DUR - 1);
       k.v = clamp(gv(m, clamp(y, GM.T, GM.H - GM.B)), PROPS[p].min, PROPS[p].max);
       if (read) read.textContent = `${PROPS[p].label} ${fmt(k.v, PROPS[p])} · ${tc(k.t)}`;
       drawGraph(); updateCanvas(); updateFields();
     };
-    const up = () => { end(mv, up); GL = null; setDragging(false); if (isLong()) return; if (moved) { commit('Edit keyframe'); setSuppressClick(true); } renderAll(); };
+    const up = () => {
+      end(mv, up); GL = null; setDragging(false); if (isLong()) return;
+      if (moved && multi) { // keep each property's keys in time order, and keep them selected
+        const props = new Set(snap.map((o) => o.s.p));
+        props.forEach((q) => l.p[q].keys.sort((a, b) => a.t - b.t));
+        S.keys = S.keys.filter((s) => s.l !== l.id).concat(snap.map((o) => ({ l: l.id, p: o.s.p, i: l.p[o.s.p].keys.indexOf(o.k) })));
+      }
+      if (moved) { commit(multi ? 'Move keyframes' : 'Edit keyframe'); setSuppressClick(true); } else if (toggled) S.keys.splice(S.keys.findIndex((s) => s.l === me.l && s.p === p && s.i === i), 1);
+      renderAll();
+    };
+    bind(mv, up); return;
+  }
+  if (S.keyMulti) { // multi-select: drag a box round the points to select them
+    const a = pt(e), ps = TF.filter((q) => animated(l.p[q])), NS = 'http://www.w3.org/2000/svg', box = document.createElementNS(NS, 'rect');
+    box.setAttribute('fill', 'rgb(var(--acc) / .14)'); box.setAttribute('stroke', 'rgb(var(--acc))'); box.setAttribute('stroke-dasharray', '4 3'); svg.appendChild(box);
+    const mv = (ev) => { const b = pt(ev); box.setAttribute('x', String(Math.min(a[0], b[0]))); box.setAttribute('y', String(Math.min(a[1], b[1]))); box.setAttribute('width', String(Math.abs(a[0] - b[0]))); box.setAttribute('height', String(Math.abs(a[1] - b[1]))); };
+    const up = (ev) => {
+      end(mv, up); const b = pt(ev), x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]), y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]); box.remove();
+      const hit = [];
+      if (Math.hypot(b[0] - a[0], b[1] - a[1]) > 6) ps.forEach((q) => { const m = gmap(l, q); l.p[q].keys.forEach((k, i) => { const cx = gx(k.t), cy = gy(m, k.v); if (cx >= x1 && cx <= x2 && cy >= y1 && cy <= y2) hit.push({ l: l.id, p: q, i }); }); });
+      if (hit.length) { S.keys = [...S.keys.filter((s) => !hit.some((h) => h.l === s.l && h.p === s.p && h.i === s.i)), ...hit]; setSuppressClick(true); }
+      renderAll();
+    };
     bind(mv, up); return;
   }
   const set = (ev) => seek(Math.round(pt(ev)[0] / GM.W * DUR));

@@ -10,6 +10,6 @@ export function transformSection(l, multi) {
     + sw('lock', !!l.lock, l.lock ? 'lock' : 'unlock', l.lock ? 'Unlock layer' : 'Lock layer')
     + sw('solo', S.solo.has(l.id), 'solo', S.solo.has(l.id) ? 'Stop soloing' : 'Solo: show only this layer') + `</div>`;
   const tf = switches + ['pos', 'scale', 'rot', 'anchor'].map((g) => propRow(l, g)).join('')
-    + `<div class="three"><button class="line-btn" data-act="flipx" aria-pressed="${!!l.flipX}" style="${l.flipX ? 'color:var(--acc-text);box-shadow:var(--lit);background:var(--lit-bg)' : ''}" title="Flip horizontal">${ic('flipH', 's')}Flip H</button><button class="line-btn" data-act="flipy" aria-pressed="${!!l.flipY}" style="${l.flipY ? 'color:var(--acc-text);box-shadow:var(--lit);background:var(--lit-bg)' : ''}" title="Flip vertical">${ic('flipV', 's')}Flip V</button><button class="line-btn" data-act="tfreset" title="Reset position, scale, rotation and opacity">${ic('reset', 's')}Reset</button></div>`;
+    + `<div class="three"><button class="line-btn" data-act="flipx" aria-pressed="${!!l.flipX}" title="Flip horizontal">${ic('flipH', 's')}Flip H</button><button class="line-btn" data-act="flipy" aria-pressed="${!!l.flipY}" title="Flip vertical">${ic('flipV', 's')}Flip V</button><button class="line-btn" data-act="tfreset" title="Reset position, scale, rotation and opacity">${ic('reset', 's')}Reset</button></div>`;
   return tf;
 }

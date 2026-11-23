@@ -1,4 +1,4 @@
-import { DUR } from '../model/project';
+import { DUR, FPS } from '../model/project';
 import { rasterFrame } from './raster';
 
 /* ---- MP4 (WebCodecs H.264 + a small muxer) ---- */
@@ -49,7 +49,7 @@ export async function exportMp4(job, w, h, fps, nF) {
   for (let i = 0; i < nF; i++) {
     if (job.cancel) { try { enc.close(); } catch { /* closed */ } return null; }
     if (err) throw err;
-    await rasterFrame(Math.min(DUR, i * 30 / fps), w, h, ctx, false);
+    await rasterFrame(Math.min(DUR, i * FPS / fps), w, h, ctx, false);
     while (enc.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 4));
     const vf = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
     enc.encode(vf, { keyFrame: i % Math.max(1, Math.round(fps)) === 0 }); vf.close();

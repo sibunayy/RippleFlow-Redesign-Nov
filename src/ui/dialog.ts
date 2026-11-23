@@ -1,5 +1,5 @@
 import { $, app } from '../core/dom';
-import { DUR, FPS } from '../model/project';
+import { CH, CW, DUR, FPS } from '../model/project';
 import { S } from '../state/state';
 import { shaderDialog } from '../shader/ui';
 import { exportDialog } from '../export/dialog';
@@ -18,8 +18,8 @@ export function renderDialog() {
   } else if (S.dialog === 'settings') {
     inner = `<h2>Project settings</h2>
       <div class="seg" role="group" aria-label="Duration">${[3, 5, 10, 15].map((d) => `<button data-act="setdur" data-v="${d}" aria-pressed="${DUR === d * FPS}">${d} s</button>`).join('')}</div>
-      <div class="kv"><span>Size</span><b class="tc">1920 × 1080</b></div>
-      <div class="kv"><span>Frame rate</span><b class="tc">30 fps</b></div>
+      <div class="kv"><span>Size</span><b class="tc">${CW} × ${CH}</b></div>
+      <div class="kv"><span>Frame rate</span><b class="tc">${FPS} fps</b></div>
       <div class="kv"><span>Storage</span><b>Autosaved on this device</b></div>
       <button class="line-btn" data-act="resetproj">${S.resetArm ? 'Tap again to erase and reset' : 'Reset to demo project'}</button>
       <div class="foot"><button class="primary" data-act="close">Done</button></div>`;

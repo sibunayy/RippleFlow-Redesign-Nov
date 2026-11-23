@@ -76,7 +76,7 @@ export function trackDown(e, trk) {
     const sel = [], has = (l, p, i) => sel.some((q) => q.l === l && q.p === p && q.i === i);
     $$('#tlrows .dk[data-dk="one"]').forEach((dk) => { if (inside(dk) && !has(dk.dataset.l, dk.dataset.p, +dk.dataset.i)) sel.push({ l: dk.dataset.l, p: dk.dataset.p, i: +dk.dataset.i }); });
     $$('#tlrows .dk[data-dk="agg"]').forEach((dk) => { if (!inside(dk)) return; const LL = lay(dk.dataset.l), t = +dk.dataset.t; TF.forEach((p) => { const i = keyAt(LL.p[p], t); if (i >= 0 && !has(LL.id, p, i)) sel.push({ l: LL.id, p, i }); }); });
-    S.keys = sel; if (sel[0] && !selIds().includes(sel[0].l)) { S.sel = sel[0].l; S.multi.clear(); }
+    S.keys = S.keyMulti ? [...S.keys.filter((k) => !has(k.l, k.p, k.i)), ...sel] : sel; if (sel[0] && !selIds().includes(sel[0].l)) { S.sel = sel[0].l; S.multi.clear(); }
     renderAll(); toast(sel.length ? `${sel.length} keyframes selected` : 'No keyframes in that area');
   };
   addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);

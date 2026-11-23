@@ -1,5 +1,5 @@
 import { $ } from '../core/dom';
-import { HUES, layers } from '../model/project';
+import { HUES, layers, CW, CH } from '../model/project';
 import { st } from '../model/schema';
 import { lay } from '../anim/interpolate';
 import { S } from '../state/state';
@@ -19,12 +19,13 @@ import { setDragging } from '../events/delegate';
 import { ptrs } from '../gestures/canvas';
 
 /* ---- live strokes ---- */
+addEventListener('rf-picture-ready', () => updateCanvas()); // a baked picture finished decoding: draw it
 export let liveHide = null;
 const ink = $('#ink'), ictx = ink.getContext('2d');
 function inkSetup(l) {
   const dpr = devicePixelRatio || 1, W = innerWidth, H = innerHeight;
   ink.width = Math.round(W * dpr); ink.height = Math.round(H * dpr); ink.style.width = W + 'px'; ink.style.height = H + 'px';
-  const sr = stage.getBoundingClientRect(), k = sr.width / 1920;
+  const sr = stage.getBoundingClientRect(), k = sr.width / CW;
   ictx.setTransform(1, 0, 0, 1, 0, 0); ictx.clearRect(0, 0, ink.width, ink.height);
   ictx.beginPath(); ictx.rect(sr.left * dpr, sr.top * dpr, sr.width * dpr, sr.height * dpr); ictx.clip();
   const m = new DOMMatrix([dpr, 0, 0, dpr, 0, 0]).translate(sr.left, sr.top).scale(k).multiply(world(l, S.f));
@@ -36,7 +37,7 @@ export function drawTarget() {
   if (l && l.type === 'draw' && !l.lock && l.vis) return l;
   nameCount.draw = (nameCount.draw || 0) + 1;
   l = { id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: 'Drawing ' + nameCount.draw, type: 'draw', hue: HUES[(layers.length + 2) % HUES.length], vis: true, lock: false, fx: [], cels: [],
-    p: { x: st(960), y: st(540), scale: st(100), rot: st(0), op: st(100), ax: st(0), ay: st(0), ts: st(0), te: st(100) } };
+    p: { x: st((CW / 2)), y: st((CH / 2)), scale: st(100), rot: st(0), op: st(100), ax: st(0), ay: st(0), ts: st(0), te: st(100) } };
   layers.unshift(l); S.sel = l.id; S.multi = new Set(); S.keys = []; buildCanvas(); renderLeft(); renderTL(); renderRight();
   toast('Started a new drawing layer', false);
   return l;
@@ -44,7 +45,7 @@ export function drawTarget() {
 function localPt(l, e) { const [cx, cy] = compPt(e); let inv; try { inv = world(l, S.f).inverse(); } catch { inv = new DOMMatrix(); } const q = inv.transformPoint(new DOMPoint(cx, cy)); return [q.x, q.y]; }
 function penData(e) {
   const pen = e.pointerType === 'pen', B = S.brush;
-  let p = pen ? (e.pressure || 0.5) : 0.6; if (!B.pr) p = 0.6;
+  let p = pen ? (e.pressure || 0) : 0.6; if (!B.pr) p = 0.6; // a pen that reports 0 is lifting off; the caller skips or replaces it
   let alt = 1.5708;
   if (pen && B.tl) { if (typeof e.altitudeAngle === 'number') alt = e.altitudeAngle; else if (e.tiltX || e.tiltY) { const tx = Math.tan(e.tiltX * Math.PI / 180), ty = Math.tan(e.tiltY * Math.PI / 180); alt = Math.PI / 2 - Math.atan(Math.hypot(tx, ty)); } }
   return [Math.round(p * 100) / 100, Math.round(alt * 100) / 100];
@@ -64,7 +65,7 @@ export function drawDown(e) {
     if ((before && e2.url === before.url) || !e2.w) { c.strokes.pop(); c.v++; if (newCel) l.cels = l.cels.filter((x) => x !== c); toast('That area is not closed. Close the shape, then fill.'); celRaster(c); updateCanvas(); return; }
     commit('Fill'); updateCanvas(); renderTL(); renderRight(); return;
   }
-  const B = S.brush, cur = brushCur(), [p, alt] = penData(e);
+  const B = S.brush, cur = brushCur(), [p0, alt] = penData(e), p = p0 || 0.15; let pSm = p; // smoothed pressure, so one noisy reading cannot make a dot
   const s = { k: tool === 'erase' ? 'erase' : 'brush', pre: B.pre, c: B.c, sz: cur.sz, op: cur.op, pts: [[Math.round(x * 10) / 10, Math.round(y * 10) / 10, p, alt]] };
   const stt = {}; let cancelled = false, folded = false;
   // Pen smoothing: each new point moves part of the way to the pen (1 = follow exactly), so shaky lines come out steadier.
@@ -78,7 +79,7 @@ export function drawDown(e) {
     if (ptrs.size > 1) { cancelled = true; inkClear(); return; }
     if (!folded && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 4) { folded = true; foldStart('drag', 'pointer'); }
     const evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
-    for (const q of (evs.length ? evs : [ev])) { let [qx, qy] = localPt(l, q); const [qp, qa] = penData(q); lastRaw = [Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]; if (follow < 1) { sx += (qx - sx) * follow; sy += (qy - sy) * follow; qx = sx; qy = sy; } const last = s.pts[s.pts.length - 1]; if (Math.hypot(qx - last[0], qy - last[1]) < 0.4) continue; s.pts.push([Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]); }
+    for (const q of (evs.length ? evs : [ev])) { let [qx, qy] = localPt(l, q); const [qp0, qa] = penData(q); if (!qp0) continue; pSm += (qp0 - pSm) * 0.5; const qp = Math.round(pSm * 100) / 100; lastRaw = [Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]; if (follow < 1) { sx += (qx - sx) * follow; sy += (qy - sy) * follow; qx = sx; qy = sy; } const last = s.pts[s.pts.length - 1]; if (Math.hypot(qx - last[0], qy - last[1]) < 0.4) continue; s.pts.push([Math.round(qx * 10) / 10, Math.round(qy * 10) / 10, qp, qa]); }
     stampStroke(ictx, s, stt, s.k === 'erase' ? s.op / 100 : 1);
   };
   const up = () => {
@@ -86,8 +87,10 @@ export function drawDown(e) {
     setDragging(false); liveHide = null; foldEnd('drag');
     if (cancelled) { inkClear(); if (newCel && !c.strokes.length) l.cels = l.cels.filter((x) => x !== c); updateCanvas(); return; }
     if (follow < 1 && lastRaw) s.pts.push(lastRaw); // finish exactly where the pen lifted
+    // Draw & fill: the shape the stroke drew is filled with the brush colour. The fill goes under the line.
+    if (tool === 'dfill' && s.pts.length >= 3) c.strokes.push({ k: 'pfill', c: s.c, op: s.op, pts: s.pts.map((p) => [p[0], p[1]]) });
     c.strokes.push(s); c.v = (c.v || 0) + 1; rasterCel(c);
-    inkClear(); commit(s.k === 'erase' ? 'Erase' : 'Brush stroke'); updateCanvas(); renderTL(); renderRight();
+    inkClear(); commit(s.k === 'erase' ? 'Erase' : tool === 'dfill' ? 'Draw and fill' : 'Brush stroke'); updateCanvas(); renderTL(); renderRight();
   };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
 }

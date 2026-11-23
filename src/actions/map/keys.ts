@@ -41,6 +41,7 @@ export const keysActions = {
     }
     const r = el.getBoundingClientRect(); S.pop = { type: 'ease', x: r.left + r.width / 2, y: r.top }; renderAll();
   },
+  keymulti: () => { S.keyMulti = !S.keyMulti; renderTL(); toast(S.keyMulti ? 'Multi-select on. Tap keyframes to add or remove them. Drag one to move all of them.' : 'Multi-select off'); },
   autokey: () => { S.autoKey = !S.autoKey; renderTL(); toast(S.autoKey ? 'Auto-key on: edits at the playhead make keyframes.' : 'Auto-key off'); },
   keyall: () => { const ls = targets(); let n = 0; ls.forEach((l) => KEYALL.forEach((p) => { const pr = l.p[p]; if (!animated(pr)) { pr.keys = [{ t: Math.round(S.f), v: pr.v, e: 'ease' }]; delete pr.v; n++; } else if (keyAt(pr, S.f) < 0) { pr.keys.push({ t: Math.round(S.f), v: val(pr, S.f), e: 'ease' }); pr.keys.sort((a, b) => a.t - b.t); n++; } })); if (!ls.length) return; commit('Keyframe'); ls.forEach((l) => S.open.add(l.id)); renderAll(); toast(`Keyed ${n} properties on ${ls.length > 1 ? ls.length + ' layers' : ls[0].name} at ${tc(S.f)}`, true); },
   kprev: (el) => { const l = S.sel && lay(S.sel); if (!l) return; const st2 = grpState(l, el.dataset.g); if (st2.prev != null) { if (S.playing) play(false); seek(st2.prev); renderTL(); } },

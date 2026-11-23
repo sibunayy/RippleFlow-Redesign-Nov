@@ -27,7 +27,7 @@ export const PRESETS: { id: string; name: string; colors: Palette }[] = [
 
 export const PREF_DEFAULTS = {
   colors: { dark: {} as Palette, light: {} as Palette },
-  textSize: 100, corners: 1, glow: 100, motion: true, grid: 'dots', gridSize: 22, nameW: 232,
+  textSize: 100, uiScale: 100, corners: 1, glow: 100, motion: true, grid: 'dots', gridSize: 22, gridOpacity: 100, nameW: 232, prefsV: 2,
   loop: true, autoKey: false, hideAt: 60, tlStart: 'last', rightStart: 'last', undo: 60, newLen: 5,
 };
 export type Prefs = typeof PREF_DEFAULTS;
@@ -37,12 +37,23 @@ const cleanPalette = (p: any): Palette => {
   for (const k of Object.keys(BASE.dark) as ColorKey[]) if (isHex(p?.[k])) out[k] = p[k].toLowerCase();
   return out;
 };
+/** Settings saved before version 2 were relative to the old sizes. Text and corners now start from the larger, rounder look. */
+function migrate(saved: any) {
+  if (!saved || saved.prefsV >= 2) return saved;
+  const s = { ...saved };
+  s.textSize = s.textSize === 90 ? 83 : 100; // the old Small stays small; Standard, Large and Extra large become the new Default
+  s.corners = s.corners === .4 ? .3 : s.corners === 1 ? .65 : 1; // Sharp, Standard and Round keep their look
+  return s;
+}
 function load(saved: any): Prefs {
+  saved = migrate(saved);
   const out: any = { ...PREF_DEFAULTS, colors: { dark: cleanPalette(saved?.colors?.dark), light: cleanPalette(saved?.colors?.light) } };
   for (const k of Object.keys(PREF_DEFAULTS)) if (k !== 'colors' && saved && typeof saved[k] === typeof PREF_DEFAULTS[k]) out[k] = saved[k];
   return out;
 }
 export const PF: Prefs = load(store.get('prefs', null));
+/** The interface scale as a multiplier, for the few lengths that are set in code. */
+export const uiK = () => PF.uiScale / 100;
 export const savePrefs = () => store.set('prefs', PF);
 
 export function resetPrefs() {
@@ -87,7 +98,7 @@ export function activePreset() {
 }
 
 const MANAGED = ['--acc', '--on-acc', '--board', '--bg', '--comp-bg', '--surface', '--surface-2', '--surface-3', '--line', '--line-soft', '--text', '--muted', '--faint',
-  '--fs-xs', '--fs-s', '--fs-m', '--fs-l', '--r-field', '--r-btn', '--r-panel', '--r-k', '--g', '--grid-s', '--name'];
+  '--fs-xs', '--fs-s', '--fs-m', '--fs-l', '--r-field', '--r-btn', '--r-panel', '--r-k', '--g', '--grid-s', '--grid-c', '--name', '--k'];
 
 export function applyPrefs() {
   const st = root.style, set = (k: string, v: string) => st.setProperty(k, v), mode = themeMode(), c = PF.colors[mode], b = BASE[mode];
@@ -103,11 +114,14 @@ export function applyPrefs() {
   else if (c.panel || c.text) { set('--line', mix(panel, text, .22)); set('--line-soft', mix(panel, text, .11)); }
   if (c.panel || c.text) { set('--muted', mix(panel, text, .68)); set('--faint', mix(panel, text, .46)); }
 
-  if (PF.textSize !== 100) { const k = PF.textSize / 100; [['--fs-xs', 11], ['--fs-s', 12.5], ['--fs-m', 14], ['--fs-l', 17]].forEach(([n, px]) => set(n as string, `${+(px as number * k).toFixed(2)}px`)); }
-  if (PF.corners !== 1) { const k = PF.corners; set('--r-k', String(k)); set('--r-field', `${6 * k}px`); set('--r-btn', `${10 * k}px`); set('--r-panel', `${14 * k}px`); }
+  const K = PF.uiScale / 100; // the interface scale: the stylesheet multiplies every length by --k
+  if (PF.uiScale !== 100) set('--k', String(K));
+  if (PF.textSize !== 100) { const k = PF.textSize / 100 * K; [['--fs-xs', 13.2], ['--fs-s', 15], ['--fs-m', 16.8], ['--fs-l', 20.4]].forEach(([n, px]) => set(n as string, `${+(px as number * k).toFixed(2)}px`)); }
+  if (PF.corners !== 1) { const k = PF.corners; set('--r-k', String(+(k * 1.5).toFixed(3))); set('--r-field', `${+(9 * k * K).toFixed(2)}px`); set('--r-btn', `${+(15 * k * K).toFixed(2)}px`); set('--r-panel', `${+(21 * k * K).toFixed(2)}px`); }
   if (PF.glow !== 100) set('--g', String((root.getAttribute('data-glow') === 'soft' ? .5 : 1) * PF.glow / 100));
-  if (PF.gridSize !== 22) set('--grid-s', `${PF.gridSize}px`);
-  if (PF.nameW !== 232) set('--name', `${PF.nameW}px`);
+  if (PF.gridSize !== 22) set('--grid-s', `${+(PF.gridSize * K).toFixed(2)}px`);
+  if (PF.gridOpacity !== 100) { const o = PF.gridOpacity; set('--grid-c', o < 100 ? `color-mix(in srgb, var(--line-soft) ${o}%, transparent)` : `color-mix(in srgb, var(--line) ${o - 100}%, var(--line-soft))`); }
+  if (PF.nameW !== 232) set('--name', `${+(PF.nameW * K).toFixed(2)}px`);
   if (PF.grid === 'dots') root.removeAttribute('data-grid'); else root.setAttribute('data-grid', PF.grid);
   if (PF.motion) root.removeAttribute('data-motion'); else root.setAttribute('data-motion', 'off');
 

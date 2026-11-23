@@ -14,7 +14,7 @@ test('reload keeps the project and the panel state', async ({ page }) => {
   await expect(page.locator('#stage g[data-id]')).toHaveCount(5);
   await expect(page.locator('#tl .tl-tools')).toBeVisible();
   expect(await stored(page, 'tl')).toBe('mid');
-  await expect(page.locator('#lstrip [aria-label="Layers"]')).toHaveAttribute('aria-pressed', String(left === 'layers'));
+  await expect(page.locator('#rstrip [aria-label="Layers"]')).toHaveAttribute('aria-pressed', String(left === 'layers'));
   expect(await stored(page, 'right')).toBe(right);
 });
 

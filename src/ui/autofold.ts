@@ -1,3 +1,4 @@
+import { CW, CH } from '../model/project';
 import { $, app } from '../core/dom';
 import { S } from '../state/state';
 import { layoutStage, stage, vp } from '../render/stage';
@@ -17,8 +18,8 @@ const trackPointer = (e: PointerEvent) => { pointer = [e.clientX, e.clientY]; };
 function unfreeze() {
   if (!frozen) return;
   const r = stage.getBoundingClientRect(), v = vp.getBoundingClientRect();
-  const fit = Math.min((v.width - 56) / 1920, (v.height - 56) / 1080);
-  S.zoom = r.width / 1920 / fit;
+  const fit = Math.min((v.width - 56) / CW, (v.height - 56) / CH);
+  S.zoom = r.width / CW / fit;
   S.pan = [r.left - v.left - (v.width - r.width) / 2, r.top - v.top - (v.height - r.height) / 2];
   frozen = null; layoutStage();
 }

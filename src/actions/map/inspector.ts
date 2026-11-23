@@ -6,7 +6,7 @@ import { renderRight } from '../../ui/inspector/index';
 import { st } from '../../model/schema';
 import { renderAll } from '../../ui/layout';
 import { toast } from '../../ui/toast';
-import { DUR } from '../../model/project';
+import { DUR, CW, CH } from '../../model/project';
 import { renderTL } from '../../ui/timeline';
 import { renderPop } from '../../ui/popovers';
 import { setVal } from '../../anim/keys';
@@ -21,7 +21,7 @@ export const inspectorActions = {
   flipy: () => { const ls = selIds().map(lay); ls.forEach((l) => { l.flipY = !l.flipY; }); commit('Flip vertical'); updateCanvas(); renderRight(); },
   tfreset: () => {
     const ls = selIds().map(lay).filter((l) => l && !l.lock); if (!ls.length) return;
-    const D = { x: 960, y: 540, scale: 100, rot: 0, op: 100 };
+    const D = { x: (CW / 2), y: (CH / 2), scale: 100, rot: 0, op: 100 };
     ls.forEach((l) => { for (const p in D) l.p[p] = st(D[p]); l.flipX = l.flipY = false; });
     S.keys = S.keys.filter((k) => !(ls.some((l) => l.id === k.l) && k.p in D));
     commit('Reset transform'); updateCanvas(); renderAll(); toast('Transform reset: centred, 100%, 0°, fully opaque', true);

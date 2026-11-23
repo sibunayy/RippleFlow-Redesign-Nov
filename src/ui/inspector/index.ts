@@ -1,5 +1,6 @@
 import { $, $$, esc } from '../../core/dom';
-import { DUR, FPS, compBg, markers, projName } from '../../model/project';
+import { CH, CW, DUR, FPS, compBg, markers, projName } from '../../model/project';
+import { FPS_PRESETS, SIZES } from '../../actions/comp';
 import { ic } from '../icons';
 import { GROUPS, PROPS } from '../../model/schema';
 import { lay, val } from '../../anim/interpolate';
@@ -31,11 +32,17 @@ export function renderRight() {
   } else if (S.right === 'fbf') {
     ({ head, body } = fbfView());
   } else if (!l) {
-    head = `<div><h2>${S.right === 'effects' ? 'Effects' : 'Composition'}</h2><div class="sub">${esc(projName)} · 1920×1080 · 30 fps · ${DUR / FPS} s</div></div>`;
-    body = `<p class="hint">Select a layer on the canvas or in Layers to edit it. Use ＋ to add text, shapes or media.</p>
-      ${sec('comp', 'Composition', `<div class="kv"><span>Size</span><b class="tc">1920 × 1080</b></div><div class="kv"><span>Frame rate</span><b class="tc">30 fps</b></div>
+    head = `<div><h2>${S.right === 'effects' ? 'Effects' : 'Composition'}</h2><div class="sub">${esc(projName)} · ${CW}×${CH} · ${FPS} fps · ${+(DUR / FPS).toFixed(2)} s</div></div>`;
+    const preset = SIZES.find((z) => z[1] === CW && z[2] === CH), BGS = [['#ffffff', 'White'], ['#f4efe9', 'Off white (paper)'], ['#000000', 'Black'], ['#808080', 'Mid grey (50%)'], ['#bfbfbf', 'Light grey (75%)']], custom = !!compBg && !BGS.some(([c]) => c === compBg.toLowerCase());
+    body = `
+      ${sec('comp', 'Composition', `<div class="sublbl">Size</div>
+        <select class="sel" data-sel="compsize" aria-label="Composition size">${SIZES.map(([n, w, h]) => `<option value="${w},${h}" ${preset && preset[1] === w && preset[2] === h ? 'selected' : ''}>${n}</option>`).join('')}${preset ? '' : `<option value="" selected>Custom ${CW} × ${CH}</option>`}</select>
+        <div class="two"><label class="kv"><span>Width</span><input class="txt tc" data-comp="w" inputmode="numeric" value="${CW}" aria-label="Width in pixels"></label><label class="kv"><span>Height</span><input class="txt tc" data-comp="h" inputmode="numeric" value="${CH}" aria-label="Height in pixels"></label></div>
+        <div class="sublbl">Frame rate</div><div class="seg" role="group" aria-label="Frame rate">${FPS_PRESETS.map((n) => `<button data-act="setfps" data-v="${n}" aria-pressed="${FPS === n}">${n}</button>`).join('')}</div>
+        <label class="kv"><span>Custom fps</span><input class="txt tc" data-comp="fps" inputmode="numeric" value="${FPS}" aria-label="Frames per second"></label>
+        <p class="hint" style="padding:0">Changing the frame rate keeps the timing in seconds. Changing the size keeps each layer's pixel position.</p>
         <div class="sublbl">Duration</div><div class="seg" role="group" aria-label="Duration">${[3, 5, 10, 15].map((d) => `<button data-act="setdur" data-v="${d}" aria-pressed="${DUR === d * FPS}">${d} s</button>`).join('')}</div>
-        <div class="sublbl">Background</div><div class="swatches">${[['', 'Theme'], ['#000000', 'Black'], ['#15120f', 'Charcoal'], ['#0b1b33', 'Navy'], ['#f4efe9', 'Paper'], ['#ffffff', 'White'], ['#2a6cff', 'Blue'], ['#ff5ea8', 'Pink']].map(([c, n]) => `<button class="sw ${(compBg || '') === c ? 'on' : ''}" data-act="compbg" data-v="${c}" aria-label="Background ${n}" title="${n}" style="background:${c || 'conic-gradient(var(--comp-bg) 0 50%, var(--surface-3) 0)'}"></button>`).join('')}</div>
+        <div class="sublbl">Background</div><div class="swatches">${BGS.map(([c, n]) => `<button class="sw ${(compBg || '').toLowerCase() === c ? 'on' : ''}" data-act="compbg" data-v="${c}" aria-label="Background ${n}" title="${n}" style="background:${c}"></button>`).join('')}<label class="sw cust ${custom ? 'on' : ''}" title="Custom colour" aria-label="Custom background colour"><input type="color" data-compbg value="${compBg && /^#[0-9a-f]{6}$/i.test(compBg) ? compBg : '#808080'}"></label></div>
         <div class="sublbl">Overlays</div><div class="seg" role="group" aria-label="Overlays">${[['off', 'None'], ['safe', 'Safe areas'], ['thirds', 'Thirds']].map(([v, n]) => `<button data-act="guide" data-v="${v}" aria-pressed="${S.guide === v}">${n}</button>`).join('')}</div>
         <button class="line-btn" data-act="settings">${ic('settings', 's')}Project settings…</button>`)}
       ${sec('mk', 'Markers', `<button class="line-btn" data-act="marker">${ic('plus', 's')}Add marker at ${tc(S.f)}</button>` + (markers.length ? markers.map((m, i) => `<div class="mkrow"><button class="ib" data-act="mkjump" data-v="${i}" aria-label="Go to ${esc(m.name)}" title="Go to marker">${ic('marker', 's')}</button><input class="lname" data-mkn="${i}" value="${esc(m.name)}" aria-label="Marker name"><span class="tc" style="color:var(--muted)">${tc(m.f)}</span><button class="ib" data-act="mkdel" data-v="${i}" aria-label="Delete ${esc(m.name)}">${ic('trash', 's')}</button></div>`).join('') : '<p class="hint" style="padding:0">No markers yet. Use Marker in the timeline tools.</p>'))}`;

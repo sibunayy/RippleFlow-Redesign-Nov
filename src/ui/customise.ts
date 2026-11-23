@@ -4,7 +4,8 @@ import { $, esc } from '../core/dom';
 import { store } from '../core/store';
 import { S } from '../state/state';
 import { ic } from './icons';
-import { applyTheme } from './layout';
+import { applyLayout, applyTheme } from './layout';
+import { layoutStage } from '../render/stage';
 import { renderPop } from './popovers';
 import { renderTL } from './timeline';
 import { renderDialog } from './dialog';
@@ -39,13 +40,15 @@ const head = (t: string) => `<div class="mlbl cz-h">${t}</div>`;
 
 function body() {
   if (tab === 'interface') return head('Type and shape')
-    + segRow('textSize', 'Text size', [[90, 'Small'], [100, 'Standard'], [110, 'Large'], [120, 'Extra large']])
-    + segRow('corners', 'Corners', [[.4, 'Sharp'], [1, 'Standard'], [1.5, 'Round']])
+    + rangeRow('uiScale', 'Interface scale', 75, 150, 5, '%', 'Everything: controls, panels and text')
+    + segRow('textSize', 'Text size', [[83, 'Small'], [92, 'Medium'], [100, 'Default'], [110, 'Large']])
+    + segRow('corners', 'Corners', [[.3, 'Sharp'], [.65, 'Standard'], [1, 'Round']])
     + rangeRow('glow', 'Glow', 0, 150, 5, '%', 'Halo on active controls')
     + togRow('motion', 'Panel animation', 'Slide panels and controls')
     + head('Canvas')
     + segRow('grid', 'Background pattern', [['dots', 'Dots'], ['lines', 'Lines'], ['none', 'None']])
     + rangeRow('gridSize', 'Pattern spacing', 10, 60, 2, ' px')
+    + rangeRow('gridOpacity', 'Pattern opacity', 0, 200, 5, '%', '100% is the standard strength')
     + head('Timeline')
     + rangeRow('nameW', 'Layer name column', 150, 320, 2, ' px');
   if (tab === 'workflow') return head('Playback and keys')
@@ -98,6 +101,7 @@ function setLive(k: string, v: any) {
   PF[k] = v; savePrefs(); applyPrefs();
   if (k === 'loop') { S.loop = v; renderTL(); }
   if (k === 'autoKey') { S.autoKey = v; renderTL(); }
+  if (k === 'uiScale') requestAnimationFrame(() => { applyLayout(); layoutStage(); renderTL(); });
 }
 
 export function openCustomise() { S.dialog = 'customise'; S.pop = null; renderPop(); renderDialog(); }

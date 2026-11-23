@@ -31,8 +31,17 @@ export function applyLayout() {
 export function renderAll() { applyLayout(); renderTop(); renderStrips(); renderLeft(); renderRight(); renderTL(); renderFloats(); renderPop(); setPF(); persist(); }
 export function persist() { store.set('left', S.left); store.set('right', S.right); store.set('tl', S.tl); store.set('collapsed', [...S.collapsed]); }
 export function setPF() { app.style.setProperty('--pf', (S.f / DUR).toFixed(5)); const t = $('#tcode'); if (t) t.textContent = tc(S.f); const sc = $('#scrub'); if (sc) sc.setAttribute('aria-valuenow', Math.round(S.f)); if (S.fbf) fbfTick(); }
-export function seek(f) { S.f = Math.max(0, Math.min(DUR - 1, f)); setPF(); updateCanvas(); updateFields(); }
+let fieldsAt = 0;
+/** During playback the inspector numbers refresh about ten times a second, not on every frame. */
+export function seek(f) {
+  S.f = Math.max(0, Math.min(DUR - 1, f)); setPF(); updateCanvas();
+  if (S.playing) { const n = performance.now(); if (n - fieldsAt < 100) return; fieldsAt = n; }
+  updateFields();
+}
+/** Clip to bounds: when off, layers that reach past the canvas edge are drawn on the work area. Exports always crop to the canvas. */
+export function applyClip() { if (S.clip) root.removeAttribute('data-clip'); else root.setAttribute('data-clip', 'off'); }
 export function applyTheme() {
+  applyClip();
   if (S.themePref === 'auto') { if (S.hostTheme) root.setAttribute('data-theme', S.hostTheme); else root.removeAttribute('data-theme'); }
   else root.setAttribute('data-theme', S.themePref);
   root.setAttribute('data-glow', S.glow); root.setAttribute('data-tint', S.tint);

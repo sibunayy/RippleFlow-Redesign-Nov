@@ -1,11 +1,11 @@
 import { cTarget } from '../ui/color-picker';
 import { $ } from '../core/dom';
-import { layers } from '../model/project';
+import { layers, CW, CH } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, selIds } from '../state/state';
-import { commit, hi, hist, setLastLabel } from '../state/history';
+import { amendTop, commit } from '../state/history';
 import { setVal } from '../anim/keys';
-import { buildCanvas, compPt, layoutStage, placeSel, stage, toLocal, updateCanvas, vp } from '../render/stage';
+import { buildCanvas, compPt, layoutStage, layoutStageLive, placeSel, stage, toLocal, updateCanvas, vp } from '../render/stage';
 import { renderStrips } from '../ui/strips';
 import { updateFields } from '../ui/inspector/index';
 import { renderFloats } from '../ui/floats';
@@ -72,7 +72,7 @@ export function canvasDown(e) {
     const [nx, ny] = compPt(ev); let dx = nx - cx, dy = ny - cy;
     if (!moved && Math.hypot(dx, dy) < 4) return; if (!moved) foldStart('drag'); moved = true; setDragging(true);
     let sx = false, sy = false;
-    if (S.snap && !L.parent && start.length === 1) { const x = start[0][1] + dx, y = start[0][2] + dy; if (Math.abs(x - 960) < 14) { dx += 960 - x; sx = true; } if (Math.abs(y - 540) < 14) { dy += 540 - y; sy = true; } }
+    if (S.snap && !L.parent && start.length === 1) { const x = start[0][1] + dx, y = start[0][2] + dy; if (Math.abs(x - (CW / 2)) < 14) { dx += (CW / 2) - x; sx = true; } if (Math.abs(y - (CH / 2)) < 14) { dy += (CH / 2) - y; sy = true; } }
     const sr = stage.getBoundingClientRect(), vr = vp.getBoundingClientRect();
     $('#gv').style.display = sx ? 'block' : 'none'; $('#gv').style.left = (sr.left - vr.left + sr.width / 2) + 'px';
     $('#gh').style.display = sy ? 'block' : 'none'; $('#gh').style.top = (sr.top - vr.top + sr.height / 2) + 'px';
@@ -100,7 +100,7 @@ function shapeDrag(e, cx, cy) {
   const up = () => {
     vp.removeEventListener('pointermove', mv); vp.removeEventListener('pointerup', up); vp.removeEventListener('pointercancel', up); setDragging(false);
     if (!moved) newLayer(type, { x: Math.round(cx), y: Math.round(cy) });
-    else { hist[hi] = JSON.stringify(layers); setLastLabel('Add ' + L.name); renderAll(); }
+    else { amendTop('Add ' + L.name); renderAll(); }
     S.tool = 'select'; renderStrips(); renderFloats();
   };
   vp.addEventListener('pointermove', mv); vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
@@ -117,8 +117,8 @@ const endPtr = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = nu
 export function listen() {
   installPenUndo();
   addEventListener('pointerdown', (e) => { setSuppressClick(false); if (e.pointerType === 'pen') penSeen = true; }, true);
-  vp.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch0 && ptrs.size === 2) { const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); const z = Math.max(.25, Math.min(6, pinch0.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0.d)), k = z / pinch0.z; const cx = (a[0] + b[0]) / 2 - v.left, cy = (a[1] + b[1]) / 2 - v.top, mx = v.width / 2, my = v.height / 2; S.zoom = z; S.pan = [cx - mx - (pinch0.c[0] - mx - pinch0.pan[0]) * k, cy - my - (pinch0.c[1] - my - pinch0.pan[1]) * k]; layoutStage(); } });
+  vp.addEventListener('pointermove', (e) => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (pinch0 && ptrs.size === 2) { const [a, b] = [...ptrs.values()], v = vp.getBoundingClientRect(); const z = Math.max(.25, Math.min(6, pinch0.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0.d)), k = z / pinch0.z; const cx = (a[0] + b[0]) / 2 - v.left, cy = (a[1] + b[1]) / 2 - v.top, mx = v.width / 2, my = v.height / 2; S.zoom = z; S.pan = [cx - mx - (pinch0.c[0] - mx - pinch0.pan[0]) * k, cy - my - (pinch0.c[1] - my - pinch0.pan[1]) * k]; layoutStageLive(); } });
   vp.addEventListener('pointerup', endPtr); vp.addEventListener('pointercancel', endPtr);
-  vp.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) S.zoom = Math.max(.25, Math.min(6, S.zoom * (e.deltaY < 0 ? 1.08 : .92))); else S.pan = [S.pan[0] - e.deltaX, S.pan[1] - e.deltaY]; layoutStage(); }, { passive: false });
+  vp.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) S.zoom = Math.max(.25, Math.min(6, S.zoom * (e.deltaY < 0 ? 1.08 : .92))); else S.pan = [S.pan[0] - e.deltaX, S.pan[1] - e.deltaY]; layoutStageLive(); }, { passive: false });
   vp.addEventListener('dblclick', (e) => { const g = e.target.closest('g[data-id]'); const L = g && lay(g.dataset.id); if (L && L.type === 'text') { S.right = 'props'; S.collapsed.delete('app'); renderAll(); setTimeout(() => { const t = $('#ltext'); if (t) { t.focus(); t.select(); } }, 80); } });
 }

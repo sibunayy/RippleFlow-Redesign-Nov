@@ -9,15 +9,17 @@
   --g: 1; --halo: 1;
   --acc-text: color-mix(in srgb, rgb(var(--acc)) 66%, var(--mixw));
   --lit-bg: rgb(var(--acc) / calc(.15 * var(--g)));
-  --lit: inset 0 0 0 1px rgb(var(--acc) / calc(.6 * var(--g))), inset 0 0 14px rgb(var(--acc) / calc(.34 * var(--g))), 0 0 calc(16px * var(--halo)) rgb(var(--acc) / calc(.3 * var(--g) * var(--halo)));
-  --lit-press: inset 0 0 0 1px rgb(var(--acc) / calc(.8 * var(--g))), inset 0 0 20px rgb(var(--acc) / calc(.5 * var(--g))), 0 0 calc(22px * var(--halo)) rgb(var(--acc) / calc(.4 * var(--g) * var(--halo)));
+  --lit: inset 0 0 0 1px rgb(var(--acc) / calc(.6 * var(--g))), inset 0 0 calc(14px * var(--k)) rgb(var(--acc) / calc(.34 * var(--g))), 0 0 calc(calc(16px * var(--k)) * var(--halo)) rgb(var(--acc) / calc(.3 * var(--g) * var(--halo)));
+  --lit-press: inset 0 0 0 1px rgb(var(--acc) / calc(.8 * var(--g))), inset 0 0 calc(20px * var(--k)) rgb(var(--acc) / calc(.5 * var(--g))), 0 0 calc(calc(22px * var(--k)) * var(--halo)) rgb(var(--acc) / calc(.4 * var(--g) * var(--halo)));
+  --fill-glow: 0 0 calc(14px * var(--k) * var(--halo)) rgb(var(--acc) / calc(.5 * var(--g) * var(--halo)));
   --rest: inset 0 0 0 1px var(--line-soft), inset 0 1px 0 rgb(255 255 255 / .035);
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --fs-xs: 11px; --fs-s: 12.5px; --fs-m: 14px; --fs-l: 17px;
-  --r-field: 6px; --r-btn: 10px; --r-panel: 14px;
+  --k: 1; /* interface scale (Customise > Interface): every length in the stylesheet is multiplied by it */
+  --fs-xs: calc(13.2px * var(--k)); --fs-s: calc(15px * var(--k)); --fs-m: calc(16.8px * var(--k)); --fs-l: calc(20.4px * var(--k));
+  --r-k: 1.5; --r-field: calc(9px * var(--k)); --r-btn: calc(15px * var(--k)); --r-panel: calc(21px * var(--k));
   --ease: cubic-bezier(.2, .8, .2, 1);
-  --name: 232px; --gut: 12px;
+  --name: calc(232px * var(--k)); --gut: calc(12px * var(--k));
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) {
@@ -43,14 +45,14 @@
 html, body { height: 100%; }
 body {
   margin: 0; background: var(--board); color: var(--text); font: var(--fs-m)/1.35 var(--ui);
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 12px; overflow: hidden; -webkit-user-select: none; user-select: none; overscroll-behavior: none;
+  padding-left: max(calc(16px * var(--k)), env(safe-area-inset-left, 0px)); padding-right: max(calc(16px * var(--k)), env(safe-area-inset-right, 0px));
+  padding-block: calc(12px * var(--k)); overflow: hidden; -webkit-user-select: none; user-select: none; overscroll-behavior: none;
 }
 input, textarea { -webkit-user-select: text; user-select: text; font: inherit; }
 button { font: inherit; color: inherit; }
 .tc { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-svg.i.s { width: 16px; height: 16px; } svg.i.xs { width: 13px; height: 13px; }
+svg.i { width: calc(20px * var(--k)); height: calc(20px * var(--k)); fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+svg.i.s { width: calc(16px * var(--k)); height: calc(16px * var(--k)); } svg.i.xs { width: calc(13px * var(--k)); height: calc(13px * var(--k)); }
 svg.i .f { fill: currentColor; stroke: none; }
 

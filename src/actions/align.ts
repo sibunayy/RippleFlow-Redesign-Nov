@@ -1,3 +1,4 @@
+import { CW, CH } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, selIds } from '../state/state';
 import { commit } from '../state/history';
@@ -9,8 +10,8 @@ import { renderAll } from '../ui/layout';
 export function alignTo(v) {
   const ls = selIds().map(lay).filter((l) => l && !l.lock && gEls[l.id]); if (!ls.length) return;
   const sr = stage.getBoundingClientRect();
-  const boxes = ls.map((l) => { const r = gEls[l.id].getBoundingClientRect(); return { l: (r.left - sr.left) / sr.width * 1920, r: (r.right - sr.left) / sr.width * 1920, t: (r.top - sr.top) / sr.height * 1080, b: (r.bottom - sr.top) / sr.height * 1080 }; });
-  const U = ls.length > 1 ? { l: Math.min(...boxes.map((b) => b.l)), r: Math.max(...boxes.map((b) => b.r)), t: Math.min(...boxes.map((b) => b.t)), b: Math.max(...boxes.map((b) => b.b)) } : { l: 0, r: 1920, t: 0, b: 1080 };
+  const boxes = ls.map((l) => { const r = gEls[l.id].getBoundingClientRect(); return { l: (r.left - sr.left) / sr.width * CW, r: (r.right - sr.left) / sr.width * CW, t: (r.top - sr.top) / sr.height * CH, b: (r.bottom - sr.top) / sr.height * CH }; });
+  const U = ls.length > 1 ? { l: Math.min(...boxes.map((b) => b.l)), r: Math.max(...boxes.map((b) => b.r)), t: Math.min(...boxes.map((b) => b.t)), b: Math.max(...boxes.map((b) => b.b)) } : { l: 0, r: CW, t: 0, b: CH };
   const shift = (l, dx, dy) => { if (!dx && !dy) return; const [lx, ly] = toLocal(l, dx, dy); setVal(l, 'x', Math.round(val(l.p.x, S.f) + lx)); setVal(l, 'y', Math.round(val(l.p.y, S.f) + ly)); };
   if (v === 'dh' || v === 'dv') {
     const h = v === 'dh', o = ls.map((l, i) => ({ l, c: h ? (boxes[i].l + boxes[i].r) / 2 : (boxes[i].t + boxes[i].b) / 2 })).sort((a, b) => a.c - b.c);

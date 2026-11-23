@@ -1,4 +1,4 @@
-/* Cascade order is the source order. The v8 inspector pass stays last of the original files; 12-edits.css (post-port changes) comes after it. */
+/* Cascade order is the source order. 12-edits.css (post-port changes) loads before the v8 inspector pass, which stays last. */
 @import './00-host.css';
 @import './01-misc.css';
 @import './02-tokens.css';
@@ -10,5 +10,5 @@
 @import './08-timeline.css';
 @import './09-overlays.css';
 @import './10-drawing.css';
-@import './11-inspector-v8.css';
 @import './12-edits.css';
+@import './11-inspector-v8.css';

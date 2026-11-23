@@ -1,5 +1,6 @@
 import { $ } from '../core/dom';
-import { HUES, layers, markers, saveProj, setProjName } from '../model/project';
+import { HUES, layers, markers, saveProj, setCompBg, setProjName } from '../model/project';
+import { applyCompSize, applyFps } from '../actions/comp';
 import { rememberMedia } from '../library/db';
 import { earr } from '../anim/easing';
 import { lay } from '../anim/interpolate';
@@ -57,6 +58,13 @@ export function listen() {
   $('#scrim').addEventListener('click', () => { S.left = null; renderAll(); });
   document.addEventListener('change', (e) => {
     const t: any = e.target; // delegated: any element in the app
+    if (t.dataset && t.dataset.sel === 'compsize') { const [w, h] = String(t.value).split(',').map(Number); if (w && h) applyCompSize(w, h); return; }
+    if (t.dataset && t.dataset.comp) {
+      const v = parseInt(t.value, 10), W = $('[data-comp="w"]') as HTMLInputElement, H = $('[data-comp="h"]') as HTMLInputElement;
+      if (t.dataset.comp === 'fps') applyFps(v); else applyCompSize(t.dataset.comp === 'w' ? v : parseInt(W.value, 10), t.dataset.comp === 'h' ? v : parseInt(H.value, 10));
+      return;
+    }
+    if (t.dataset && t.dataset.compbg !== undefined) { setCompBg(t.value); saveProj(); buildCanvas(); renderRight(); return; }
     if (t.dataset && t.dataset.sel) {
       const l = S.sel && lay(S.sel); if (!l) return; const k = t.dataset.sel, i = +t.dataset.i;
       if (k === 'font') { l.font = t.value; l.weight = snapW(l); commit('Font'); renderRight(); buildCanvas(); }
@@ -88,6 +96,7 @@ export function listen() {
   });
   document.addEventListener('input', (e) => {
     const t: any = e.target; // delegated: any element in the app
+    if (t.dataset && t.dataset.compbg !== undefined) { setCompBg(t.value); saveProj(); buildCanvas(); return; } // live while the colour picker is open
     if (t.id === 'lq' || t.id === 'aq') { S[t.id] = t.value; const pos = t.selectionStart; renderLeft(); const n = $('#' + t.id); n.focus(); n.setSelectionRange(pos, pos); }
     if (t.id === 'pq') { S.q = t.value; const pos = t.selectionStart; renderRight(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); }
     if (t.id === 'cphex' && cp && /^#[0-9a-f]{6}$/i.test(t.value)) { Object.assign(cp, hexToHsv(t.value)); cpApply(t.value.toLowerCase()); }

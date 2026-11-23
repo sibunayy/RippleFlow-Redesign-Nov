@@ -1,3 +1,4 @@
+import { uiK } from './prefs';
 import { $, app, esc } from '../core/dom';
 import { DUR, layers, markers } from '../model/project';
 import { ic } from './icons';
@@ -19,7 +20,7 @@ export function tlHeight() {
   return S.tl === 'peek' ? peekHeight() : S.tl === 'mid' ? Math.round(H * .4) : Math.round(H * .64);
 }
 /** Collapsed height: the transport plus a row for the active layer. Short screens and the frame workspace keep the transport only. */
-export function peekHeight() { return S.fbf || app.clientHeight < 560 ? 58 : 88; }
+export function peekHeight() { return Math.round((S.fbf || app.clientHeight < 560 ? 58 : 88) * uiK()); }
 /** The active layer while the timeline is collapsed: its name, time span, keyframes and cels. It only displays; the transport above stays the control. */
 function activeLayerRow(l, ticks: number[]) {
   if (!l) return `<div class="tla empty"><div class="tla-name"><span class="nm">No layer selected</span></div><div class="tla-track"><span class="phl"></span></div><span></span></div>`;
@@ -37,15 +38,16 @@ export function renderTL() {
   if (S.fbf) return renderFbfTimeline();
   const el = $('#tl'), l = S.sel && lay(S.sel);
   const ticks = l ? [...new Set(TF.flatMap((p) => animated(l.p[p]) ? l.p[p].keys.map((k) => k.t) : []))] : [];
-  const expanded = tlHeight() > 90;
+  const expanded = tlHeight() > Math.round(90 * uiK());
   let body = '';
   if (expanded) {
     const tools = `<div class="tl-tools">
       <div class="seg" role="tablist" aria-label="Timeline view"><button role="tab" aria-selected="${S.tlMode === 'dope'}" data-act="tlmode" data-v="dope">Dope sheet</button><button role="tab" aria-selected="${S.tlMode === 'graph'}" data-act="tlmode" data-v="graph">Graph</button></div>
       <button class="line-btn ghost" data-act="marker" aria-label="Add marker at playhead">${ic('marker', 's')}Marker</button>
-      <button class="line-btn ghost ${S.loop ? '' : ''}" data-act="loopt" aria-pressed="${S.loop}" style="${S.loop ? 'color:var(--acc-text)' : ''}" title="Loop playback inside the work area">${ic('loop', 's')}Loop</button>
+      <button class="line-btn ghost ${S.loop ? '' : ''}" data-act="loopt" aria-pressed="${S.loop}" title="Loop playback inside the work area">${ic('loop', 's')}Loop</button>
       ${S.wa[0] > 0 || S.wa[1] < DUR ? `<button class="line-btn ghost" data-act="wareset" title="Reset work area to the full timeline">Full range</button>` : ''}
       <span class="spacer"></span>
+      <button class="line-btn ghost" data-act="keymulti" aria-pressed="${S.keyMulti}" title="Tap keyframes to select several, then drag one to move them all">${ic('selall', 's')}Multi-select</button>
       ${S.sel && lay(S.sel) && TF.some((p) => animated(lay(S.sel).p[p])) ? `<button class="line-btn ghost" data-act="keysall" aria-label="Select all keyframes on the selected layer">${ic('selall', 's')}All keys</button>` : ''}
       ${S.keys.length ? `<button class="line-btn ghost" data-act="copykeys" aria-label="Copy selected keyframes">Copy</button>` : ''}${keyClip && S.sel ? `<button class="line-btn ghost" data-act="pastekeys" aria-label="Paste keyframes at playhead">Paste</button>` : ''}
       ${S.keys.length ? `<button class="line-btn ghost" data-act="keysdel" aria-label="Delete selected keyframes" style="color:var(--danger)">${ic('trash', 's')}Delete</button>` : ''}
@@ -97,7 +99,7 @@ export function renderTL() {
         <button class="ib ${S.onion.on ? 'on' : ''}" data-act="onion" data-onion aria-pressed="${S.onion.on}" aria-label="Onion skin (hold for settings)" title="Onion skin · hold for settings">${ic('onion', 's')}</button>
         <button class="ib" data-flip aria-label="Flip: hold to see the previous cel, drag to flip through cels" title="Hold to flip">${ic('flip', 's')}</button>
       </div>` : '<span></span>'}
-    </div>${!expanded && peekHeight() > 58 ? activeLayerRow(l, ticks) : ''}${body}`;
+    </div>${!expanded && peekHeight() > Math.round(58 * uiK()) ? activeLayerRow(l, ticks) : ''}${body}`;
   el.classList.toggle('drawsel', !!(l && l.type === 'draw'));
   if (expanded && S.tlMode === 'graph') drawGraph();
 }

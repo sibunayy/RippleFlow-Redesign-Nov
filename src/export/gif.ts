@@ -1,4 +1,4 @@
-import { DUR } from '../model/project';
+import { DUR, FPS } from '../model/project';
 import { EX } from './dialog';
 import { rasterFrame } from './raster';
 
@@ -55,7 +55,7 @@ class GifOut {
 }
 export async function exportGif(job, w, h, fps, nF) {
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const ctx = cv.getContext('2d', { willReadFrequently: true });
-  const trans = EX.trans, at = (i) => Math.min(DUR, i * 30 / fps);
+  const trans = EX.trans, at = (i) => Math.min(DUR, i * FPS / fps);
   // pass 1: sample colours from ~12 frames
   const counts = new Map(), step = Math.max(1, Math.floor(nF / 12));
   for (let i = 0; i < nF; i += step) {

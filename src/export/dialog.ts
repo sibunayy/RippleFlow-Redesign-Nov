@@ -1,5 +1,5 @@
 import { $, esc } from '../core/dom';
-import { DUR } from '../model/project';
+import { CH, CW, DUR, FPS } from '../model/project';
 import { S } from '../state/state';
 import { updateCanvas } from '../render/stage';
 import { tc } from '../ui/inspector/controls';
@@ -25,8 +25,8 @@ export async function runExport() {
   if (exportJob && exportJob.url) URL.revokeObjectURL(exportJob.url);
   if (S.playing) play(false);
   const fmt = EX.fmt, res = EX.res[fmt] || 1080, fps = EX.fps[fmt] || 30;
-  const h = res % 2 ? res + 1 : res, w = Math.round(h * 16 / 9 / 2) * 2, nF = Math.round(DUR / 30 * fps);
-  const job: any = exportJob = { status: 'run', p: 0, text: 'Starting', cancel: false, fmt, name: `${exName()}${fmt === 'PNG' ? '-png' : ''}.${{ GIF: 'gif', PNG: 'zip', Lottie: 'json' }[fmt] || 'mp4'}`, dims: fmt === 'Lottie' ? '1920×1080 vector' : `${w}×${h}`,
+  const h = res % 2 ? res + 1 : res, w = Math.round(h * CW / CH / 2) * 2, nF = Math.round(DUR / FPS * fps);
+  const job: any = exportJob = { status: 'run', p: 0, text: 'Starting', cancel: false, fmt, name: `${exName()}${fmt === 'PNG' ? '-png' : ''}.${{ GIF: 'gif', PNG: 'zip', Lottie: 'json' }[fmt] || 'mp4'}`, dims: fmt === 'Lottie' ? `${CW}×${CH} vector` : `${w}×${h}`,
     set(p, t) { this.p = p; this.text = t; const bar = $('#dlg .prog i'); if (bar) { bar.style.width = p + '%'; $('#dlg .job .tc').textContent = Math.round(p) + '%'; $('#dlg .jtxt').textContent = t; } } };
   renderDialog();
   const f0 = S.f;
@@ -55,8 +55,8 @@ export function exportDialog() {
       : j.status === 'err' ? `<div class="job"><span style="color:var(--danger)">${esc(j.msg)}</span></div>` : '';
   return `<h2>Export</h2>
       ${seg('Format', [['MP4', 'MP4'], ['GIF', 'GIF'], ['PNG seq', 'PNG'], ['Lottie', 'Lottie']], fmt, 'expfmt')}
-      ${fmt === 'Lottie' ? '<p class="hint" style="padding:0">Vector animation at 1920×1080, 30 fps. Shapes, paths, text, images, trim paths, mattes and blend modes are kept, and motion is baked frame by frame. Effects and shader layers are left out.</p>' : `${seg('Resolution', EX_RES[fmt].map(([t, v]) => [t, v]), EX.res[fmt], 'expres')}
-      ${seg('Frame rate', EX_FPS[fmt].map((v) => [v + ' fps', v]), EX.fps[fmt], 'expfps')}`}
+      ${fmt === 'Lottie' ? '<p class="hint" style="padding:0">Vector animation at ${CW}×${CH}, ${FPS} fps. Shapes, paths, text, images, trim paths, mattes and blend modes are kept, and motion is baked frame by frame. Effects and shader layers are left out.</p>' : `${seg('Resolution', EX_RES[fmt].map(([t, v]) => [t, v]), EX.res[fmt], 'expres')}
+      ${seg('Frame rate', [...new Set([...EX_FPS[fmt], FPS])].sort((a, b) => a - b).map((v) => [v + ' fps', v]), EX.fps[fmt], 'expfps')}`}
       <div class="kv"><span>Range</span><b class="tc">00:00:00 – ${tc(DUR)}</b></div>
       <div class="kv"><span>Transparent background${fmt === 'MP4' ? ' (GIF and PNG only)' : fmt === 'Lottie' ? ' (always)' : ''}</span><button class="tog" data-act="exptrans" aria-pressed="${fmt === 'Lottie' || fmt !== 'MP4' && EX.trans}" aria-label="Transparent background" ${fmt === 'MP4' || fmt === 'Lottie' || run ? 'disabled' : ''}></button></div>
       ${job}
