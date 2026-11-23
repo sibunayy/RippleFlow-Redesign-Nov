@@ -24,6 +24,12 @@
 /* Frame-by-frame toggle in the middle of the header. */
 .fbf-toggle { display: inline-flex; align-items: center; gap: calc(6px * var(--k)); height: calc(30px * var(--k)); padding: 0 calc(12px * var(--k)); border: 0; border-radius: calc(999px * var(--k)); background: var(--surface-2); box-shadow: var(--rest); color: var(--muted); font-size: var(--fs-s); font-weight: 600; cursor: pointer; flex: none; }
 .fbf-toggle:hover { color: var(--text); }
+/* Header widths in icon-button units (40px): Frame by frame is 3 wide, Clip to bounds and Overlay are 2 wide.
+   Landscape only: in portrait the wider buttons push Export off the screen. The label alone fills 3 units, so the
+   icon shows only in portrait (where the label is hidden). */
+.app:not(.portrait) .top .fbf-toggle { width: calc(120px * var(--k)); justify-content: center; gap: calc(4px * var(--k)); padding: 0; white-space: nowrap; }
+.app:not(.portrait) .top .fbf-toggle > :not(span) { display: none; }
+.app:not(.portrait) .top .ib.w2 { width: calc(80px * var(--k)); }
 .fbf-toggle.on { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
 .line-btn.lit { color: var(--acc-text); background: var(--lit-bg); box-shadow: var(--lit); }
 .app.portrait .fbf-toggle span { display: none; }
