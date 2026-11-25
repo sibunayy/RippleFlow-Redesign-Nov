@@ -16,7 +16,7 @@ if ((navigator as any).gpu) {
 }
 export function shSource(l) {
   if (l.code) return { lang: shLang(l.code), code: l.code };
-  const lang = gpuState === 'ok' ? 'wgsl' : 'glsl';
+  const P = SHP[l.preset || 'liquid'] || SHP.liquid, lang = gpuState === 'ok' && P.wgsl ? 'wgsl' : 'glsl';
   return { lang, code: shPresetCode(l.preset || 'liquid', lang) };
 }
 const hexRgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || '')); const n = m ? parseInt(m[1], 16) : 0; return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
