@@ -71,7 +71,7 @@ export function listen() {
       if (k === 'font') { l.font = t.value; l.weight = snapW(l); commit('Font'); renderRight(); buildCanvas(); }
       else if (k === 'tweight') { l.weight = +t.value; commit('Weight'); buildCanvas(); }
       else if (k === 'cap' || k === 'join') { l[k] = t.value; commit('Stroke ' + k); buildCanvas(); }
-      else if (k === 'shp') { if (t.value !== '__custom') { const P = SHP[t.value]; l.preset = t.value; delete l.code; l.hue = P.c[0]; l.hue2 = P.c[1]; P.def.forEach((v, j) => { l['sp' + j] = v; }); if (/^(Shader|Liquid gradient|Plasma|Aurora|Ring tunnel|Cells|Synth grid)( \d+)?$/.test(l.name)) l.name = P.name; commit('Shader preset'); buildCanvas(); renderAll(); } return; }
+      else if (k === 'shp') { if (t.value !== '__custom') { const P = SHP[t.value]; l.preset = t.value; delete l.code; l.hue = P.c[0]; l.hue2 = P.c[1]; P.def.forEach((v, j) => { l['sp' + j] = v; }); if ((l.name.replace(/ \d+$/, '') === 'Shader' || Object.values(SHP).some((o: any) => o.name === l.name.replace(/ \d+$/, '')))) l.name = P.name; commit('Shader preset'); buildCanvas(); renderAll(); } return; }
       else if (k === 'matte') { if (layers.indexOf(l) < 1) { toast('There is no layer above to use as a matte.'); renderRight(); return; } l.matte = t.value || null; commit(l.matte ? 'Track matte' : 'Remove matte'); buildCanvas(); renderAll(); return; }
       else if (k === 'blend') { l.blend = t.value; commit('Blend mode'); buildCanvas(); }
       else if (k === 'parent') { l.parent = t.value || null; l.pt = Math.round(S.f); const p = l.parent && lay(l.parent); if (p) l.pw = parentRef(p, l.pt); else delete l.pw; commit('Parent'); updateCanvas(); renderLeft(); }

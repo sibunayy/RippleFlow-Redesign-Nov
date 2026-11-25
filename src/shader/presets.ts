@@ -1,4 +1,5 @@
 
+import { PACK } from './pack';
 /* ---- Shader layers: WGSL on WebGPU, Shadertoy-style GLSL on WebGL2 ---- */
 const SH_H_GLSL = `float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
@@ -10,7 +11,7 @@ fn vnoise(p: vec2f) -> f32 { let i = floor(p); let f = fract(p); let u = f * f *
   return mix(mix(hash(i), hash(i + vec2f(1.0, 0.0)), u.x), mix(hash(i + vec2f(0.0, 1.0)), hash(i + vec2f(1.0, 1.0)), u.x), u.y); }
 fn fbm(q: vec2f) -> f32 { var p = q; var v = 0.0; var a = 0.5; for (var i = 0; i < 5; i++) { v += a * vnoise(p); p = p * 2.02 + vec2f(1.7, 9.2); a *= 0.5; } return v; }
 `;
-export const SHP = {
+export const SHP: Record<string, any> = {
   liquid: { name: 'Liquid gradient', ps: ['Scale', 'Warp', 'Shadows', 'Brightness'], def: [.35, .5, .5, .5], c: ['#4f7cff', '#ff5ea8'],
     glsl: `void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec2 uv = fragCoord / iResolution.y;
@@ -179,6 +180,7 @@ export const SHP = {
   let ground = vec3f(0.01, 0.0, 0.03) + u.color1.rgb * line * mix(0.3, 1.6, u.params.z) * clamp(d * 5.0, 0.0, 1.0);
   return vec4f(select(sky, ground, uv.y < hz), 1.0);
 }` },
+  ...PACK,
 };
 export const shLang = (code) => (/@fragment|\bfn\s+\w+\s*\(|vec[234]f\b|\bu\.res\b/.test(code) && !/void\s+mainImage/.test(code) ? 'wgsl' : 'glsl');
 export const SH_GLSL_PRE = `#version 300 es
@@ -204,5 +206,5 @@ export const SH_WGSL_POST = `
   let a = select(c.a, 1.0, u.opaque > 0.5);
   return vec4f(c.rgb * a, a);
 }`;
-export const shPresetCode = (key, lang) => { const P = SHP[key] || SHP.liquid; return (lang === 'wgsl' ? SH_H_WGSL : SH_H_GLSL) + '\n' + P[lang]; };
+export const shPresetCode = (key, lang) => { const P = SHP[key] || SHP.liquid; if (!P[lang]) lang = 'glsl'; return (lang === 'wgsl' ? SH_H_WGSL : SH_H_GLSL) + '\n' + P[lang]; };
 export const SH = {};
