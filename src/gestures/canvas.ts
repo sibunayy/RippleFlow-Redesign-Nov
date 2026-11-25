@@ -21,6 +21,7 @@ import { drawDown } from '../drawing/ink';
 import { renderBrushBar } from '../drawing/brush-bar';
 import { drawOverlay } from '../drawing/overlay';
 import { longPress, setDragging, setSuppressClick } from '../events/delegate';
+import { hoseDown, rigDown } from './rig';
 import { shifted } from '../state/modifier';
 
 // Canvas: select/move, hand pan, pinch zoom, place shapes and text.
@@ -52,7 +53,9 @@ export function canvasDown(e) {
   if (isDrawTool(S.tool) && e.button !== 1) { if (e.pointerType === 'touch' && penSeen) return panStart(e); return drawDown(e); }
   const [cx, cy] = compPt(e);
   if (S.tool === 'text') { newLayer('text', { x: Math.round(cx), y: Math.round(cy) }); S.tool = 'select'; renderStrips(); renderFloats(); return; }
+  if (S.tool === 'hose') return hoseDown(e, cx, cy);
   if (['rect', 'ellipse', 'star', 'polygon', 'line'].includes(S.tool)) return shapeDrag(e, cx, cy);
+  if ((S.tool === 'rig' || S.tool === 'select') && rigDown(e)) return;
   if (S.tool === 'pen') return penDown(e);
   if (S.tool === 'hand' || e.button === 1) return panStart(e);
   if (peLayer()) return peDown(e);

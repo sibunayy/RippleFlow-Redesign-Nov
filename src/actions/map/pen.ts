@@ -18,7 +18,7 @@ export const penActions = {
   peedit: () => { const l = lay(S.sel); if (l && EDITABLE.includes(l.type)) peEnter(l); },
   pedone: () => peExit(),
   petype: (el) => (el && el.dataset.v ? peSetType(el.dataset.v) : peToggle()),
-  pepar: () => { S.peParallel = !S.peParallel; renderFloats(); toast(S.peParallel ? 'Dragging a handle moves both handles by the same amount' : 'Handles mirror each other again'); },
+  pesplit: () => { S.peSplit = !S.peSplit; renderFloats(); toast(S.peSplit ? 'Separate handles. Dragging a handle moves only that handle.' : 'Handles move together, away from each other'); },
   pedel: () => peDelete(),
   peclose: () => peCloseToggle(),
   // Hand-shaped curves and automatic smoothing are two ways to curve a path, so switching this replaces the hand-shaped ones.

@@ -8,6 +8,8 @@
  * 4. Keyboard: when the on-screen keyboard opens, the app is resized to the visible area above it, so the field being
  *    edited and the canvas text stay in view. It goes back to full height when the keyboard closes.
  */
+import { fingers } from '../state/modifier';
+
 const editable = (t: EventTarget | null) => !!(t as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]');
 
 export function guardTouch() {
@@ -22,7 +24,7 @@ export function guardTouch() {
     if (e.touches.length === 1 && (t.clientX < 24 || t.clientX > innerWidth - 24) && e.cancelable) e.preventDefault();
   }, { passive: false });
   // More than one finger outside a scrolling list: never let Safari scroll or zoom the page.
-  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', (e) => { if (fingers(e).length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
 
   // Double-tap zoom is switched off in CSS (touch-action: manipulation in 12-edits.css).
   document.addEventListener('selectstart', (e) => { if (!editable(e.target)) e.preventDefault(); });

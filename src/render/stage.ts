@@ -3,7 +3,7 @@ import { DUR, FPS, compBg, layers, CW, CH, projName } from '../model/project';
 import { lay, val } from '../anim/interpolate';
 import { S, isDrawTool, isSelTool, selIds } from '../state/state';
 import { guideHtml } from './guides';
-import { shapeSvg } from './shapes';
+import { hoseD, shapeSvg } from './shapes';
 import { isFilterFx, postT, rippleBF } from '../fx/defs';
 import { fxDefs } from '../fx/filters';
 import { mat, mstr, pose, relM, repN, repXf, setXfEls, world, xfEls } from '../anim/pose';
@@ -80,6 +80,7 @@ export function updateCanvas() {
       if (!xf) return;
       const q = pose(l, f, i); if (l.rep && l.rep.on) repXf(l, q, i);
       let m = mat(q); if (base) m = base.multiply(m);
+      if (l.type === 'hose') m = new DOMMatrix(); // a hose is drawn straight in composition space, between its joints
       xf.setAttribute('transform', mstr(m));
       xf.setAttribute('opacity', Math.max(0, Math.min(1, q.o / 100)).toFixed(3));
       if (l.type === 'draw') drawXf(l, xf, i, f);
@@ -90,6 +91,7 @@ export function updateCanvas() {
         else { tp.setAttribute('stroke-dasharray', `${((hi - lo) / 100 * len).toFixed(2)} ${(len * 2).toFixed(1)}`); tp.setAttribute('stroke-dashoffset', (-lo / 100 * len).toFixed(2)); tp.style.strokeOpacity = hi - lo < .05 ? '0' : ''; }
       }
     });
+    if (l.type === 'hose') { const d = hoseD(l, f); g.querySelectorAll('path.ho, path.hf').forEach((p) => p.setAttribute('d', d)); }
     g.setAttribute('opacity', String(lightboxOn() && l.id !== S.sel ? .2 : 1));
     if (l.type === 'shader') { const rt = renderShader(l, f); const ph = g.querySelector('.shph'); if (ph) ph.style.display = rt.ok ? 'none' : ''; }
     const sf = shaderFill(l); if (sf) { renderShader(fxShaderLayer(l, sf.j), f, ...fxShaderDims(shaderPx(l.fx[sf.j].scale ?? 100))); }
@@ -176,6 +178,10 @@ export function placeSel() {
   const box = $('#selbox'), qb = $('#qbar'), anc = $('#anc'), v = vp.getBoundingClientRect(), dt = isDrawTool(S.tool), r = dt ? null : selRect();
   drawOverlay();
   $('#bbar').classList.toggle('show', dt && !S.playing && !S.fbf);
+  if (S.tool === 'rig') { // the rig tool shows its own bar at the top, and no selection box
+    box.hidden = true; anc.hidden = true; qb.classList.toggle('show', !S.playing);
+    qb.style.left = Math.max(8, (v.width - qb.offsetWidth) / 2) + 'px'; qb.style.top = '12px'; return;
+  }
   if (!r) { box.hidden = true; anc.hidden = true; qb.classList.remove('show'); return; }
   const multi = selIds().length > 1, l = lay(S.sel);
   box.hidden = false; box.classList.toggle('multi', multi);

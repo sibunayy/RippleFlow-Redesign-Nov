@@ -64,7 +64,7 @@ export async function exportLottie(job) {
   let idx = 1;
   for (let li = 0; li < layers.length; li++) {
     const l = layers[li]; if (job.cancel) return null;
-    if (!l.vis || ['audio', 'null', 'adjust', 'comp', 'shader', 'draw'].includes(l.type)) { if (['shader', 'adjust', 'comp', 'draw'].includes(l.type) && l.vis) warn.add(`${TYPE_NAME[l.type] || l.type} layers`); continue; }
+    if (!l.vis || ['audio', 'null', 'adjust', 'comp', 'shader', 'draw', 'hose'].includes(l.type)) { if (['shader', 'adjust', 'comp', 'draw', 'hose'].includes(l.type) && l.vis) warn.add(`${TYPE_NAME[l.type] || l.type} layers`); continue; }
     if (l.fx.some((e) => e.on && e.id !== 'postime')) warn.add('effects');
     if (l.type === 'text' && (l.anims || []).length) warn.add('per-character text animators');
     const ip = Math.max(0, Math.round(l.inP ?? 0)), op = Math.min(DUR, Math.round(l.outP ?? DUR)); if (op <= ip) continue;

@@ -2,6 +2,8 @@ import { CW, CH } from '../model/project';
 import { esc } from '../core/dom';
 import { textSvg } from './text';
 import { BLANK } from '../drawing/cels';
+import { lay } from '../anim/interpolate';
+import { jointPt } from '../anim/pose';
 
 function ptsArr(n, ro, ri) { const a = []; for (let i = 0; i < n * 2; i++) { const r = i % 2 ? ri : ro, t = Math.PI * i / n - Math.PI / 2; a.push([Math.cos(t) * r, Math.sin(t) * r]); } return a; }
 export const polyOf = (l) => l.type === 'star' ? ptsArr(l.n || 5, 120, 120 * (l.ir ?? 43) / 100) : ptsArr(l.n || 3, 120, 120 * Math.cos(Math.PI / (l.n || 3)));
@@ -22,7 +24,7 @@ export function pathSegs(l) {
   }
   return segs;
 }
-function pathD(l) {
+export function pathD(l) {
   const S0 = pathSegs(l); if (!S0.length) return ''; const f = (q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1);
   return 'M' + f(S0[0][0]) + S0.map((q) => (pathHasHandles(l) || (l.smooth && l.pts.length > 2) ? 'C' + f(q[1]) + ' ' + f(q[2]) + ' ' + f(q[3]) : 'L' + f(q[3]))).join('') + (l.closed && l.pts.length > 2 ? 'Z' : '');
 }
@@ -35,6 +37,11 @@ function shapeLen(l) {
     case 'star': case 'polygon': { const p = polyOf(l); let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += Math.hypot(a[0] - b[0], a[1] - b[1]); } return s; }
     default: return 100;
   }
+}
+/** A rubber hose follows its joints (null layers with joint: true). Its outline is a smooth curve through them, at frame f. */
+export function hoseD(l, f) {
+  const pts = (l.joints || []).map((id) => lay(id)).filter(Boolean).map((j) => { const q = jointPt(j, f); return [q.x, q.y]; });
+  return pts.length > 1 ? pathD({ pts, smooth: true, closed: false }) : '';
 }
 const gradId = (l) => 'gr-' + l.id;
 const gradDef = (l) => { if (!l.grad) return ''; const stops = `<stop offset="0" stop-color="${l.hue}"/><stop offset="1" stop-color="${l.hue2 || '#ff5ea8'}"/>`;
@@ -49,6 +56,7 @@ function shapeSvg0(l) {
   const fop = (l.fop ?? 100) < 100 ? ` fill-opacity="${(l.fop / 100).toFixed(2)}"` : '';
   switch (l.type) {
     case 'text': return textSvg(l);
+    case 'hose': { const w = l.w ?? 64, ow = l.sw ?? 6, cap = `fill="none" stroke-linecap="round" stroke-linejoin="round"`; return `${ow > 0 ? `<path class="ho" d="" ${cap} stroke="${l.sc || '#1b1410'}" stroke-width="${w + ow * 2}"/>` : ''}<path class="hf" d="" ${cap} stroke="${l.hue}" stroke-width="${w}"/>`; }
     case 'path': return `<path d="${pathD(l)}" fill="${l.fill === true ? fillVal(l) : 'none'}"${fop}${stk}/>`;
     case 'ellipse': return `<circle r="${l.r}" fill="${fillA}"${fop}${stk}/>`;
     case 'ring': return `<circle r="${l.r}" fill="none"${stk}/>`;

@@ -5,7 +5,7 @@ import { audioBody } from './content-audio';
 import { transformSection } from './transform';
 import { layerSection } from './layer';
 import { textContent } from './content-text';
-import { shapeContent } from './content-shape';
+import { hoseContent, shapeContent } from './content-shape';
 import { pathContent } from './content-path';
 import { shaderLook } from '../../shader/ui';
 import { chip } from './paint';
@@ -26,11 +26,12 @@ export function propsView(l) {
   if (l.type === 'text') ({ title, look, paint, paintTitle } = textContent(l));
   else if (['ellipse', 'ring', 'rect', 'star', 'polygon', 'line'].includes(l.type)) ({ title, look, paint, paintTitle } = shapeContent(l));
   else if (l.type === 'path') ({ title, look, paint, paintTitle } = pathContent(l));
+  else if (l.type === 'hose') ({ title, look, paint, paintTitle } = hoseContent(l));
   else if (l.type === 'shader') { title = 'Shader'; look = shaderLook(l); }
   else if (['solid', 'comp'].includes(l.type)) { title = 'Fill'; look = chip(l, 'Fill', 'hue'); }
   else if (l.type === 'draw') { title = 'Drawing'; look = drawHtml(l); }
   else look = `<p class="hint" style="padding:0">${TYPE_NAME[l.type]} layers have no fill or stroke.</p>`;
-  const body = sec('tf', 'Transform', tf)
+  const body = (l.type === 'hose' ? '' : sec('tf', 'Transform', tf)) // a hose is placed by its joints, not by its own transform
     + sec('cmp', 'Layer', layerSec)
     + sec('app', title, look)
     + (paint ? sec('fill', paintTitle, paint) : '')

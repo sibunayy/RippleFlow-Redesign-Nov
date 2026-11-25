@@ -137,9 +137,10 @@ export function peDown(e) {
   if (sp) for (const side of ['o', 'i']) {
     const h = side === 'o' ? hOut(sp) : hIn(sp), other = side === 'o' ? hIn(sp) : hOut(sp);
     if (!(h[0] || h[1]) || !near(sp[0] + h[0], sp[1] + h[1], HIT)) continue;
-    const lh = Math.hypot(...h), lo = Math.hypot(...other), linked = lh > 0 && lo > 0 && Math.abs(h[0] * other[1] - h[1] * other[0]) < lh * lo * .02 && h[0] * other[0] + h[1] * other[1] < 0;
-    const i = S.peI;
-    track(e, { move: (ev) => { const P = toEditable(l), p = P[i], q = local(ev), d = [rd(q[0] - p[0]), rd(q[1] - p[1])], ld = Math.hypot(d[0], d[1]) || 1, o = S.peParallel ? [rd(other[0] + d[0] - h[0]), rd(other[1] + d[1] - h[1])] : linked && !ev.altKey ? [rd(-d[0] / ld * lo), rd(-d[1] / ld * lo)] : other; if (side === 'o') setH(p, o, d); else setH(p, d, o); if (p.length > 6 && (S.peParallel || ev.altKey)) p[6] = 0; live(); }, done: finish, cancel: restore });
+    const i = S.peI, hasOther = other[0] !== 0 || other[1] !== 0;
+    // By default both handles move together, equal in length and pointing away from each other (as in Photoshop and Illustrator).
+    // Separate (the quick bar button) or Alt pulls only the handle you hold. A point with a single handle always moves just that one.
+    track(e, { move: (ev) => { const P = toEditable(l), p = P[i], q = local(ev), d = [rd(q[0] - p[0]), rd(q[1] - p[1])], apart = hasOther && !S.peSplit && !ev.altKey, o = apart ? [-d[0], -d[1]] : other; if (side === 'o') setH(p, o, d); else setH(p, d, o); if (p.length > 6 && !apart) p[6] = 0; live(); }, done: finish, cancel: restore });
     return;
   }
   // 2. a point: tap selects, double-tap switches corner/curve, drag moves
