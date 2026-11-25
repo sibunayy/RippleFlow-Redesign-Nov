@@ -11,6 +11,8 @@ export const mod = { latched: false, held: false };
 const HOLD_MS = 250, DOUBLE_MS = 350;
 let downAt = 0, lastTapEnd = -Infinity, pid: number | null = null;
 
+/** Finger touches that count as gestures. A Pencil touch and a finger on the Modifier button do not: with Mod held, the Pencil must still draw. */
+export const fingers = (e: TouchEvent) => Array.from(e.touches as ArrayLike<any>).filter((t) => !t || (t.touchType !== 'stylus' && !t.target?.closest?.('#modbtn')));
 export const modOn = () => mod.latched || mod.held;
 export const shifted = (e?: { shiftKey?: boolean }) => !!(e && e.shiftKey) || modOn();
 

@@ -280,3 +280,8 @@ body { position: relative; }
 .sb.mod .mlock { position: absolute; top: calc(6px * var(--k)); right: calc(6px * var(--k)); width: calc(7px * var(--k)); height: calc(7px * var(--k)); border-radius: 50%; background: rgb(var(--acc)); opacity: 0; }
 .sb.mod.latched .mlock { opacity: 1; background: var(--on-acc); }
 .sb.mod { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+/* ---- Rig: joints and bones on the canvas ---- */
+.rg-b { stroke: rgb(var(--acc)); stroke-width: 3; stroke-linecap: round; opacity: .85; fill: none; }
+.rg-j { fill: var(--surface); stroke: rgb(var(--acc)); stroke-width: 2.5; }
+.rg-j.on { fill: rgb(var(--acc)); }

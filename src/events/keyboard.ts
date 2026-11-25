@@ -15,6 +15,7 @@ import { A } from '../actions/index';
 import { drawOverlay } from '../drawing/overlay';
 import { penFinish, pinch0, preTouchSel } from '../gestures/canvas';
 import { peDelete, peExit, peLayer } from '../gestures/path-edit';
+import { fingers } from '../state/modifier';
 
 // two-finger tap = undo, three-finger tap = redo (touch only)
 let tapStart = null;
@@ -45,11 +46,11 @@ export function listen() {
     if (e.key === ' ') { e.preventDefault(); play(); return; }
     if (e.key === '?') { A.help(); return; }
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); if (S.playing) play(false); seek(Math.round(S.f) + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)); return; }
-    const map = { b: 'brush', f: 'dfill', x: 'erase', g: 'fill', v: 'select', m: 'marquee', q: 'lasso', h: 'hand', p: 'pen', t: 'text', r: 'rect', e: 'ellipse', y: 'polygon', s: 'star', l: 'line' };
+    const map = { b: 'brush', f: 'dfill', x: 'erase', g: 'fill', v: 'select', m: 'marquee', q: 'lasso', h: 'hand', p: 'pen', t: 'text', r: 'rect', e: 'ellipse', y: 'polygon', s: 'star', l: 'line', u: 'hose', j: 'rig' };
     if (!mod && map[k]) { S.tool = map[k]; if (S.tool !== 'pen' && S.penPts.length) { S.penPts = []; drawOverlay(); } if (SHAPES.some((s) => s[0] === S.tool)) S.shape = S.tool; if (isSelTool(S.tool)) S.selMode = S.tool; if (S.tool === 'marquee' || S.tool === 'lasso') S.areaMode = S.tool; if (isDrawTool(S.tool)) S.drawMode = S.tool; renderStrips(); renderFloats(); return; }
     if (!mod && k === 'k') { A.autokey(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && S.keys.length) { A.keysdel(); } else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel) { A.del(); }
   });
-  addEventListener('touchstart', (e) => { if (e.touches.length >= 2) tapStart = { n: e.touches.length, t: performance.now() }; }, { passive: true });
-  addEventListener('touchend', (e) => { if (tapStart && e.touches.length === 0) { if (performance.now() - tapStart.t < 260 && pinch0 === null) { const pre = preTouchSel && performance.now() - preTouchSel.t < 600 ? preTouchSel : null; tapStart.n === 2 ? undo() : tapStart.n === 3 && redo(); if (pre && pre.sel && lay(pre.sel)) { S.sel = pre.sel; S.multi = new Set(pre.multi.filter((id) => lay(id))); S.keys = pre.keys.filter((k) => lay(k.l)); renderAll(); } } tapStart = null; } }, { passive: true });
+  addEventListener('touchstart', (e) => { const n = fingers(e).length; if (n >= 2) tapStart = { n, t: performance.now() }; }, { passive: true });
+  addEventListener('touchend', (e) => { if (tapStart && fingers(e).length === 0) { if (performance.now() - tapStart.t < 260 && pinch0 === null) { const pre = preTouchSel && performance.now() - preTouchSel.t < 600 ? preTouchSel : null; tapStart.n === 2 ? undo() : tapStart.n === 3 && redo(); if (pre && pre.sel && lay(pre.sel)) { S.sel = pre.sel; S.multi = new Set(pre.multi.filter((id) => lay(id))); S.keys = pre.keys.filter((k) => lay(k.l)); renderAll(); } } tapStart = null; } }, { passive: true });
 }

@@ -11,6 +11,7 @@ import { inspectorActions } from './map/inspector';
 import { effectsActions } from './map/effects';
 import { timelineActions } from './map/timeline';
 import { viewActions } from './map/view';
+import { rigActions } from './map/rig';
 
 /**
  * Every tap action, keyed by its data-act name. events/delegate.ts calls A[el.dataset.act](el, event).
@@ -30,4 +31,5 @@ export const A = {
   ...effectsActions,
   ...timelineActions,
   ...viewActions,
+  ...rigActions,
 };

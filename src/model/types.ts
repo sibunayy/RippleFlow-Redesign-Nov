@@ -15,7 +15,7 @@ export type PropName = 'x' | 'y' | 'scale' | 'rot' | 'op' | 'ax' | 'ay' | 'ts' |
 
 export type LayerType =
   | 'text' | 'rect' | 'ellipse' | 'polygon' | 'star' | 'line' | 'ring' | 'path'
-  | 'solid' | 'null' | 'adjust' | 'shader' | 'comp' | 'image' | 'audio' | 'draw';
+  | 'solid' | 'null' | 'adjust' | 'shader' | 'comp' | 'image' | 'audio' | 'draw' | 'hose';
 
 /** One effect in a layer's stack. Settings are named per effect (radius, amount, …). */
 export interface Effect { id: string; name: string; on: boolean; mix?: number; [setting: string]: any }
@@ -58,6 +58,8 @@ export interface Layer {
   // Timing and links
   inP?: number; outP?: number; parent?: string | null; pt?: number; matte?: string | null; blend?: string;
   flipX?: boolean; flipY?: boolean;
+  /** Rig: a joint is a Null layer with joint: true; a rubber hose draws a tube through the joints listed in joints. */
+  joint?: boolean; joints?: string[];
   // Procedural
   rep?: Repeater; mods?: Modifier[]; anims?: TextAnim[];
   // Text

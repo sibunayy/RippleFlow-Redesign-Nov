@@ -17,3 +17,12 @@ export function shapeContent(l) {
       + `<div class="sublbl">Stroke</div>` + strokeBody;
   return { title, look, paint, paintTitle };
 }
+
+/** Rubber hose: thickness and colours. The pose comes from its joints, which are dragged on the canvas. */
+export function hoseContent(l) {
+  if (!l.sc) l.sc = '#1b1410';
+  const look = `<p class="hint" style="padding:0">Drag a joint on the canvas to pose the hose. Hand joints swing the bone above them. The hose follows its joints, so move or turn the top joint to move it.</p>`
+    + grid2([pf(l, 'lp', 0, 'w', 'Thickness', 4, 300, .5)]);
+  const paint = `<div class="fillrow">${chip(l, 'Colour', 'hue')}</div><div class="sublbl">Outline</div><div class="fillrow">${chip(l, 'Outline', 'sc')}</div>` + grid2([pf(l, 'lp', 0, 'sw', 'Width', 0, 40, .2)]);
+  return { title: 'Rubber hose', look, paint, paintTitle: 'Colour & outline' };
+}

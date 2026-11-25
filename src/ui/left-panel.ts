@@ -6,8 +6,8 @@ import { S, selIds } from '../state/state';
 import { mTag } from './inspector/extras';
 
 /* ---------- render: left panel ---------- */
-const TYPE_ICON = { draw: 'brush', text: 'text', ellipse: 'ellipse', ring: 'ellipse', line: 'line', rect: 'rect', star: 'star', polygon: 'polygon', solid: 'solid', null: 'null', adjust: 'adjust', shader: 'shader', comp: 'comp', image: 'media', audio: 'audio' };
-export const TYPE_NAME = { draw: 'Drawing', text: 'Text', ellipse: 'Ellipse', ring: 'Ring', line: 'Line', rect: 'Rectangle', star: 'Star', polygon: 'Polygon', path: 'Path', audio: 'Audio', solid: 'Solid', null: 'Null', adjust: 'Adjustment', shader: 'Shader', comp: 'Composition', image: 'Image' };
+const TYPE_ICON = { hose: 'hose', draw: 'brush', text: 'text', ellipse: 'ellipse', ring: 'ellipse', line: 'line', rect: 'rect', star: 'star', polygon: 'polygon', solid: 'solid', null: 'null', adjust: 'adjust', shader: 'shader', comp: 'comp', image: 'media', audio: 'audio' };
+export const TYPE_NAME = { hose: 'Rubber hose', draw: 'Drawing', text: 'Text', ellipse: 'Ellipse', ring: 'Ring', line: 'Line', rect: 'Rectangle', star: 'Star', polygon: 'Polygon', path: 'Path', audio: 'Audio', solid: 'Solid', null: 'Null', adjust: 'Adjustment', shader: 'Shader', comp: 'Composition', image: 'Image' };
 export function renderLeft() {
   if (S.left === 'presets') S.left = null;
   const el = $('#lpanel');
@@ -23,7 +23,7 @@ export function renderLeft() {
       <button class="ib" data-act="insert" aria-label="Insert layer">${ic('plus', 's')}</button>`;
     body = `<label class="search" style="margin-top:2px">${ic('search', 's')}<input id="lq" placeholder="Filter layers" aria-label="Filter layers" value="${esc(S.lq)}">${S.lq ? `<button class="ib" data-act="lqclear" aria-label="Clear filter" style="width:28px;height:28px">${ic('x', 'xs')}</button>` : ''}</label>`
       + shown.map((l) => `<div class="lrow ${selIds().includes(l.id) ? 'sel' : ''} ${l.vis ? '' : 'hid'} ${S.solo.has(l.id) ? 'soloed' : ''}" data-act="sel" data-v="${l.id}" data-ctx="${l.id}" role="button" tabindex="0" aria-label="Select ${esc(l.name)}. Alt plus arrow keys to reorder"><span class="grip" data-grip title="Drag to reorder" aria-hidden="true">${ic('grip', 's')}</span>
-        <span class="chip-dot" style="background:${l.hue}"></span><span class="ty">${ic(l.comp ? 'comp' : (TYPE_ICON[l.type] || 'rect'), 's')}</span><span class="nm">${esc(l.name)}${mTag(l)}${l.parent && lay(l.parent) ? `<span class="pn" title="Parent">${ic('right', 'xs')}${esc(lay(l.parent).name)}</span>` : ''}</span>
+        <span class="chip-dot" style="background:${l.hue}"></span><span class="ty">${ic(l.comp ? 'comp' : l.joint ? 'rig' : (TYPE_ICON[l.type] || 'rect'), 's')}</span><span class="nm">${esc(l.name)}${mTag(l)}${l.parent && lay(l.parent) ? `<span class="pn" title="Parent">${ic('right', 'xs')}${esc(lay(l.parent).name)}</span>` : ''}</span>
         <button class="ib ${S.solo.has(l.id) ? 'solo-on' : ''}" data-act="solo" data-v="${l.id}" aria-pressed="${S.solo.has(l.id)}" aria-label="Solo ${esc(l.name)}" title="Solo: show only soloed layers" >${ic('solo', 's')}</button>
         <button class="ib" data-act="vis" data-v="${l.id}" aria-label="${l.vis ? 'Hide' : 'Show'} layer">${ic(l.vis ? 'eye' : 'eyeoff', 's')}</button>
         <button class="ib" data-act="lock" data-v="${l.id}" aria-label="${l.lock ? 'Unlock' : 'Lock'} layer" style="${l.lock ? 'color:var(--acc-text)' : ''}">${ic(l.lock ? 'lock' : 'unlock', 's')}</button></div>`).join('')

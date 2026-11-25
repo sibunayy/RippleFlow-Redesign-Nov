@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => { await openApp(page); });
 test('every tool in the strip selects', async ({ page }) => {
   const tools = page.locator('#lstrip [data-act="tool"]');
   const n = await tools.count();
-  expect(n).toBe(7); // Select and Marquee are separate tools
+  expect(n).toBe(8); // Select, Marquee and Rig are separate tools
   for (let i = 0; i < n; i++) {
     await tools.nth(i).click();
     await expect(tools.nth(i)).toHaveAttribute('aria-pressed', 'true');

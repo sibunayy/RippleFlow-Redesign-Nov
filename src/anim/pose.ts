@@ -49,6 +49,8 @@ export function relM(l, f, d) {
   try { inv = new DOMMatrix(l.pw).inverse(); if (!isFinite(inv.a) || !isFinite(inv.e)) inv = new DOMMatrix(); } catch { inv = new DOMMatrix(); }
   return world(p, f, d + 1).multiply(inv);
 }
+/** Where a layer's anchor (its joint, for a rig) sits in composition space at frame f. Follows parents. */
+export const jointPt = (l, f) => { const m = world(l, f), q = m.transformPoint(new DOMPoint(l.p.ax ? val(l.p.ax, f) : 0, l.p.ay ? val(l.p.ay, f) : 0)); return { x: q.x, y: q.y }; };
 export const repN = (l) => (l.rep && l.rep.on ? Math.max(1, Math.min(60, Math.round(l.rep.count) || 1)) : 1);
 export let xfEls = {};
 export function setXfEls(v) { return (xfEls = v); }
